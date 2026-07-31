@@ -1,15 +1,36 @@
 # -*- coding: ascii -*-
 """
-Strategy C (RATCHETING, NO DAMPING) : Adaptive Sequential IDA
+Strategy C (SYMMETRIC PULSE, NO DAMPING) : Adaptive Sequential IDA
 =======================================================================
-This is the ratcheting-enabled version of strategy_C_3dec_python.py.
-It is identical to the original except for the marked  # >>> RATCHETING
-blocks, which swap the symmetric pulse generation for the asymmetric
-(record-derived) pulse implemented in ratcheting_pulse.py.
+Production driver for the mason_v7 model. Writes to stratC_results_NODAMP_v7.
 
-Toggle behaviour with USE_RATCHETING:
-    USE_RATCHETING = False  -> exactly the original symmetric method
-    USE_RATCHETING = True   -> asymmetric ratcheting pulse (Modification A)
+USE_RATCHETING is now FALSE, so this runs the original symmetric pulse and
+ASYM_K is inert. The reason is in MODELLING_DISCREPANCIES.md section 0: the
+source paper attributes the experimental asymmetry to the timber floors
+applying a moment to one side of the wall, and measures 8-12 mm of cumulative
+joist slip, with the bow-tie specimen (which removed that slip) reversing the
+sign of its residual tilt. Both mechanisms are already in this model
+geometrically, whereas ASYM_K imposes an asymmetric INPUT PULSE -- a different
+mechanism, and very likely a double count. Any residual tilt this run produces
+therefore comes from the joists alone, which is the quantity worth comparing.
+
+Set USE_RATCHETING = True to restore the asymmetric (record-derived) pulse from
+ratcheting_pulse.py. The marked  # >>> RATCHETING  blocks are the only places
+the two paths differ.
+
+Relationship to strategy_C_3dec_GI.py: both now run the symmetric pulse, so the
+pair is close to a controlled test of the fracture-energy hypothesis. They still
+differ in three ways beyond G_I/G_II and OUT_DIR:
+  - GI calls instrument_tilt_v2.dat and exports through
+    instrument_history_export_v2.dat, so ONLY THE GI RUN records the
+    experiment-matched tilt and the local rotation at the tiltmeter height
+    (Z = 2.43 m). This driver still exports the original 16 channels only.
+  - GI has the working damping branch; here the `if DAMP_RATIO > 0:` body is
+    still `pass`, so setting DAMP_RATIO non-zero in THIS file silently produces
+    an undamped run while preflight reports damping as active.
+  - GI exposes COH_RESIDUAL.
+Ask before relying on a tilt comparison between the two -- the channels are not
+the same on both sides yet.
 
 ratcheting_pulse.py must sit in the same directory as this script (or on
 sys.path). Run inside 3DEC:
@@ -60,7 +81,11 @@ OUT_DIR = "stratC_results_NODAMP_v7"
 STATE_FILE_NAME = "stratC_checkpoint.json"
 
 # >>> RATCHETING : controls
-USE_RATCHETING = True    # False reproduces the original symmetric method exactly
+USE_RATCHETING = False   # OFF. The paper attributes the asymmetry to eccentric joist
+                         # loading and 8-12 mm of cumulative joist slip, both of which
+                         # this model already contains geometrically, whereas ASYM_K
+                         # imposes an asymmetric INPUT PULSE. Any residual tilt that
+                         # still appears now comes from the joists alone. ASYM_K is inert.
 ASYM_K         = 1.0     # global asymmetry sharpening (>=1 sharpens); calibrate out-of-sample
 # Damping is exposed here so it is explicit and printed at startup.
 # The conference paper used FULL Rayleigh at 3%. The pasted driver used
