@@ -286,29 +286,75 @@ discriminating validation target than peak displacement.
 
 ---
 
-## 4. Fixing the dissipation, not the damping
+## 4. Fixing the dissipation, not the damping — MEASURED
 
-From the discrepancies document: undamped over-predicts peak response 2.10× before
-softening, while 1.5% Rayleigh under-predicts 0.64× during rocking. One global ratio
-cannot serve both, because the deficiency is in the joint's hysteretic dissipation before
-the mechanism forms, and Rayleigh damping then over-penalises the slow large-amplitude
-rocking afterwards.
+`hysteresis_dissipation.py` builds base-shear vs top-quarter-displacement loops for model
+and US-1 using the paper's own definitions (U = mean of Ch3/Ch4 per Eq. 1, F = base shear
+per Eq. 2) and measures the enclosed area. Both signals are low-passed at 50 Hz first —
+the model's contact force carries impact chatter that the experimental accelerometer-derived
+base shear does not, and comparing raw traces is not like-for-like.
 
-Priority order:
+**Result 1 — yes, the model under-dissipates before the mechanism forms, by about 2×.**
 
-1. Check whether the pre-mechanism response is dissipating anything at all — plot a
-   `Channel_3` force–displacement loop for runs 5–12 and measure the enclosed area. If
-   the loops are nearly closed, `G_I`/`G_II` are too small and the model is behaving
-   near-elastically until it suddenly is not.
-2. `G_I = 0.025·(2·f_t)^0.7 × 10³` ≈ **5.4 J/m²** at `f_t` = 0.2 MPa. That is at the
-   brittle end. A more ductile mode-I response would let cracking distribute instead of
-   localising into one full-height mechanism at run 14 — which is the §3 problem in the
-   discrepancies document, and plausibly the same root cause as the premature softening.
-3. Only after 1–2, revisit viscous damping — and if you keep it, use stiffness-proportional
-   only, so it does not penalise the low-frequency rocking.
+| Loop fullness (area / 4·F_pk·U_pk, per cycle) | Model | US-1 | Ratio |
+|---|---|---|---|
+| Runs 5–12 (pre-mechanism) | 0.036 | 0.070 | **0.51×** |
+| Runs 14–21 (post-mechanism) | 0.103 | 0.136 | 0.76× |
 
-And fix the `DAMP_RATIO` trap in `strategy_C_3dec_nodamp.py` (lines ~440–446) before any
+The pre-mechanism deficit is real and robust: it survived three different formulations of
+the metric (0.24× whole-run-signed raw, 0.44× whole-run-signed filtered, 0.51× per-cycle
+filtered) and is insensitive to whether `total_shear` or `cstav` is used. Both model bands
+sit at or below `xi_eq` ≈ 0.02–0.05, i.e. the joints are barely dissipating.
+
+**Result 2 — and this is the bigger finding: the model has almost no strength left after
+run 14.**
+
+| Run | Model peak base shear | US-1 peak base shear | Model E_diss | US-1 E_diss |
+|---|---|---|---|---|
+| 14 | 4.58 kN | 18.39 kN | 17.9 J | 34.3 J |
+| 17 | 5.04 kN | 23.40 kN | 62.0 J | 137.4 J |
+| 20 | 2.14 kN | 28.76 kN | 47.8 J | 273.5 J |
+| 21 | 2.86 kN | 31.92 kN | 53.0 J | 350.0 J |
+
+The model's base shear **decays to 2–3 kN while the experiment's climbs to 32 kN** — a
+10× strength deficit by run 21 — and it dissipates 7× less energy in absolute terms.
+
+2–3 kN is about what **pure gravity-stabilised rigid rocking** would give: with roughly
+27 kN of total vertical load (12.9 kN self-weight + 10.35 kN spring + 3.84 kN slabs), a
+mid-height hinge mechanism gives on the order of `N·t/h_half` ≈ 27 × 0.21 / 1.29 ≈ 4.4 kN.
+So after run 14 the model is behaving as a rigid block held up only by gravity, with the
+joints contributing nothing. The specimen, still developing 32 kN, plainly retained
+substantial flexural and arching capacity throughout.
+
+**What that points at.** The bed joints lose *all* cohesive capacity once cracked:
+`cohesion-residual 0` is set explicitly, and `G_I = 0.025·(2·f_t)^0.7 × 10³` ≈ **5.4 J/m²**
+at `f_t` = 0.2 MPa is very brittle. Once a joint opens there is no residual tension, no
+cohesion, and friction only mobilises under normal stress — which an opening joint does not
+have. Priority order:
+
+1. **Give the joints residual capacity.** A non-zero `cohesion-residual`, and a larger
+   `G_I`/`G_II`, so cracked joints still carry something. The paper's measured bond-wrench
+   strength is 0.28 MPa (CoV 22%) and wallette flexural strength 0.41–0.45 MPa, so the
+   *peak* strength is about right — it is the post-peak behaviour that is wrong.
+2. **Check the arching path.** A wall restrained top and bottom develops arching thrust,
+   which is the main reason the real specimen kept gaining strength. If the top boundary
+   condition is wrong (§2.2 item 2) the thrust never develops, which would produce exactly
+   this collapse in capacity.
+3. **Only then** revisit viscous damping — and if you keep it, stiffness-proportional only,
+   so it does not penalise the low-frequency rocking.
+
+Fix the `DAMP_RATIO` trap in `strategy_C_3dec_nodamp.py` (lines ~440–446) before any
 damping study, or it will silently produce undamped results while reporting otherwise.
+
+**A caveat on the metric.** Zero-crossing cycle segmentation degrades for strongly
+one-sided (ratcheted) responses — US-1 run 18 swings −9.0 to +2.1 mm and its cumulative
+energy is under-counted as a result. The fullness values are sound; treat absolute `E_diss`
+for heavily one-sided runs as a lower bound.
+
+```bash
+python hysteresis_dissipation.py --runs 5 12 --test 9 --lowpass 50
+python hysteresis_dissipation.py --runs 14 21 --test 9 --lowpass 50
+```
 
 ---
 
