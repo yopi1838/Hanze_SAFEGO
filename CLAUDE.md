@@ -271,9 +271,22 @@ y ∈ [0.29318, 0.46909] and [2.05227, 2.22818]. `bLength = 1.292`.
 **Densities.** Masonry 1885 kg/m³ · steel parts 7850 · timber joists `[5510*1.034]`
 ≈ 5697.
 
-**Joint model `mason_v6`** (`block contact jmodel assign mason_v6`) — a **user-written
-plugin**, not a built-in 3DEC jmodel; the compiled binary is `libjmodelmason*.so`
-(see §8). Parameters from `fish define properties` in `ANALYSIS_PART_I_MASON.dat`:
+**Joint model `mason_v7`** (`block contact jmodel assign mason_v7`) — a **user-written
+plugin**, not a built-in 3DEC jmodel (see §8 for the binaries and a naming trap).
+
+> **Changed 31 Jul 2026.** The `.dat` previously assigned `mason_v6`. It now assigns
+> `mason_v7`, to match the Windows plugin `jmodelmasonv7_1009.dll` added to the repo.
+> The property set is unchanged between the two — v7 only splits the internal
+> `nlimit` parameter into `nlimit1` / `nlimit2`, both of which take their defaults
+> unless set explicitly. **Every existing `.sav` in this repo still contains v6.**
+> `Part_I_MASON_v6.sav` and all `stratC_run_NN.sav` were built before this change, so
+> restoring them gives you v6 regardless of what the `.dat` now says. Only a fresh
+> rebuild from `Geo_Prep.dat` → `ANALYSIS_PART_I_MASON.dat` produces a v7 model, and
+> those results are **not** directly comparable to the existing run set. Note also
+> that a rebuild still writes to `Part_I_MASON_v6.sav` — that filename is now
+> misleading and should be renamed (which means updating the drivers too).
+
+Parameters from `fish define properties` in `ANALYSIS_PART_I_MASON.dat`:
 
 ```
 kn = ks   = 2.5e9 Pa/m
@@ -379,11 +392,34 @@ CLI arguments still win over the defaults everywhere they existed before, and
 
 - **3DEC 9.1** (`3dec910` appears in a hard-coded path). Syntax throughout is
   3DEC 7+/9 style.
-- **`mason_v6` jmodel plugin** — `libjmodelmason009.so` / `libjmodelmasonv6009.so`
-  are in this folder. Note these are **Linux** shared objects. Nothing in the code
-  loads them explicitly; 3DEC must find them on its plugin search path, or a startup
-  file not in this repo loads them. **On a Windows machine you need the corresponding
-  `.dll` instead** — `block contact jmodel assign mason_v6` will fail without it.
+- **The jmodel plugin — filenames lie about which model they register.** Nothing in
+  the code loads a plugin explicitly; 3DEC must find it on its plugin search path, or
+  a startup file not in this repo loads it. The name in `jmodel assign` must match the
+  keyword the binary *registers*, which is often **not** what its filename suggests.
+  Verified by reading the keyword out of each binary:
+
+  | Binary | Registers | In this repo? |
+  |---|---|---|
+  | `jmodelmasonv7_1009.dll` | `mason_v7` | **yes** (Windows) |
+  | `libjmodelmasonv6009.so` | `mason_v6H` | yes (Linux) |
+  | `libjmodelmason009.so` | `mason_v5H` | yes (Linux) |
+  | `jmodelmasonv6009.dll` | `mason_v7` ← filename says v6 | no |
+  | `jmodelmasonv7009.dll` | `mason_debug1` | no |
+  | `jmodelmasonv8009.dll` | `mason_v5` | no |
+  | `jmodelmasonv5009.dll` | `mason_v5` | no |
+  | `jmodelmasonv1009.dll` | `masonv1` (no underscore) | no |
+  | `jmodelmason009.dll` | `mason` | no |
+  | `jmodelmasonhealing009.dll` | `masonhealing` | no |
+
+  The unlisted ones live in `C:\Users\yopi1\source\repos\MASON\ItascaConstutitiveModel1\Release`
+  on the original machine. All link `base009.dll` / `jmodels009.dll`, i.e. the
+  **3DEC 9.x** series — the `1009` in `jmodelmasonv7_1009.dll` is a naming quirk, not
+  3DEC 10.
+  Note that **no available binary registers a plain `mason_v6`**; the Linux `.so`
+  registers `mason_v6H`, which the old `.dat` presumably matched via 3DEC's keyword
+  prefix matching. If you ever need to reproduce the original v6 results on Windows,
+  that DLL does not currently exist and would have to be built.
+  To check any binary yourself: `strings -a <file> | grep -i '^mason'`.
 - **Python** — the drivers run in 3DEC's embedded interpreter, so they are written in
   a Python-2/3-compatible style (`.format()`, no f-strings, ASCII coding headers).
   Preserve that style when editing `strategy_C_3dec_*.py`, `export_plots.py`,
@@ -536,5 +572,7 @@ highest-value part of the repo.
   import it from the 3DEC drivers.
 - **Do not edit anything under `EXP_DATA/`.** It is raw measured data and the only
   copy that is version-controlled.
+- **Never trust a jmodel plugin's filename.** Before changing `jmodel assign`, read the
+  keyword out of the binary (`strings -a <file> | grep -i '^mason'`) — see §8.
 - When changing a convention, a channel definition, or a path, **update this file in
   the same commit.**
