@@ -1,0 +1,58 @@
+[bLength=1.292]
+; =====================================================================
+; instrument_history_export_new.dat
+; Expects TWO FISH variables to be set before calling:
+;   [exportdir]  = full folder path   (e.g. "stratC_results/Run01_HU12_s0p50")
+;   [runlabel]   = filename prefix    (e.g. "Run01_HU12_s0p50")
+; =====================================================================
+[retval=system.directory.create(exportdir)]
+
+; =====================================================================
+; NAMED BLOCK HISTORIES
+; =====================================================================
+history export "Channel_1_DispBot" vs "time" file [string.build("%1/%2_Channel_1_DispBot.csv",exportdir,runlabel)] truncate
+history export "Channel_2_DispMid" vs "time" file [string.build("%1/%2_Channel_2_DispMid.csv",exportdir,runlabel)] truncate
+history export "Channel_3_DispTopQLeft" vs "time" file [string.build("%1/%2_Channel_3_DispTopQLeft.csv",exportdir,runlabel)] truncate
+history export "Channel_4_DispTopQRight" vs "time" file [string.build("%1/%2_Channel_4_DispTopQRight.csv",exportdir,runlabel)] truncate
+history export "Channel_5_DispTable" vs "time" file [string.build("%1/%2_Channel_5_DispTable.csv",exportdir,runlabel)] truncate
+history export "Channel_8_LeftJoistBelowSlab1" vs "time" file [string.build("%1/%2_Channel_8_LeftJoistBelowSlab1.csv",exportdir,runlabel)] truncate
+history export "Channel_9_LeftJoistAboveSlab1" vs "time" file [string.build("%1/%2_Channel_9_LeftJoistAboveSlab1.csv",exportdir,runlabel)] truncate
+history export "Channel_10_LeftJoistBelowSlab2" vs "time" file [string.build("%1/%2_Channel_10_LeftJoistBelowSlab2.csv",exportdir,runlabel)] truncate
+history export "Channel_11_LeftJoistBelowSlab2" vs "time" file [string.build("%1/%2_Channel_11_LeftJoistBelowSlab2.csv",exportdir,runlabel)] truncate
+history export "Channel_12_AccTable" vs "time" file [string.build("%1/%2_Channel_12_AccTable.csv",exportdir,runlabel)] truncate
+history export "Channel_13_AccSlab1" vs "time" file [string.build("%1/%2_Channel_13_AccSlab1.csv",exportdir,runlabel)] truncate
+history export "Channel_14_AccSlab2" vs "time" file [string.build("%1/%2_Channel_14_AccSlab2.csv",exportdir,runlabel)] truncate
+history export "Channel_15_AccBot" vs "time" file [string.build("%1/%2_Channel_15_AccBot.csv",exportdir,runlabel)] truncate
+history export "Channel_16_AccMid" vs "time" file [string.build("%1/%2_Channel_16_AccMid.csv",exportdir,runlabel)] truncate
+history export "Channel_17_AccTop" vs "time" file [string.build("%1/%2_Channel_17_AccTop.csv",exportdir,runlabel)] truncate
+history export "Channel_19_DispTopQRight" vs "time" file [string.build("%1/%2_Channel_19_DispTopQRight.csv",exportdir,runlabel)] truncate
+history export "Channel_20_TopBeam" vs "time" file [string.build("%1/%2_Channel_20_TopBeam.csv",exportdir,runlabel)] truncate
+
+; =====================================================================
+; FISH HISTORIES (indices match instrument_history_new.dat)
+;   1  Record_Disp          7  joist_s1_shear     13  tilt_up_seg
+;   2  Bot_Quarter_Disp     8  joist_s2_shear     14  tilt_beam_seg
+;   3  Mid_Disp             9  total_shear        15  tilt_full_wall
+;   4  Top_Quarter_A_Disp  10  tilt_angles        16  rel_disp_top_mm
+;   5  Top_Quarter_B_Disp  11  tilt_bot_seg
+;   6  cstav               12  tilt_low_seg
+; =====================================================================
+history export 1 vs "time" file [string.build("%1/%2_Record_Disp.csv",exportdir,runlabel)] truncate
+history export 2 vs "time" file [string.build("%1/%2_Bot_Quarter_Disp.csv",exportdir,runlabel)] truncate
+history export 3 vs "time" file [string.build("%1/%2_Mid_Disp.csv",exportdir,runlabel)] truncate
+history export 4 vs "time" file [string.build("%1/%2_Top_Quarter_A_Disp.csv",exportdir,runlabel)] truncate
+history export 5 vs "time" file [string.build("%1/%2_Top_Quarter_B_Disp.csv",exportdir,runlabel)] truncate
+history export 6 vs "time" file [string.build("%1/%2_cstav_BaseShear.csv",exportdir,runlabel)] truncate
+history export 7 vs "time" file [string.build("%1/%2_joist_s1_shear.csv",exportdir,runlabel)] truncate
+history export 8 vs "time" file [string.build("%1/%2_joist_s2_shear.csv",exportdir,runlabel)] truncate
+history export 9 vs "time" file [string.build("%1/%2_total_shear.csv",exportdir,runlabel)] truncate
+
+; =====================================================================
+; TILT ANGLE HISTORIES
+; =====================================================================
+history export 11 vs "time" file [string.build("%1/%2_tilt_bot_seg.csv",exportdir,runlabel)] truncate
+history export 12 vs "time" file [string.build("%1/%2_tilt_low_seg.csv",exportdir,runlabel)] truncate
+history export 13 vs "time" file [string.build("%1/%2_tilt_up_seg.csv",exportdir,runlabel)] truncate
+history export 14 vs "time" file [string.build("%1/%2_tilt_beam_seg.csv",exportdir,runlabel)] truncate
+history export 15 vs "time" file [string.build("%1/%2_tilt_full_wall.csv",exportdir,runlabel)] truncate
+history export 16 vs "time" file [string.build("%1/%2_rel_disp_top_mm.csv",exportdir,runlabel)] truncate

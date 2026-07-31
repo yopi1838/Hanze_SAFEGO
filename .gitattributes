@@ -1,0 +1,13 @@
+# Freeze line endings. 3DEC .dat/.dec files are CRLF and 3DEC reads them fine;
+# normalising them would create a huge spurious diff and risk breaking FISH parsing.
+# Compiled plugins must stay byte-identical.
+* -text
+
+# Be explicit about binaries so git never tries to diff or convert them.
+*.so    binary
+*.dll   binary
+*.sav   binary
+*.3dsav binary
+*.xlsx  binary
+*.png   binary
+*.pdf   binary

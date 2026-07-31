@@ -1,0 +1,39 @@
+ model new
+ model restore 'Part_I'
+
+ model dynamic active on
+ block contact reset disp
+
+;TOP BEAM
+ block history displacement-z gridpointid 4576
+ block history velocity-z gridpointid 4576
+ 
+;TILT METER
+ block history displacement-z gridpointid 11611
+
+;BOTTOM BLOCK
+ block history displacement-z gridpointid 4594
+ block history velocity-z gridpointid 4594
+
+ model hist name 'time' dynamic time-total
+ 
+;table 1 import 'V_.tab'                                  
+;block apply velocity-z 1 table 1 range group 'S'       
+;block apply velocity-z 1 table 1 range group 'T_B' 
+;block mech damp rayleigh 0 0                               
+;model solve time 39         
+
+;block update subcontact 10
+;block update common-plane 10
+
+ history interval 10
+ 
+ table 1 import 'V_L.tab'                                  
+ block apply velocity-z 1 table 1 range group 'S'       
+ block apply velocity-z 1 table 1 range group 'T_B' 
+ block mech damp rayleigh 0 0                               
+ model solve time 72      
+ 
+ model save 'Dynamic_Analysis_Run1'
+
+ 

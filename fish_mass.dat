@@ -1,0 +1,8 @@
+fish define get_mass
+    local tmass = 0.0
+    loop foreach bp block.list
+        tmass = tmass + block.mass(bp)
+    endloop
+    io.out('Model mass = ' + string(tmass) + ' kg')
+end
+@get_mass

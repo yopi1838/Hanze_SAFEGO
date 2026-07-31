@@ -1,0 +1,167 @@
+[bLength=1.292]
+history delete
+;HISTORIES
+fish def Record_Disp
+   monitoring_point = block.gp.near(0.648, 2.68, 0.21)
+   monitoring_point_1 = block.gp.near(0.648, 0.6, 0.21)
+   monitoring_point_2 = block.gp.near(0.648, 1.26, 0.21)
+   monitoring_point_3a = block.gp.near(0.108, 2.06, 0.21)
+   monitoring_point_3b = block.gp.near(1.188, 2.06, 0.21)
+   Record_Disp = block.gp.disp.z(monitoring_point)
+   Bot_Quarter_Disp = block.gp.disp.z(monitoring_point_1)
+   Mid_Disp = block.gp.disp.z(monitoring_point_2)
+   Top_Quarter_A_Disp = block.gp.disp.z(monitoring_point_3a)
+   Top_Quarter_B_Disp = block.gp.disp.z(monitoring_point_3b)
+end
+
+fish define contactList
+    local allpts = list(block.contact.list) ; A list of pointers to scalars
+    local check = block.contact.isgroup(::block.contact.list,'Reaction')   
+    local j1list = list(block.contact.list)
+    local j1check = block.contact.isgroup(::block.contact.list, 'Joist_S1_contact')
+    j1 = j1list(j1check) 
+    local j2list = list(block.contact.list)
+    local j2check = block.contact.isgroup(::block.contact.list, 'Joist_S2_contact')
+    j2 = j2list(j2check) 
+    ; List of booleans
+    contactList = allpts(check) ; List of scalars in 'surface'    
+end
+@contactList
+; === Updated cstav with joist reactions and total shear ===
+fish define cstav
+    ; --- Base reaction (existing 'Reaction' group) ---
+    contactList
+    local scstav_vec = 0.0
+    local jarea = 0.0
+    total_shear = 0.0
+    loop foreach cx contactList
+        loop foreach sc block.contact.subcontactlist(cx)
+            scstav_vec = scstav_vec + block.subcontact.force.shear.z(sc)
+            jarea = jarea + block.subcontact.area(sc)
+        endloop
+    endloop
+    cstav = scstav_vec / 1000  ; kN
+
+    ; --- Joist_S1 reaction ---
+    local fz_j1 = 0.0
+    
+    loop foreach cxf j1
+        loop foreach sc block.contact.subcontactlist(cxf)
+            fz_j1 = fz_j1 + block.subcontact.force.shear.z(sc)
+        endloop
+    endloop
+    joist_s1_shear = fz_j1 / 1000  ; kN
+
+    ; --- Joist_S2 reaction ---
+    local fz_j2 = 0.0
+    
+    loop foreach cx j2
+        loop foreach sc block.contact.subcontactlist(cx)
+            fz_j2 = fz_j2 + block.subcontact.force.shear.z(sc)
+        endloop
+    endloop
+    joist_s2_shear = fz_j2 / 1000  ; kN
+
+    ; --- Total (comparable to experimental V = Σ m·a) ---
+    total_shear = scstav_vec/1000 + fz_j1 / 1000 + fz_j2 / 1000
+end
+; =====================================================================
+; TILT ANGLE COMPUTATION (via FISH)
+; =====================================================================
+; Tilt = arctan( (dz_upper - dz_lower) / dy )
+; Reported in degrees. Positive = tilting in +z direction.
+;
+; Gridpoints are located along the wall centerline (x=bLength/2, z=0.21)
+; at the same positions as the displacement channels.
+;
+; Segments:
+;   tilt_bot_seg   : table (y=0.00) to bottom quarter (y=0.66)  dy=0.66
+;   tilt_low_seg   : bottom quarter (y=0.66) to mid (y=1.26)    dy=0.60
+;   tilt_up_seg    : mid (y=1.26) to top (y=2.06)               dy=0.80
+;   tilt_beam_seg  : top wall (y=2.06) to beam (y=2.68)         dy=0.62
+;   tilt_full_wall : table (y=0.00) to top wall (y=2.06)        dy=2.06
+; =====================================================================
+
+fish define tilt_angles
+    ; Locate gridpoints (same as displacement channels)
+    local gp_table  = block.gp.near(0.646, 0.00, 0.21)
+    local gp_bot    = block.gp.near(0.646, 0.66, 0.21)
+    local gp_mid    = block.gp.near(0.646, 1.26, 0.21)
+    local gp_top    = block.gp.near(0.646, 2.06, 0.21)
+    local gp_beam   = block.gp.near(0.646, 2.68, 0.21)
+
+    ; Get out-of-plane displacements (z-direction)
+    local dz_table  = block.gp.disp.z(gp_table)
+    local dz_bot    = block.gp.disp.z(gp_bot)
+    local dz_mid    = block.gp.disp.z(gp_mid)
+    local dz_top    = block.gp.disp.z(gp_top)
+    local dz_beam   = block.gp.disp.z(gp_beam)
+
+    ; Segment heights
+    local dy_bot_seg  = 0.66
+    local dy_low_seg  = 0.60
+    local dy_up_seg   = 0.80
+    local dy_beam_seg = 0.62
+    local dy_full     = 2.06
+
+    ; Tilt angles in degrees
+    ; arctan( relative_dz / dy ) * 180/pi
+    local rad2deg = 180.0 / math.pi
+
+    tilt_bot_seg   = math.atan((dz_bot  - dz_table) / dy_bot_seg)  * rad2deg
+    tilt_low_seg   = math.atan((dz_mid  - dz_bot)   / dy_low_seg)  * rad2deg
+    tilt_up_seg    = math.atan((dz_top  - dz_mid)   / dy_up_seg)   * rad2deg
+    tilt_beam_seg  = math.atan((dz_beam - dz_top)   / dy_beam_seg) * rad2deg
+    tilt_full_wall = math.atan((dz_top  - dz_table) / dy_full)     * rad2deg
+    tilt_angles = math.atan((dz_bot  - dz_table) / dy_bot_seg)  * rad2deg
+    ; Relative displacement (Ch19 - Ch5) in mm for convenience
+    rel_disp_top_mm = (dz_top - dz_table) * 1000.0
+end
+
+@tilt_angles
+@cstav
+fish history Record_Disp ;1
+fish history Bot_Quarter_Disp ;2
+fish history Mid_Disp ;3
+fish history Top_Quarter_A_Disp ;4
+fish history Top_Quarter_B_Disp ;5
+fish history cstav ;6
+fish history joist_s1_shear ;7
+fish history joist_s2_shear ;8
+fish history total_shear ;9
+fish history tilt_angles ;10
+fish history tilt_bot_seg ;11
+fish history tilt_low_seg ;12
+fish history tilt_up_seg ;13
+fish history tilt_beam_seg ;14
+fish history tilt_full_wall ;15
+fish history rel_disp_top_mm ; 16
+
+[Record_Disp]
+; =====================================================================
+; DISPLACEMENT CHANNELS
+; =====================================================================
+block history name "Channel_1_DispBot" displacement-z position ([bLength/2],0.66,0.21) 
+block history name "Channel_2_DispMid" displacement-z position ([bLength/2],1.26,0.21)
+block history name "Channel_3_DispTopQLeft" displacement-z position ([bLength/2-0.54],2.06,0.21)
+block history name "Channel_4_DispTopQRight" displacement-z position ([bLength/2+0.54],2.06,0.21)
+block history name "Channel_5_DispTable" displacement-z position ([bLength/2],0.0,0.21)
+block history name "Channel_8_LeftJoistBelowSlab1" displacement-z position ([bLength/2-0.54],0.56,0.22)
+block history name "Channel_9_LeftJoistAboveSlab1" displacement-z position ([bLength/2-0.54],0.66,0.22)
+block history name "Channel_10_LeftJoistBelowSlab2" displacement-z position ([bLength/2-0.54],2.35,0.22)
+block history name "Channel_11_LeftJoistBelowSlab2" displacement-z position ([bLength/2-0.54],2.45,0.22)
+
+; =====================================================================
+; VELOCITY CHANNELS (for acceleration derivation)
+; =====================================================================
+block history name "Channel_12_AccTable" velocity-z position ([bLength/2],0.0,0.21) 
+block history name "Channel_13_AccSlab1" velocity-z position ([bLength/2],0.49,0.73) 
+block history name "Channel_14_AccSlab2" velocity-z position ([bLength/2],2.28,0.73) 
+block history name "Channel_15_AccBot" velocity-z position ([bLength/2],0.66,0.21) 
+block history name "Channel_16_AccMid" velocity-z position ([bLength/2],1.26,0.21) 
+block history name "Channel_17_AccTop" velocity-z position ([bLength/2],2.06,0.21) 
+block history name "Channel_19_DispTopQRight" displacement-z position ([bLength/2],2.06,0.21)
+block history name "Channel_20_TopBeam" displacement-z position ([bLength/2],2.68,0.21) 
+model history name "time" dynamic time-total
+
+

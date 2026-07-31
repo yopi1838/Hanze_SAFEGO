@@ -1,0 +1,154 @@
+model new 
+model restore 'GEO_WALL'
+
+block create brick 0.3230 0.4038 0.29318 0.46909 0.105 1.355 group 'Joist'
+block create brick 0.3230 0.4038 2.05227 2.22818 0.105 1.355 group 'Joist'
+
+block create brick 0.8883 0.9690 0.29318 0.46909 0.105 1.355 group 'Joist'
+block create brick 0.8883 0.9690 2.05227 2.22818 0.105 1.355 group 'Joist'
+
+; 3 meters long
+block create brick 0 1.292 0.20000 0.29318 1 1.5 group 'Joist_S1'
+block create brick 0 1.292 1.95909 2.05227 1 1.5 group 'Joist_S2'
+
+block face triangulate radial-8 range group "Masonry"
+block face triangulate edge-max [0.05] range group "Masonry" not
+
+;block gr group 'T_PL' range id 4573
+;block gr group 'J_PL' range id 3745
+;block gr group 'J_PL' range id 3781
+;block gr group 'J_PL' range id 3763
+;block gr group 'J_PL' range id 3799
+
+;MATERIAL PROPERTIES
+block property density 1885 range group "Masonry"
+block property density 7850 range group "S" or "T_B" or "Joist_S1" or "Joist_S2"
+block property density [5510*1.034] range group "Joist"
+
+fish define properties
+    kn= 2.5e9
+    ks = 2.5e9
+    tension=0.2e6
+    cohesion=0.3e6
+    friction=36.9
+    fc_comp=20e6
+    Gt = (0.025*(2*tension*1e-6)^0.7)*10^3
+    Gs = 10*Gt
+    Gc = (15 + 0.43*(fc_comp*1e-6) - 0.036*(fc_comp*1e-6)^2)*10^3
+    n = 2.0
+    Css = 9.0
+    Cnn=1.0
+    Cn = 0.0
+end
+@properties
+;CONTACT PROPERTIES
+block contact generate-subcontacts
+block contact jmodel assign mason_v6
+block contact prop stiffness-normal @kn stiffness-initial @kn  stiffness-shear @ks ...
+    tension @tension cohesion @cohesion friction @friction ...
+    friction-residual @friction cohesion-residual 0 ...
+    G_I @Gt G_II @Gs G_c @Gc compression @fc_comp ...
+    comp-residual [fc_comp*0.2] Cn [Cn] Cnn [Cnn] Css [Css] peak_ratio [n] 
+
+;Timber Support Properties
+block contact jmodel assign mohr range group-intersection 'Joist' 'Joist_S1'
+block contact property stiffness-normal [kn*0.1] stiffness-shear 1 ...
+    tension 1 cohesion 1 friction 1 ...
+    range group-intersection 'Joist' 'Joist_S1'
+
+block contact jmodel assign mohr range group-intersection 'Joist' 'Joist_S2'
+block contact property stiffness-normal [kn*0.1] stiffness-shear 1 ...
+    tension 1 cohesion 1 friction 1 ...
+    range group-intersection 'Joist' 'Joist_S2'
+
+model	large-strain off							
+;block contact	material-table	default	jmodel v6
+;block contact material-table default prop stiffness-normal @kn stiffness-initial @kn ...
+;    stiffness-shear @ks tension 0 cohesion 0 friction @friction ...
+;    friction-residual @friction cohesion-residual 0 G_I @Gt G_II @Gs ...
+;    G_c @Gc compression @fc_comp comp-residual [0] Cn [0] Cnn [1] Css [9] ...
+;    peak_ratio [3.0]
+
+;BOUNDARY CONDITIONS
+block fix range group 'S'
+block fix range group 'Joist_S1'
+block fix range group 'Joist_S2'
+
+;HISTORIES
+fish def Record_Disp
+   monitoring_point = block.gp.near(0.648, 2.68, 0.21)
+   monitoring_point_1 = block.gp.near(0.648, 0.6, 0.21)
+   monitoring_point_2 = block.gp.near(0.648, 1.26, 0.21)
+   monitoring_point_3a = block.gp.near(0.108, 2.06, 0.21)
+   monitoring_point_3b = block.gp.near(1.188, 2.06, 0.21)
+   Record_Disp = block.gp.disp.z(monitoring_point)
+   Bot_Quarter_Disp = block.gp.disp.z(monitoring_point_1)
+   Mid_Disp = block.gp.disp.z(monitoring_point_2)
+   Top_Quarter_A_Disp = block.gp.disp.z(monitoring_point_3a)
+   Top_Quarter_B_Disp = block.gp.disp.z(monitoring_point_3b)
+end
+fish history Record_Disp
+fish history Bot_Quarter_Disp
+fish history Mid_Disp
+fish history Top_Quarter_A_Disp
+fish history Top_Quarter_B_Disp
+[Record_Disp]
+
+block apply velocity-x 0 range group 'T_B' 
+block apply velocity-z 0 range group 'T_B' 
+
+block initialize rvelocity-y 0 range group 'T_B' 
+block initialize rvelocity-z 0 range group 'T_B' 
+block fix rotation-y range group 'T_B' 
+block fix rotation-z range group 'T_B' 
+block face group "Comp_apply" range pos-y 2.68
+block hide off
+block contact group "Reaction" range pos-y -0.01 0.01 
+block hide range group "Masonry" or "S" or "T_B"
+block contact group "Reaction" range pos-x -1 1
+block hide off
+fish define contactList
+    local allpts = list(block.contact.list) ; A list of pointers to scalars
+    local check = block.contact.isgroup(::block.contact.list,'Reaction')     
+    ; List of booleans
+    contactList = allpts(check) ; List of scalars in 'surface'    
+end
+@contactList
+fish define cstav
+    contactList
+    local scstav_vec = 0.0
+    ncstav = 0.0
+    ncjdisp = 0.0
+    local scjdisp_vec = 0.0
+    local jarea = 0.0
+    negFlag = 0.0
+    loop foreach cx contactList
+        scx = block.contact.subcontactlist(cx)
+        loop foreach sc scx
+             ; weight by area
+             local area_ = block.subcontact.area(sc)
+             scstav_vec = scstav_vec + block.subcontact.force.shear.z(sc)
+             ncstav = ncstav + block.subcontact.force.norm(sc)
+             ncjdisp = ncjdisp + block.subcontact.disp.norm(sc)*area_
+             scjdisp_vec = scjdisp_vec + block.subcontact.disp.shear.z(sc)*area_
+             jarea = jarea + area_
+        endloop
+    endloop
+    if jarea > 0 then
+        ncstav = ncstav/jarea
+        sstop = 0.0
+        cstav = scstav_vec/1000
+    endif        
+end
+@cstav
+fish history cstav
+fish history ncstav
+model gravity 0 -9.81 0
+model solve ratio 1e-6
+
+block face apply stress-yy [-10.35e3/(0.21*1.292)] range group "Comp_apply"
+
+model solve ratio 5e-8
+
+model save 'Part_I_MASON_v6'
+;;call "sinus_wave_analysis.dat"
