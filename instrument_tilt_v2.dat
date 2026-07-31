@@ -14,21 +14,28 @@
 ;                        exp_Test9_tilt.csv / exp_Test12_tilt.csv hold.
 ;                        The original FISH tilt_* channels are this.
 ;
-;   (2) LOCAL ROTATION - what the bonded inclinometer ("sensor 18",
-;                        exp_US1_tiltmeter.csv) actually measures: the
-;                        rotation of the single masonry unit it is glued
-;                        to, NOT the rotation of the whole wall.
+;   (2) LOCAL ROTATION - what the inclinometer ("sensor 18",
+;                        exp_US1_tiltmeter.csv) measures. Its settled value
+;                        cannot be the wall's chord rotation: 2.77 deg over
+;                        the 2.06 m chord would be 99 mm of permanent top
+;                        displacement, while the absolute transducer records
+;                        -1.18 mm. It must therefore be a LOCAL rotation --
+;                        but of what, exactly, is NOT documented in the data
+;                        available here. The tiltmeter does not appear in
+;                        Test9_Info.xlsx or Test12_Info.xlsx.
 ;
 ; These differ by roughly two orders of magnitude in the US-1 data
 ; (run 21: chord tilt -0.029 deg, inclinometer +2.768 deg), so the model
 ; must output BOTH or the comparison is meaningless. It previously
 ; output only (1) and it was being plotted against (2).
 ;
-; Note also that the raw inclinometer PEAK values are not rotation at
-; all -- a gravity-referenced MEMS device reads horizontal acceleration
-; as apparent tilt. Only its settled/quiet-window value is a rotation.
-; Emulating that artefact is done in post-processing, not here; see
-; tilt_experiment_match.py.
+; Note also that the raw inclinometer PEAK values are unusable. The device
+; is gravity-referenced (its logger file carries 3-axis accelerometer packs
+; whose resting vector is constant at 16750 counts, 16745 of it on z), so
+; during shaking it reads horizontal acceleration as apparent tilt; and both
+; its tilt channel (+/-25.75 deg) and its accelerometers (+/-1.96 g) clip in
+; the strong runs. Only the settled/quiet-window value is a rotation.
+; See tilt_experiment_match.py and MODELLING_DISCREPANCIES.md section 1.
 ;
 ; WHAT CHANGES vs instrument_history_new.dat
 ; ------------------------------------------
@@ -47,12 +54,14 @@
 ; SET THESE BEFORE CALLING
 ; ------------------------
 ;   [bot_sensor_y]  0.66 to compare against US-1, 0.60 against US-2
-;   [incl_y_lo] / [incl_y_hi]  the actual top and bottom of the block
-;                    the inclinometer is bonded to. THESE ARE PLACEHOLDERS
-;                    -- read the real mounting height off Test9_Info.xlsx
-;                    or the instrumentation photographs before trusting
-;                    tilt_local_incl. A wrong height gives a plausible
-;                    but wrong number.
+;   [incl_y_lo] / [incl_y_hi]  the extent of whatever the inclinometer is
+;                    mounted on. THESE ARE PLACEHOLDERS AND CANNOT BE
+;                    VERIFIED FROM THE DATA IN THIS REPO -- the tiltmeter is
+;                    absent from Test9_Info.xlsx and Test12_Info.xlsx.
+;                    Recover the mounting from the test report, the
+;                    instrumentation photographs, or the lab before trusting
+;                    tilt_local_incl. A wrong height gives a plausible but
+;                    wrong number, which is worse than no number.
 ; =====================================================================
 
 [bot_sensor_y = 0.66]      ; 0.66 = US-1 (Test 9) ; 0.60 = US-2 (Test 12)

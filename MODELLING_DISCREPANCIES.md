@@ -45,7 +45,7 @@ They are not measuring the same thing.
 0.4552° reported). It is a global measure of how far the top of the wall has moved
 relative to the table.
 
-**The inclinometer is not a chord angle, and its peak values are not rotations at all.**
+**The inclinometer is not a chord angle, and its peak values are not usable.**
 The decisive evidence is in the experimental data alone, no model required:
 
 | Run | Wall movement measured | Inclinometer peak | Top displacement that angle *would* require |
@@ -55,17 +55,46 @@ The decisive evidence is in the experimental data alone, no model required:
 | 10 | 2.008 mm | 24.32° | 931 mm |
 | 21 | 16.825 mm | 23.73° | 905 mm |
 
-At run 3 the wall moved eighteen microns while the device reported 26.8°. A
-gravity-referenced MEMS inclinometer senses the direction of apparent gravity, so under
-horizontal acceleration `a` it reads `atan(a/g)` regardless of any actual rotation. The
-implied `a/g` values (0.18 → 0.57 g) correlate with table displacement at r = 0.67, and
-peak at runs 3, 6, 8 and 11 — the EC40 runs with the largest table stroke and the
-*smallest* wall response. This is an acceleration artefact, not tilt.
+At run 3 the wall moved eighteen microns while the device reported 26.8°, which would
+need 985 mm of top displacement. Whatever that number is, it is not a rigid-body
+rotation of the wall.
 
-`process_tiltmeter.py` already does the right thing by extracting settled quiet-window
-values. But even the settled value is **local rotation of the masonry unit the device is
-bonded to**, not global lean: 2.77° over the 2.06 m chord would be 99 mm of permanent
-top displacement, and the absolute transducer records −1.18 mm.
+### What the raw logger file establishes about the instrument
+
+`EXP_DATA/US1_Tilt_values.csv` records, every 5 s, a tilt triple (value/min/max, in
+millidegrees) on two axes **plus two full 3-axis accelerometer packs** (value/min/max,
+in raw counts). That structure allows the instrument's behaviour to be checked directly:
+
+- **It is gravity-referenced.** Over the first 50 resting windows the acceleration vector
+  has constant magnitude 16750 counts (sd = 3), of which 16745 lies on the z axis. The
+  device is tracking the gravity vector and deriving tilt from its direction. A
+  gravity-referenced device necessarily reads horizontal acceleration as apparent tilt
+  during shaking — that much is unavoidable physics, not an assumption about the sensor.
+- **The accelerometer is a 16-bit ±2 g digital part.** `amaxy1` and `amaxz1` both rail at
+  exactly **32760 counts = 1.96 g** (2¹⁵ − 8), and the measured scale of ~16750 counts/g
+  is close to the nominal 2¹⁴ = 16384 counts/g. This is characteristic of a MEMS
+  accelerometer, though the data does not identify the part or the sensing technology.
+- **Both channels saturate during the strong runs.** The tilt channel rails symmetrically
+  at **±25.75°** (`tmaxy` max +25754 mdeg, `tminy` min −25752 mdeg; 34 of 1016 windows sit
+  within 1% of the rail), and the accelerometers rail at ±1.96 g. In the strong runs the
+  device is simply at its limits.
+
+`tmaxy` correlates with peak lateral acceleration at r = 0.69 across all 1016 windows —
+consistent with an acceleration-driven reading, but **a simple `atan(a/|a|)` law does not
+reproduce the magnitudes** (it predicts 5.7°–62.7° in windows where the device reported
+25.1°–25.8°), largely because both channels are clipping. The mechanism is established;
+a quantitative transfer function is not.
+
+**What the device is attached to is not documented in the data available here.**
+`Test9_Info.xlsx` and `Test12_Info.xlsx` list only the 17 displacement/force/acceleration
+channels — the tiltmeter is not in either. So while the kinematics rule out its reading
+being a global chord rotation (2.77° over 2.06 m would be 99 mm of permanent top
+displacement, against −1.18 mm on the absolute transducer), **what local rotation it does
+represent cannot be determined without the mounting record.** That record is the single
+most valuable missing piece for this comparison.
+
+`process_tiltmeter.py` is already right to extract settled quiet-window values rather
+than peaks.
 
 **Consequence.** The model outputs only chord tilt (`tilt_full_wall` = `atan((Ch19 −
 Ch5)/2.06)`, verified to 1e-6°). Plotted against the inclinometer it under-reads by ~7x;
@@ -236,9 +265,11 @@ Two new files, both additive — nothing existing is renumbered or overwritten.
   wall is still spanning one-way. If it grows, the single-chord tilt definition has
   stopped being adequate for either model or test.
 
-> **You must set `[incl_y_lo]` / `[incl_y_hi]` before trusting `tilt_local_incl`.** They
-> are placeholders (1.95–2.06 m). Read the real mounting height off `Test9_Info.xlsx` or
-> the instrumentation photographs. A wrong height gives a plausible but wrong number,
+> **`tilt_local_incl` cannot be validated until the tiltmeter's mounting is known.**
+> `[incl_y_lo]` / `[incl_y_hi]` are placeholders (1.95–2.06 m) and the mounting is *not*
+> recorded in `Test9_Info.xlsx` / `Test12_Info.xlsx` — the tiltmeter is absent from both.
+> Recover it from the test report, the instrumentation photographs or the lab, and set
+> these before using the channel. A wrong height gives a plausible but wrong number,
 > which is worse than no number.
 
 > `instrument_history_export_new.dat` exports FISH histories **by numeric index**. The
@@ -276,8 +307,10 @@ and is the one worth comparing, once the model actually emits a local rotation.
 2. **Re-plot every tilt comparison** with the right pairing (§1): chord vs chord,
    local rotation vs inclinometer. Some of the current disagreement will disappear;
    what remains is the real signal.
-3. **Set the inclinometer mounting height** and get `tilt_local_incl` out of the v7 run.
-   Without it there is no valid model counterpart to the headline experimental result.
+3. **Recover the tiltmeter's mounting location from the test records** — it is not in
+   the data here — then set `[incl_y_lo]`/`[incl_y_hi]` and get `tilt_local_incl` out of
+   the v7 run. Without it there is no valid model counterpart to the headline
+   experimental result. Also treat every inclinometer reading above ~25° as clipped.
 4. **Then** investigate premature mechanism formation (§3) — starting with the top
    boundary condition, which is cheap to test and could change the mechanism outright.
 5. Leave `ASYM_K` alone until 1–4 are done. It is currently absorbing the error from

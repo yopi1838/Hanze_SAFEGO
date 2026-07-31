@@ -11,11 +11,22 @@ under the same name "tilt".
                   (exp_Test9_tilt.csv), and what the model's tilt_full_wall
                   already is. These two ARE comparable.
 
-  inclinometer    exp_US1_tiltmeter.csv. A gravity-referenced MEMS device
-                  bonded to one masonry unit. Its settled value is that
-                  unit's rotation -- NOT the wall's chord tilt. Its peak
-                  value is not a rotation at all: during shaking the device
-                  reads horizontal acceleration as apparent tilt.
+  inclinometer    exp_US1_tiltmeter.csv. A gravity-referenced device: the
+                  raw logger file carries two 3-axis accelerometer packs
+                  alongside the tilt channels, and at rest their vector has
+                  constant magnitude 16750 counts with 16745 of it on z, so
+                  tilt is derived from the gravity direction. Consequences:
+                    - during shaking it reads horizontal acceleration as
+                      apparent tilt, so its PEAK columns are not rotations;
+                    - the tilt channel rails at +/-25.75 deg and the
+                      accelerometers at +/-1.96 g (32760 counts, 16-bit
+                      +/-2 g), so strong-run peaks are also CLIPPED;
+                    - its settled value cannot be the wall's chord rotation
+                      (2.77 deg over 2.06 m would be 99 mm of permanent top
+                      displacement; the absolute transducer records -1.18 mm),
+                      but WHAT local rotation it represents is unknown -- the
+                      tiltmeter is not listed in Test9_Info.xlsx or
+                      Test12_Info.xlsx and its mounting is undocumented here.
 
 This script produces both, so each can be compared against the right
 experimental series:
@@ -29,9 +40,14 @@ experimental series:
      theta_apparent = atan( a_z/g + tan(theta_true) )
      a_z is differentiated from the model's velocity channel at the sensor
      height. theta_true needs a genuine local-rotation channel from the
-     model (tilt_local_incl in instrument_tilt_v2.dat); without it, only
-     the acceleration artefact is reproduced, which is still enough to show
-     that the measured PEAKS are artefact-dominated.
+     model (tilt_local_incl in instrument_tilt_v2.dat).
+
+     This is a DEMONSTRATION of the mechanism, not a calibrated model of
+     the instrument. Checked against the raw logger file, a simple
+     atan(a/|a|) law does not reproduce the reported magnitudes (predicting
+     5.7-62.7 deg in windows where the device reported 25.1-25.8 deg),
+     largely because both the tilt and acceleration channels clip. Do not
+     present emulated peaks as predictions.
 
 Usage
     python tilt_experiment_match.py [SIM_DIR] [--test {9,12}] [--out CSV]
@@ -120,11 +136,15 @@ def emulate_inclinometer(t, vel_z, theta_true_deg=None, fc=25.0):
     9.9 deg at run 1 coexists with 0.33 mm of wall movement, and why run 3
     reads 26.8 deg while the wall moves 0.018 mm.
 
-    CAVEAT: the peak value depends strongly on the assumed device bandwidth
-    `fc`, which is not documented for this instrument. Treat the emulated
-    peak as an order-of-magnitude demonstration that the reading is
-    acceleration-dominated, not as a calibrated prediction. The settled
-    value is much less sensitive to fc and is the one worth comparing.
+    CAVEATS, both important:
+      - the emulated peak depends strongly on the assumed bandwidth `fc`
+        (31/47/52 deg at 10/25/50 Hz for run 15, against 24.3 deg measured),
+        and the real device's bandwidth is not documented;
+      - the real device CLIPS at +/-25.75 deg on tilt and +/-1.96 g on
+        acceleration, which this function does not reproduce.
+    Treat the output as an order-of-magnitude demonstration that the reading
+    is acceleration-dominated, not as a calibrated prediction. The settled
+    value is much less sensitive and is the one worth comparing.
     """
     if len(t) < 3:
         return np.zeros_like(vel_z)
