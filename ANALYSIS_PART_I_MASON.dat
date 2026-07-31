@@ -150,5 +150,5 @@ block face apply stress-yy [-10.35e3/(0.21*1.292)] range group "Comp_apply"
 
 model solve ratio 5e-8
 
-model save 'Part_I_MASON_v6'
+model save 'Part_I_MASON_v7'
 ;;call "sinus_wave_analysis.dat"

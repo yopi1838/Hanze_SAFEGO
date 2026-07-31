@@ -23,10 +23,16 @@ DEFAULT_SIM = "stratC_results_NODAMP_v6_NEW"
 
 
 def _env_path(var):
+    """Read a path from the environment. Relative values are taken as relative to
+    the repo root, not the current working directory, so
+    SAFEGO_SIM_DIR=stratC_results_NODAMP_v7 works from anywhere."""
     v = os.environ.get(var)
     if not v:
         return None
-    return Path(os.path.expanduser(v)).resolve()
+    p = Path(os.path.expanduser(v))
+    if not p.is_absolute():
+        p = ROOT / p
+    return p.resolve()
 
 
 def exp_data_dir():

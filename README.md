@@ -80,7 +80,14 @@ python-reset-state false
 call 'strategy_C_3dec_nodamp.py'
 ```
 
-Writes to `stratC_results_NODAMP_v6_NEW/`. Resumable via `stratC_checkpoint.json`.
+Writes to `stratC_results_NODAMP_v7/`. Resumable via `stratC_checkpoint.json` — note
+the driver *resumes* from that file, so a folder that already holds a completed run
+will exit immediately with "All 25 runs already completed". A new model version needs
+a new `OUT_DIR`.
+
+Full fresh build: `call 'Geo_Prep.dat'` → `call 'ANALYSIS_PART_I_MASON.dat'` (writes
+`Part_I_MASON_v7.sav`) → the driver. Needs the `mason_v7` plugin on 3DEC's plugin
+path; on Windows that is `jmodelmasonv7_1009.dll`, included in this repo.
 
 Variants: `strategy_C_3dec_damp1p5.py` (1.5% Rayleigh),
 `strategy_C_3dec_ratcheting.py` (3% Rayleigh),
@@ -91,10 +98,10 @@ handling and restore a base save that is no longer produced.**
 ### Post-processing (outside 3DEC)
 
 ```bash
-python postprocess_stratC.py stratC_results_NODAMP_v6_NEW \
-    --label "No viscous damping (hysteretic only), asym. pulse" \
-    --compare stratC_results_DAMP1p5 stratC_results_NODAMP_v6 \
-    --compare-labels "1.5% Rayleigh" "NODAMP v6 (previous)"
+python postprocess_stratC.py stratC_results_NODAMP_v7 \
+    --label "mason_v7, no viscous damping, asym. pulse" \
+    --compare stratC_results_NODAMP_v6_NEW stratC_results_DAMP1p5 \
+    --compare-labels "mason_v6" "1.5% Rayleigh"
 ```
 
 Run this **first** — it creates `postproc/`, which every figure script writes into.

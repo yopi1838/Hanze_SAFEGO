@@ -91,7 +91,7 @@ current and cross-platform.
 
 | Script | `OUT_DIR` | Damping actually applied | Base save restored | Portable paths? | Preflight? |
 |---|---|---|---|---|---|
-| `strategy_C_3dec_nodamp.py` **(current)** | `stratC_results_NODAMP_v6_NEW` | **none** — contact dissipation only | `Part_I_MASON_v6.sav` | yes | yes |
+| `strategy_C_3dec_nodamp.py` **(current)** | `stratC_results_NODAMP_v7` | **none** — contact dissipation only | `Part_I_MASON_v7.sav` | yes | yes |
 | `strategy_C_3dec_damp1p5.py` | `stratC_results_DAMP1p5` | `rayleigh 0.015 10.8696` (full) | `Part_I_MASON.sav` | yes | yes |
 | `strategy_C_3dec_ratcheting.py` | `stratC_results_RATCHETING` | `rayleigh 0.03 10.8696` (full, hard-coded) | `Part_I_MASON.sav` | **no** (Windows-only) | no |
 | `sinus_wave_IDA_strategyC_Maxwell.py` (ancestor) | `stratC_results_MP_NEW` | `rayleigh 0.06 10.8696 mass` | `Part_I_MASON.sav` | **no** | no |
@@ -104,7 +104,7 @@ current and cross-platform.
   Setting it non-zero silently gives you an undamped run. Fix the branch, don't trust
   the printout.
 - **`_damp1p5` and `_ratcheting` restore `Part_I_MASON.sav`**, which the current
-  `ANALYSIS_PART_I_MASON.dat` no longer produces (it now writes `Part_I_MASON_v6`).
+  `ANALYSIS_PART_I_MASON.dat` no longer produces (it now writes `Part_I_MASON_v7`).
   Those two cannot be re-run from scratch without the old save file.
 - **`cmd_path()` is broken in the two older drivers**: `path.replace("/", "\\")`.
   On Linux this corrupts paths and was the documented cause of period-ID failures
@@ -123,7 +123,7 @@ current and cross-platform.
 ```
 Groningen.dec
    └─ call ─> Geo_Prep.dat ─────────────────────> model save 'GEO_WALL'
-                 └─ restore ─> ANALYSIS_PART_I_MASON.dat ─> 'Part_I_MASON_v6'
+                 └─ restore ─> ANALYSIS_PART_I_MASON.dat ─> 'Part_I_MASON_v7'
                                   (gravity, precompression, jmodel mason_v6)
                                         │
         ┌───────────────────────────────┘   inside 3DEC:
@@ -138,7 +138,7 @@ Groningen.dec
         │  model save → export histories → identify T_end from Ch19 ring-down →
         │  checkpoint → feed T_end into the next run
         ▼
-  stratC_results_NODAMP_v6_NEW/
+  stratC_results_NODAMP_v7/          (v6 runs live in stratC_results_NODAMP_v6_NEW)
         │
         ▼  python postprocess_stratC.py            (outside 3DEC)
   postproc/postproc_all_channels.csv, postproc_summary.csv, fig1–fig5.png
@@ -282,9 +282,10 @@ plugin**, not a built-in 3DEC jmodel (see §8 for the binaries and a naming trap
 > `Part_I_MASON_v6.sav` and all `stratC_run_NN.sav` were built before this change, so
 > restoring them gives you v6 regardless of what the `.dat` now says. Only a fresh
 > rebuild from `Geo_Prep.dat` → `ANALYSIS_PART_I_MASON.dat` produces a v7 model, and
-> those results are **not** directly comparable to the existing run set. Note also
-> that a rebuild still writes to `Part_I_MASON_v6.sav` — that filename is now
-> misleading and should be renamed (which means updating the drivers too).
+> those results are **not** directly comparable to the existing run set. The v7
+> rebuild therefore writes to a **separate** base save and results folder:
+> `Part_I_MASON_v7.sav` and `stratC_results_NODAMP_v7/`. Nothing in the v6 run set is
+> overwritten.
 
 Parameters from `fish define properties` in `ANALYSIS_PART_I_MASON.dat`:
 
@@ -513,7 +514,7 @@ here now; those comparisons can be completed. `exp_tilt_from_raw.py --test 12` a
   `PLOT_DEF_FILE`.
 - **US-2 (Test 12)** experimental comparison is flagged "will be added when the data
   is available" in `exp_vs_sim_figs.py`.
-- **`Dynamic_Analysis.dat`** is legacy (restores `Part_I`, not `Part_I_MASON_v6`);
+- **`Dynamic_Analysis.dat`** is legacy (restores `Part_I`, not `Part_I_MASON_v7`);
   superseded by the Strategy-C drivers.
 
 ### A methodological note worth not re-deriving
@@ -541,6 +542,43 @@ in order of preference:
 3. **Postprocess only.** If you just need figures, `postproc/` is already in git —
    the figure scripts can run without the raw CSVs, except `ch19_xval.py` and
    `profile_hysteresis.py`, which read raw channel CSVs directly.
+
+### Running a fresh v7 set from scratch
+
+The v7 model is built and run into its own namespace, so it cannot collide with the
+existing v6 results:
+
+```
+3DEC, cwd = repo root
+  call 'Geo_Prep.dat'                 ->  GEO_WALL.sav        (overwrites; regenerable)
+  call 'ANALYSIS_PART_I_MASON.dat'    ->  Part_I_MASON_v7.sav (new file)
+  python-reset-state false
+  call 'strategy_C_3dec_nodamp.py'    ->  stratC_results_NODAMP_v7/
+```
+
+Requires the `mason_v7` plugin on 3DEC's plugin search path — on Windows that is
+`jmodelmasonv7_1009.dll`, now in this repo (see §8).
+
+**The `stratC_checkpoint.json` gotcha.** The driver resumes from
+`<OUT_DIR>/stratC_checkpoint.json`. Every existing results folder has one recording
+`last_completed_run: 25`, and those files are tracked in git — so pointing a run at
+`stratC_results_NODAMP_v6_NEW` prints "All 25 runs already completed" and exits
+without doing anything. `stratC_results_NODAMP_v7/` starts empty, so the v7 run is
+genuinely fresh. If you ever need to re-run a folder that already has a checkpoint,
+delete that one file first.
+
+Afterwards, point the analysis at the new folder:
+
+```bash
+python postprocess_stratC.py stratC_results_NODAMP_v7 --label "mason_v7, no viscous damping" \
+    --compare stratC_results_NODAMP_v6_NEW --compare-labels "mason_v6"
+# scripts that resolve through safego_paths.py:
+SAFEGO_SIM_DIR=stratC_results_NODAMP_v7 python ch19_xval.py sim
+```
+
+`SAFEGO_SIM_DIR` accepts a plain folder name — it is resolved against the repo root,
+not your current directory. Leaving it unset keeps the v6 set as the default, so
+existing analysis keeps working untouched.
 
 ### Irreplaceable files already in git — do not delete
 
@@ -574,5 +612,8 @@ highest-value part of the repo.
   copy that is version-controlled.
 - **Never trust a jmodel plugin's filename.** Before changing `jmodel assign`, read the
   keyword out of the binary (`strings -a <file> | grep -i '^mason'`) — see §8.
+- **A run is only "fresh" if its `OUT_DIR` has no `stratC_checkpoint.json`.** The
+  driver resumes from that file; pointing a new run at a completed folder makes it
+  print "All 25 runs already completed" and exit. New model version → new `OUT_DIR`.
 - When changing a convention, a channel definition, or a path, **update this file in
   the same commit.**

@@ -56,7 +56,7 @@ FFT_F_MAX  = 50.0
 T_MIN_PHYS = 0.02
 T_MAX_PHYS = 1.0
 
-OUT_DIR = "stratC_results_NODAMP_v6_NEW"
+OUT_DIR = "stratC_results_NODAMP_v7"
 STATE_FILE_NAME = "stratC_checkpoint.json"
 
 # >>> RATCHETING : controls
@@ -524,7 +524,7 @@ def execute_run(run_no, record, scale, T_current):
 # =====================================================================
 SPECTRA_FILES = ["spectrum_HU12.csv", "spectrum_EC40.csv", "spectrum_FR76.csv"]
 DAT_FILES     = ["instrument_history_new.dat", "instrument_history_export_new.dat"]
-BASE_SAVE     = "Part_I_MASON_v6.sav"
+BASE_SAVE     = "Part_I_MASON_v7.sav"
 
 def preflight_checks():
     """Fail loudly, before any solving, if inputs or config are not in order."""
@@ -572,7 +572,7 @@ def run_strategy_C():
     if resume_from == 1:
         print("\n--- Starting fresh from run 1 ---")
         print("    USE_RATCHETING = {}   ASYM_K = {}".format(USE_RATCHETING, ASYM_K))
-        setup_model_for_dynamic("Part_I_MASON_v6.sav")
+        setup_model_for_dynamic("Part_I_MASON_v7.sav")
     else:
         last_done = resume_from - 1
         print("\n--- Resuming: restoring run {:02d}, will execute run {:02d} next ---".format(
