@@ -137,19 +137,61 @@ It is **not a constant scale error.** The ratio grows monotonically with amplitu
 `tilt_channel ≈ (accelerometer angle)^2.04`, i.e. very nearly quadratic. A unit or
 calibration mistake would give a fixed factor.
 
-I cannot tell you which channel is right; that needs the instrument's documentation. But
-the stakes are clear:
+### …but the instrumentation drawing and the model both cut the other way
 
-- If the **accelerometers** are right, the specimens' permanent local rotation is 0.27°
-  (US-1) and 0.074° (US-2). The model's +0.396° cumulative chord tilt at run 21 is then
-  within a factor of ~3 of the experiment, not a factor of 12, and **"the model ratchets
-  and the experiment does not" largely dissolves** — leaving only §3's premature
-  mechanism formation to explain.
-- If the **tilt channel** is right, the specimens accumulated 6° of local rotation at the
-  top while their top-of-wall displacement transducers returned to within 0.2 mm of plumb,
-  and the model under-predicts local rotation by ~15×.
+The instrumentation figure places sensor 18 (tiltmeter) **at the very top of the wall**,
+on a bracket above the slab-2 connection — higher than the top quarter level, around
+2.45–2.58 m. That is a single small housing, so its tilt element and its accelerometers
+undergo the *same* rotation; the disagreement between them cannot be a location effect
+and must be instrumental.
 
-`check_tiltmeter_consistency.py` reproduces this table from the raw logger files.
+It also identifies the right model counterpart, and the model already has one:
+`tilt_beam_seg`, the 2.06 → 2.68 m chord. Comparing cumulative residuals:
+
+| Run | Model `tilt_beam_seg` (top region) | US-1 tilt channel | Model `tilt_full_wall` | US-1 accelerometers |
+|---|---|---|---|---|
+| 15 | −0.98° | +0.57° | +0.26° | +0.056° |
+| 21 | −1.51° | +2.77° | +0.40° | +0.141° |
+| 23 | −2.37° | +2.42° | +0.62° | +0.145° |
+
+The model's top-of-wall rotation is **within a factor of ~2 of the tilt channel, and at
+run 23 essentially equal to it** — while being 10–16× the accelerometer values. (Signs
+differ; the mapping between the model's +z and the device's +y is not established, and
+`ratcheting_pulse.py` already flags that same unresolved sign convention.)
+
+So the evidence is genuinely split:
+
+- **For the accelerometers:** at rest `atan2(a_y, a_z)` *is* the tilt, two independent
+  chips agree to r = 0.995, and the displacement transducers show almost no permanent
+  chord rotation.
+- **For the tilt channel:** the model's independent prediction of top-of-wall rotation
+  lands on it, not on the accelerometers. And there is a plausible failure mode on the
+  other side — if the device periodically auto-zeroes its horizontal acceleration
+  channels, the accelerometer-derived angle would under-read a slowly accumulated
+  permanent rotation, and increasingly so as it grows. That would produce exactly the
+  growing ratio observed.
+
+I cannot adjudicate this from the data alone; it needs the instrument's documentation or
+a bench check. What I can say is that **it is a real inconsistency inside one device, it
+is reproducible across two independent specimens, and it changes the headline conclusion
+either way**:
+
+- If the accelerometers are right, permanent local rotation is 0.27° / 0.074° and the
+  model over-predicts top-of-wall rotation by ~10×.
+- If the tilt channel is right, the model reproduces top-of-wall rotation to within a
+  factor of ~2 — and **the ratcheting discrepancy is largely an artefact of having
+  compared the model's full-wall chord against a top-of-wall local rotation**, which is
+  precisely the §1 category error.
+
+`check_tiltmeter_consistency.py` reproduces the comparison from the raw logger files.
+
+### A note on the figure itself
+
+The dimension chain reads 800 / 660 / 600 top-down, putting the bottom quarter level at
+**600 mm**. That is the **US-2 (Test 12)** geometry — `Test9_Info.xlsx` puts US-1's bottom
+sensor at 660 mm. If this figure is being used to describe US-1, the bottom quarter level
+is wrong by 60 mm. It does confirm the ±540 mm offsets of sensors 3 and 4 and the
+sensor-to-channel mapping used throughout.
 
 `process_tiltmeter.py` is already right to extract settled quiet-window values rather
 than peaks.
