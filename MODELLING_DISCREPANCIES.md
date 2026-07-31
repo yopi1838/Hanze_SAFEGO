@@ -28,6 +28,50 @@ particular may remove most of the ratcheting discrepancy on its own.
 
 ---
 
+## 0. Corrections from the source paper
+
+Moshfeghi, Smyrou, Arslan & Bal, *Structures* **66** (2024) 106815 (the SafeGo shake-table
+paper) resolves several things this document originally inferred from data alone. Where
+they conflict, the paper wins.
+
+| Earlier claim here | Corrected |
+|---|---|
+| US-1 "collapsed" at run 24 at ~29.7 mm | **Neither specimen collapsed.** The sequence stopped at the shake table's capacity (PTA 0.78 g). Cracks were "visible… with almost no change in length and width" at the end. 29.7 mm is simply the largest displacement the table could impose. |
+| The tiltmeter's mounting is undocumented | **Table 3: X = 0, Z = 2.43 m**, "Separately Retrieved from an Online Portal" — i.e. a vendor-processed value, not a raw channel. |
+| The tilt-channel / accelerometer dispute is unresolved | **Resolved in favour of the tilt channel** — see below. |
+| The wall is two-leaf with a collar joint | **Solid one-brick wall**, alternating stretcher and header courses; the paper states "the two layers in the solid walls are fully engaged due to the bricklaying technique". No collar joint exists. |
+
+**Why the tilt channel wins.** The deformed shape (Fig. 15) has US-1 reaching ~28–30 mm at
+2.06 m with the top beam held at zero at 2.85 m, so the chord rotation over that upper
+segment is `atan(28/790)` ≈ **2.0°** at peak — the same order as the reported residual
+tilt, and an order of magnitude above the 0.27° the accelerometers give. The authors
+independently read the 2.2–6° residual tilt as consistent with those deformed shapes, and
+the model's own `tilt_beam_seg` gives −1.51° at run 21 and −2.37° at run 23. Three
+independent lines land on the tilt channel. Since the tilt value comes from the vendor's
+online portal rather than the raw device, there is no reason to expect the accelerometer
+words in the same export to be DC-preserving — auto-zeroing or high-pass filtering there
+would produce exactly the under-reading measured.
+
+The §1 analysis below therefore stands in its **category** conclusion — chord tilt and the
+tiltmeter measure different things and the model was compared against the wrong one — but
+the accelerometer cross-check should now be read as *evidence about the export pipeline*,
+not as a challenge to the published curve. The peak columns remain unusable regardless:
+they are acceleration-dominated and clipped at ±25.75°, and the paper confirms the
+instrument was only ever read pre- and post-run.
+
+**Two further findings, both directly useful:**
+
+- **Measured period elongation: +17.5% (US-1, 0.091→0.107 s) and +13.9% (US-2,
+  0.087→0.099 s)** — confirming the values derived here independently, and making the
+  model's +337% unambiguously the central problem.
+- **The asymmetry has a physical cause the model already contains.** The paper attributes
+  it to "the timber floors applying a moment towards one side of the wall section", and
+  measures **8–12 mm of cumulative joist slip**. The bow-tie specimen, which eliminated
+  that slip, reversed the sign of its residual tilt. `ASYM_K` imposes an asymmetric input
+  pulse instead — a different mechanism, and possibly a double count.
+
+---
+
 ## 1. The tilt comparison is not like-for-like
 
 There are two experimental "tilt" series and they disagree with each other by roughly

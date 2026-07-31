@@ -1,47 +1,95 @@
-# Strategy: matching top-of-wall rotation and OOP displacement at collapse
+# Strategy: matching top-of-wall rotation and OOP response
 
 Companion to `MODELLING_DISCREPANCIES.md`. That document diagnoses; this one proposes
 what to change, in what order, and how you would know it worked.
 
 ---
 
-## The one observation that should drive everything
+## Correction: neither specimen collapsed
 
-| | US-1 (Test 9) | Model (NODAMP v6) |
-|---|---|---|
-| Max period elongation before failure | **1.22×** | **4.37×** (reached at run 18) |
-| Period elongation at the run before failure | 1.20× (run 23) | 3.92× |
-| Peak OOP displacement at failure | **~29.7 mm** (run 24) | survived **46.7 mm** at run 23 without failing |
-| Character | fails **abruptly, while still stiff** | softens **massively, then survives 11 more runs** |
+Moshfeghi, Smyrou, Arslan & Bal, *Structures* **66** (2024) 106815 settles several things
+I had inferred wrongly from the data alone. Most importantly:
 
-The specimen collapsed at roughly **14% of the wall thickness** (29.7 mm on a 210 mm
-section) having barely softened. That is far below any rocking-instability limit — a
-two-leaf wall failing by rocking would need mid-height displacement on the order of the
-thickness itself, and would announce itself with large period elongation first.
+**US-1 and US-2 were never taken to collapse.** The test sequence stopped because the
+shake table reached its capacity — PTA 0.78 g — not because the walls failed. The paper
+is explicit that the tests "could not be continued with higher accelerations", and that
+the cracks visible at the start "were also visible, with almost no change in length and
+width, at the end of the test sequence". Run 25 was simply not applied to US-1.
 
-**The model is not failing by the mechanism the specimen failed by.** It builds a
-ductile, full-height rocking mechanism that tolerates very large displacement; the
-specimen suffered something abrupt and comparatively brittle. No amount of tuning
-`ASYM_K`, damping, or the pulse shape will reconcile those — they are different failure
-modes.
+So **"OOP displacement at collapse" is not an experimental observable in this campaign.**
+There is nothing to match. My earlier framing — that US-1 "collapsed at ~29.7 mm" — was
+wrong; that is just the largest displacement the table could impose (Table 4: US-1
++25.0 / −30.0 mm, US-2 +10.0 / −8.0 mm).
 
-So the strategy has to start with a question that is not a modelling question:
+That does not make the model look better. It makes the target different:
 
-> **What actually failed in US-1 at run 24?**
+| | US-1 | US-2 | Model (NODAMP v6) |
+|---|---|---|---|
+| Period elongation over the whole sequence | **+17.5%** (0.091→0.107 s) | **+13.9%** (0.087→0.099 s) | **+337%** (4.37×) |
+| Max OOP displacement at top quarter | 30 mm | 10 mm | 46.7 mm by run 23, 194 mm at run 25 |
+| End state | damaged, standing, cracks barely grown | damaged, standing | full-height rocking mechanism from run 14 |
 
-Recover this from the test report, video, or post-test photographs before committing
-compute. The candidates below all predict ~30 mm collapse displacement with little prior
-softening, and they need different model changes:
+The measured period elongations confirm the numbers I derived independently, and the
+model's 4.37× is the central problem. **The model is producing a collapse mechanism where
+the experiment produced only moderate, distributed damage.** The goal is therefore not to
+match a collapse displacement but to *stop the model collapsing at all* within this input
+range — while still reproducing the ~30 mm peak displacement and the residual tilt.
 
-| Candidate mechanism | Why it fits | What it would need in the model |
-|---|---|---|
-| **Collar-joint delamination, outer leaf peels** | Explains low capacity (a 105 mm leaf is half as stable) *and* why the tiltmeter on the wall face reads a large rotation while the chord stays plumb | Weaken the collar joint — see §2 |
-| **Joist / slab connection loss** | Removes intermediate restraint abruptly; wall had been relying on it, so no prior softening | Joist contacts currently have near-zero strength *and cannot detach* — needs a real pull-out path |
-| **Local crushing at a support or joist pocket** | Brittle, localised, little global softening | `comp-residual` and `G_c` govern; check whether crushing is even being triggered |
-| **In-plane / OOP interaction** | The tiltmeter records both axes; in-plane residual was −0.36° | Model is driven OOP only |
+### What the paper says about the wall section — and why the collar-joint idea is dead
 
-Everything below assumes you will identify this first. §1 and §3 are worth doing
-regardless, because they are correctness fixes.
+The specimens are **solid one-brick walls**, not two-leaf cavity walls. They are built
+"using the one-brick technique, where the wall is as wide as the long edge of a brick"
+(207 mm brick, 210 mm wall), alternating stretcher and header courses, "The head course
+is laid with the short side of the brick exposed to greatly increase the structural
+integrity". The paper states plainly that **"the two layers in the solid walls are fully
+engaged due to the bricklaying technique"**.
+
+So there is no weak collar joint, and my §2.2 hypothesis — that the model's collar joint
+was too strong and was suppressing leaf separation — is **withdrawn**. The cavity-wall
+specimens from the same campaign are reported separately precisely because they behave
+differently.
+
+This also answers the question directly: giving the mid-thickness plane `mason` joint
+properties is defensible. If anything the model errs the *other* way — `Geo_Prep.dat` cuts
+a **continuous** plane at z = 0.105, whereas in the real wall every header course crosses
+that plane with solid brick. The model therefore under-represents the through-thickness
+bond rather than over-representing it. Two options, in order of preference:
+
+1. Leave the plane cut but give it **higher** tension/cohesion than a bed joint, to stand
+   in for the header interlock; or
+2. Do not cut it at all, and treat the wall as monolithic through its thickness, which is
+   what "fully engaged" implies.
+
+Neither is likely to fix the premature mechanism — the model's problem is at the bed
+joints and the boundary conditions, not through the thickness.
+
+### The ratcheting mechanism the paper identifies, which the model may be double-counting
+
+Two statements matter a great deal for `ratcheting_pulse.py`:
+
+- *"The hysteretic curves are asymmetric, an effect caused by the timber floors applying
+  a moment towards one side of the wall section."*
+- *"In the unstrengthened specimens, the joists slipped towards the positive direction
+  (i.e. far from the wall surface) **8 to 12 mm cumulatively** at the end of all the
+  tests… The bow ties, however, fully couple joists to the wall limiting the slipping of
+  the embedded timber joists to almost zero."*
+
+And decisively: the specimen with bow ties (ST-2-HB), which eliminated joist slip,
+developed residual tilt **in the opposite direction** to every other wall.
+
+So the experimental asymmetry and ratcheting are attributed to **eccentric joist loading
+and cumulative joist slip** — a mechanism your model already contains geometrically.
+`ASYM_K` imposes an asymmetric *input pulse* derived from the ground-motion record, which
+is a different mechanism entirely. There is a real risk it is double-counting an
+asymmetry the model should be generating on its own.
+
+**Test this before anything else in §2**: run the model with `USE_RATCHETING = False`
+(symmetric pulse) and see how much residual tilt the joists alone produce. If the model
+already ratchets without an asymmetric pulse, `ASYM_K` should be dropped, not fitted.
+
+You also now have a direct, quantitative validation target that needs no new
+instrumentation: **cumulative joist slip, 8–12 mm**. Channels 8–11 already record joist
+displacements. Compare.
 
 ---
 
@@ -60,13 +108,32 @@ This is bookkeeping and it costs nothing:
 Just re-pairing these moves the model from 7× under the tiltmeter to within ~2× of it.
 That is the single highest-value change in this document per unit of effort.
 
-### 1.2 Bound the answer while the instrument dispute is open
+### 1.2 The instrument dispute is resolved — in favour of the tilt channel
 
-The tilt channel and its own accelerometers disagree by 20–30× and I could not
-adjudicate. Until a bench check settles it, **report the experimental rotation as a
-range**, not a point: 0.27°–6.04° for US-1, 0.074°–2.37° for US-2. A model result inside
-that band is not yet falsified; one outside it is. This is honest and it keeps the
-comparison usable in the meantime.
+Three independent lines now agree that the tiltmeter's tilt channel is the trustworthy
+one and its accelerometer channels are not usable for static tilt:
+
+- **The deformed shape.** Fig. 15 shows US-1 reaching ~28–30 mm at 2.06 m with the top
+  beam held at zero at 2.85 m. The chord rotation over that upper segment is
+  `atan(28/790)` ≈ **2.0°** at peak — the same order as the reported residual tilt, and an
+  order of magnitude above the 0.27° the accelerometers give.
+- **The authors' own reading.** They interpret the 2.2–6° residual tilt as physically
+  consistent with the deformed shapes, and note that the bow-tie specimen reversed its
+  sign — a coherent physical story, not an instrument artefact.
+- **Your model.** `tilt_beam_seg` (2.06→2.68 m) gives −1.51° at run 21 and −2.37° at
+  run 23, right in that range.
+
+Table 3 also explains the anomaly: the tiltmeter reading is *"Separately Retrieved from an
+Online Portal"*. The tilt value is the vendor's processed output, not a raw channel, so
+there is no reason to expect the raw accelerometer words in the same file to be
+DC-preserving — auto-zeroing or high-pass filtering in that pipeline would produce exactly
+the under-reading observed.
+
+So: **compare against the tilt channel, use `tilt_beam_seg`, and disregard the
+accelerometer-derived angles.** The earlier "0.27°–6.04° bound" is withdrawn.
+
+The peak columns remain unusable — they are acceleration-dominated and clipped at
+±25.75°, and the paper confirms the instrument was only ever read pre- and post-run.
 
 ### 1.3 Resolve the sign convention
 
@@ -76,21 +143,16 @@ maps to 3DEC's +z. Fix both together: pick one physical direction (say, "away fr
 shake table's positive drive direction"), and assert it in one place. Right now a sign
 error and a real counter-rotation are indistinguishable.
 
-### 1.4 Add per-leaf channels
+### 1.4 Set the sensor height correctly
 
-If the leaf-separation hypothesis is live, the model must be able to see it. Add
-displacement and rotation histories on **each leaf separately** at the top of the wall —
-the collar joint is at z = 0.105, so gridpoints near z = 0.05 (inner leaf) and z = 0.19
-(outer leaf) at the tiltmeter height. Their difference is the delamination signal, and
-the outer-leaf rotation is what a face-mounted tiltmeter would actually see.
-
-This is the test that would unify the two anomalies: if the outer leaf rotates several
-degrees while the wall chord returns to plumb, both the tiltmeter reading *and* the low
-collapse displacement are explained by one mechanism.
+Table 3 gives the tiltmeter at **X = 0, Z = 2.43 m**. Set `[incl_y_lo]`/`[incl_y_hi]` to
+bracket 2.43 m — and note that `tilt_beam_seg` (2.06→2.68) already straddles it, which is
+why it is a good proxy. The per-leaf channels I proposed earlier are dropped: the wall is
+solid and fully engaged through its thickness, so there are no leaves to separate.
 
 ---
 
-## 2. Matching OOP displacement at collapse
+## 2. Matching the OOP response and the damage mechanism
 
 ### 2.1 You cannot match a quantity the algorithm never computes
 
@@ -130,41 +192,36 @@ composite, 105 mm per leaf). The specimen failed at 0.14 t. That framing makes t
 leaf-separation hypothesis immediately testable — if separation is real, the specimen
 failed at 0.28 of a *single-leaf* thickness, still low but far more plausible.
 
-### 2.2 The collar joint is the prime suspect
+### 2.2 Suspects, revised
 
-`ANALYSIS_PART_I_MASON.dat` line 46 assigns `mason_v7` to **every** contact, and the
-collar joint cut at z = 0.105 in `Geo_Prep.dat` is a contact like any other. It therefore
-carries `tension = 0.2 MPa`, `cohesion = 0.3 MPa` — the same as a bed joint.
+With the collar joint withdrawn, the candidates for "why does the model form a full-height
+mechanism at run 14 when the specimen never did" are:
 
-Collar joints in two-leaf masonry are the classic weak plane; they are often barely
-filled. Giving one bed-joint strength makes the two leaves act compositely, which turns
-the wall into a monolithic 210 mm rocker with a large, ductile displacement capacity.
-That is precisely the behaviour the model shows and the specimen did not.
+1. **Bed-joint fracture energy is too brittle.** `G_I = 0.025·(2·f_t)^0.7 × 10³` ≈
+   **5.4 J/m²** at `f_t` = 0.2 MPa. The paper's measured bond-wrench strength is
+   **0.28 MPa** (CoV 22%) and the wallette flexural strength 0.41–0.45 MPa, so the
+   strength is about right but the *ductility* is the free parameter. Too brittle a
+   mode-I response forces damage to localise into one mechanism instead of distributing.
+   This is my primary suspect now.
+2. **The top boundary condition.** The paper: the top beam "is restrained horizontally,
+   but it is free to rotate", and the horizontal displacement at the top of the wall "is
+   always zero". Your driver applies the table velocity to **both** group `'S'` and group
+   `'T_B'`, which imposes the table motion on the top beam rather than holding it fixed
+   in space. Those are different boundary conditions. Check this — it is cheap and it
+   directly controls whether a full-height single-curvature mechanism can form.
+3. **Hinge locations.** The paper reports cracks at the base *and at the floor levels*,
+   with a hinge at the lower slab level in the unstrengthened specimens (Fig. 15, Fig. 17).
+   Check where the model's joints actually open at run 14 — if they are not at the floor
+   levels, the mechanism is wrong regardless of the displacement magnitude.
+4. **Joist support model.** The joist contacts currently have essentially zero strength
+   (`stiffness-shear 1, tension 1, cohesion 1`), i.e. frictionless sliding. The experiment
+   shows 8–12 mm of *cumulative* slip, which implies real friction with slip-dependent
+   accumulation, not free sliding.
 
-**Proposed parametric study** — cheap, well-posed, and it tests a real hypothesis:
-
-| Case | Collar-joint tension | Collar-joint cohesion | Rationale |
-|---|---|---|---|
-| C0 | 0.2 MPa (as now) | 0.3 MPa | baseline, composite action |
-| C1 | 0.05 MPa | 0.075 MPa | weak but bonded |
-| C2 | 0.01 MPa | 0.02 MPa | nominally unbonded |
-| C3 | 0 | 0 | frictional contact only |
-
-Implement by assigning a separate contact group at the collar plane before the global
-property assignment, e.g. group the contacts in a thin `pos-z` band around 0.105 and give
-them their own `block contact property ... range group 'collar'`. Run each to collapse
-using the §2.1 criterion and plot collapse displacement against collar strength. If the
-curve passes through ~30 mm at a physically plausible collar strength, you have your
-mechanism — and a defensible calibration.
-
-Watch the **period elongation** in these runs as much as the displacement. The target is a
-case that collapses at ~30 mm *while staying near T/T₀ ≈ 1.2*. A case that collapses at
-30 mm only after softening 4× has matched the number for the wrong reason.
-
-### 2.3 Do not tune damping to fix collapse
+### 2.3 Do not tune damping to fix the mechanism
 
 Rayleigh 1.5% brings the peak-response ratio from 2.05× to 0.64× in the rocking regime,
-so it will superficially improve the collapse displacement too. Resist it. The
+so it will superficially improve the displacement match too. Resist it. The
 two-regime behaviour in §4 of the discrepancies document shows the dissipation is
 mis-assigned, and matching a collapse displacement by adding velocity-proportional
 damping to a rocking mechanism buys a number at the cost of the physics.
@@ -271,11 +328,12 @@ Acceptance targets, in the order they matter:
 
 | # | Target | Current status |
 |---|---|---|
-| 1 | Run at which a mechanism forms: model ≈ experiment (i.e. **not before collapse**) | model run 14, experiment never — **fails badly** |
-| 2 | Peak period elongation ≤ ~1.3× | model 4.37× — **fails badly** |
-| 3 | OOP displacement at collapse within ±30% | model survives 1.6× the collapse displacement — fails |
-| 4 | Top-of-wall rotation within the instrument bound | plausibly already passes once re-paired (§1.1) |
+| 1 | No full-height mechanism forms within the tested input range | model forms one at run 14; neither specimen did — **fails badly** |
+| 2 | Period elongation ≈ +17.5% (US-1) / +13.9% (US-2) | model +337% — **fails badly** |
+| 3 | Max OOP displacement within ±30% of 30 mm (US-1) / 10 mm (US-2) | model reaches 46.7 mm by run 23 — fails |
+| 4 | Top-of-wall rotation vs the tilt channel (2.77° at run 21, 6.04° at run 24) | `tilt_beam_seg` gives 1.51° / 2.37° — within ~2×, passes once re-paired |
 | 5 | Peak response ratio 0.8–1.25× across all runs | 2.10×/2.05×/6.40× undamped — fails |
+| 6 | Cumulative joist slip 8–12 mm | never checked; channels 8–11 already record it |
 
 Targets 1 and 2 are the real ones. If the model stops forming a premature full-height
 mechanism, 3 and 5 will move a long way on their own — and `ASYM_K`, which is currently
@@ -285,13 +343,17 @@ absorbing the error from all of the above, can finally be fitted to something me
 
 ## Suggested sequence
 
-1. **Identify the experimental failure mode** from the test records. Nothing else is
-   well-posed until this is known.
-2. **Re-pair the tilt comparisons** (§1.1) — free, immediate, and removes a category error.
-3. **Add the collapse criterion and the `period_id_ok` flag** (§2.1, §3.1) — small code
-   changes, and they make every subsequent run interpretable.
-4. **Run the collar-joint parametric study** (§2.2) against collapse displacement *and*
-   period elongation.
-5. **Switch the control variable at mechanism onset** (§3.2) if the sequence still depends
-   on post-mechanism period identification.
-6. **Revisit dissipation** (§4), then re-fit `ASYM_K` last, and validate blind on US-2 (§5).
+1. **Check whether the model ratchets with `USE_RATCHETING = False`.** The paper
+   attributes the asymmetry to eccentric joist loading and joist slip, which your model
+   already has. If it ratchets without an imposed asymmetric pulse, `ASYM_K` is
+   double-counting and should be dropped rather than fitted.
+2. **Re-pair the tilt comparisons** (§1.1) and set the sensor height to 2.43 m (§1.4).
+   Free, immediate, removes a category error.
+3. **Check the top boundary condition** (§2.2 item 2). The paper holds the top beam
+   horizontally fixed but free to rotate; the driver drives it with the table motion.
+   Cheap to test and it directly controls whether a full-height mechanism can form.
+4. **Compare cumulative joist slip against the measured 8–12 mm** using channels 8–11.
+   A quantitative target that needs no new instrumentation.
+5. **Add the mechanism-onset flag and the `period_id_ok` flag** (§2.1, §3.1), then
+   attack the premature mechanism via bed-joint fracture energy (§2.2 item 1).
+6. **Revisit dissipation** (§4), and validate blind on US-2 (§5).
