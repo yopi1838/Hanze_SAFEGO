@@ -132,10 +132,26 @@ order of magnitude. On US-1 the accelerometers read ~4× the chord, which is wha
 expect for a genuinely *local* rotation at the top of a damaged wall. The tilt channel is
 90–125× the chord on US-1 and 60× on US-2.
 
-It is **not a constant scale error.** The ratio grows monotonically with amplitude —
-2.8× at run 2, 7× at run 13, 19.6× at run 21, 22× at run 24 — following
-`tilt_channel ≈ (accelerometer angle)^2.04`, i.e. very nearly quadratic. A unit or
-calibration mistake would give a fixed factor.
+It is **not a constant scale error.** In the well-resolved region the ratio grows
+monotonically with amplitude — US-1: 5.1× at run 10, 10.3× at run 15, 19.6× at run 21,
+22.1× at run 24. A unit or calibration mistake would give a fixed factor. A log-log fit
+gives `tilt_channel ≈ (accelerometer angle)^k` with **k = 2.04 for US-1 and 1.61 for
+US-2** — superlinear on both specimens, but not a single clean power law.
+
+Three caveats on this, from a closer pass over both logger files:
+
+- **Accelerometer resolution is ~0.0034°** (1 count at 16750 counts/g). For roughly the
+  first ten runs the accel-derived angle is only a handful of counts, so the run-by-run
+  ratios there are quantisation noise and should be ignored. The growth quoted above is
+  taken from the resolved region only, and is real.
+- **US-2's final value is less trustworthy than US-1's.** Its log ends just 45 s after
+  the last run, and the wall was still moving 25 s before the end (swing 2504 counts at
+  t = 5480 s, `tvaly` swinging between −1669 and +3696 mdeg). Only the last four windows
+  are settled, at ~2210 mdeg. US-1 by contrast has five quiet minutes and a tilt sd of
+  1 mdeg. Treat US-2's 32× as indicative, US-1's 22× as solid.
+- **The in-plane channel moved too**: `tvalx` net +1.120° on US-2 and −0.359° on US-1.
+  Worth explaining under any hypothesis — a purely OOP wall rotation should leave it
+  near zero.
 
 ### …but the instrumentation drawing and the model both cut the other way
 
