@@ -18,19 +18,20 @@ Set USE_RATCHETING = True to restore the asymmetric (record-derived) pulse from
 ratcheting_pulse.py. The marked  # >>> RATCHETING  blocks are the only places
 the two paths differ.
 
-Relationship to strategy_C_3dec_GI.py: both now run the symmetric pulse, so the
-pair is close to a controlled test of the fracture-energy hypothesis. They still
-differ in three ways beyond G_I/G_II and OUT_DIR:
-  - GI calls instrument_tilt_v2.dat and exports through
-    instrument_history_export_v2.dat, so ONLY THE GI RUN records the
-    experiment-matched tilt and the local rotation at the tiltmeter height
-    (Z = 2.43 m). This driver still exports the original 16 channels only.
-  - GI has the working damping branch; here the `if DAMP_RATIO > 0:` body is
-    still `pass`, so setting DAMP_RATIO non-zero in THIS file silently produces
-    an undamped run while preflight reports damping as active.
-  - GI exposes COH_RESIDUAL.
-Ask before relying on a tilt comparison between the two -- the channels are not
-the same on both sides yet.
+Relationship to strategy_C_3dec_GI.py: both run the symmetric pulse, both record
+the same channels, and both have the working damping branch. The pair is now a
+CONTROLLED test of the fracture-energy hypothesis, differing only in:
+    G_I / G_II   13.2 J/m2 here (as computed in ANALYSIS_PART_I_MASON.dat)
+                 vs 20 J/m2 in GI
+    OUT_DIR      stratC_results_NODAMP_v7 vs stratC_results_GI_NORATCH
+GI additionally exposes COH_RESIDUAL, but it is 0.0 there, which matches the
+base model, so it changes nothing.
+
+Instrumentation: this driver calls instrument_tilt_v2.dat after
+instrument_history_new.dat at both registration points, and exports through
+instrument_history_export_v2.dat. FISH histories export BY NUMBER, so if you
+add or remove any `fish history` line in either .dat the indices shift and the
+export file must be updated to match.
 
 ratcheting_pulse.py must sit in the same directory as this script (or on
 sys.path). Run inside 3DEC:
@@ -111,7 +112,8 @@ PROTOCOL = [
 ]
 
 # Reference only (the driver reads CSVs by filename, never by index).
-# Indices match instrument_history_new.dat / instrument_history_export_new.dat.
+# Indices match instrument_history_new.dat + instrument_tilt_v2.dat, and are
+# exported by instrument_history_export_v2.dat.
 FISH_HISTORIES = {
     1: "Record_Disp", 2: "Bot_Quarter_Disp", 3: "Mid_Disp",
     4: "Top_Quarter_A_Disp", 5: "Top_Quarter_B_Disp", 6: "cstav",
@@ -440,7 +442,7 @@ def export_all_histories(run_no, record, scale, out_dir):
     os.makedirs(full_folder, exist_ok=True)
     it.command("[exportdir='{}']".format(cmd_path(full_folder)))
     it.command("[runlabel='{}']".format(run_label))
-    it.command("call 'instrument_history_export_new.dat'")
+    it.command("call 'instrument_history_export_v2.dat'")
 
 # =====================================================================
 # 9.  MODEL SETUP (fresh or resumed)
@@ -453,6 +455,7 @@ def setup_model_for_dynamic(save_file):
     block contact group 'Joist_S2_contact' range pos-y 2.0 2.5 pos-z 0.9 1.5
     """)
     it.command("call 'instrument_history_new.dat'")
+    it.command("call 'instrument_tilt_v2.dat'")
     it.command("""
     block free velocity-z range group 'S'
     """)
@@ -462,11 +465,14 @@ def setup_model_for_dynamic(save_file):
     block mech damp local 0.0
     block mech damp global 0.0
     """)
+    # The command used to be commented out here with `pass` as the body, so
+    # setting DAMP_RATIO non-zero silently produced an undamped run while
+    # preflight_checks() reported damping as active.
     if DAMP_RATIO > 0:
-        # NO-DAMP variant: Rayleigh damping intentionally disabled (commented out).
-        # it.command("block mechanical damping rayleigh {ratio} {freq} {dtype}".format(
-        #     ratio=DAMP_RATIO, freq=1.0/T1_init, dtype=DAMP_TYPE).strip())
-        pass
+        cmd = "block mechanical damping rayleigh {ratio} {freq} {dtype}".format(
+            ratio=DAMP_RATIO, freq=1.0 / T1_init, dtype=DAMP_TYPE).strip()
+        it.command(cmd)
+        print("  Rayleigh damping applied: {}".format(cmd))
     else:
         print("  (no Rayleigh damping applied; contact dissipation only)")
     print("  Model setup complete (BCs + damping + joist contact groups applied).")
@@ -523,6 +529,7 @@ def execute_run(run_no, record, scale, T_current):
     it.command("table '{}' delete".format(tbl_name))
     it.command("history delete")
     it.command("call 'instrument_history_new.dat'")
+    it.command("call 'instrument_tilt_v2.dat'")
 
     run_summary = {
         "run": run_no, "record": record, "scale": scale,
@@ -548,7 +555,8 @@ def execute_run(run_no, record, scale, T_current):
 # 11.  MAIN DRIVER
 # =====================================================================
 SPECTRA_FILES = ["spectrum_HU12.csv", "spectrum_EC40.csv", "spectrum_FR76.csv"]
-DAT_FILES     = ["instrument_history_new.dat", "instrument_history_export_new.dat"]
+DAT_FILES     = ["instrument_history_new.dat", "instrument_tilt_v2.dat",
+                 "instrument_history_export_v2.dat"]
 BASE_SAVE     = "Part_I_MASON_v7.sav"
 
 def preflight_checks():

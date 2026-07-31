@@ -130,7 +130,8 @@ PROTOCOL = [
 ]
 
 # Reference only (the driver reads CSVs by filename, never by index).
-# Indices match instrument_history_new.dat / instrument_history_export_new.dat.
+# Indices match instrument_history_new.dat + instrument_tilt_v2.dat, and are
+# exported by instrument_history_export_v2.dat.
 FISH_HISTORIES = {
     1: "Record_Disp", 2: "Bot_Quarter_Disp", 3: "Mid_Disp",
     4: "Top_Quarter_A_Disp", 5: "Top_Quarter_B_Disp", 6: "cstav",
