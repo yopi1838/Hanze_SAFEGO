@@ -368,7 +368,7 @@ so 3DEC must be launched with this folder as cwd.
 | `Test9Run{N}_processed_globalzero.xlsx` | `profile_hysteresis.py` | processed exp data (`U_avg`, `base_shear_kN`) |
 | `Test{9,12}_Info.xlsx` | channel maps | `EXP_DATA` |
 | `US1_Tilt_values.csv`, `US2_…` | `process_tiltmeter.py` | 5 s tiltmeter logger; `;`-separated, decimal comma, millidegrees |
-| `exp_Test9_metrics.csv` | `exp_vs_sim_figs.py`, `make_presentation_figs.py` | **no producer script exists.** Needs columns `run, peak_rel_mm, resid_rel_mm, raw_base4_mm, peak_tilt_deg, resid_tilt_deg`. If a copy survives in `postproc/` it is tracked; otherwise it must be rebuilt. |
+| `exp_Test9_metrics.csv` | `exp_vs_sim_figs.py`, `make_presentation_figs.py` | **No producer script exists** — but a copy survives at `stratC_results_NODAMP_v6_NEW/postproc/exp_Test9_metrics.csv` and **is tracked in git**. Do not delete it; it cannot be regenerated from this repo. Columns: `run, peak_rel_mm, resid_rel_mm, raw_base4_mm, peak_tilt_deg, resid_tilt_deg`. |
 | `ratcheting_pulse_spec.md` | referenced in `ratcheting_pulse.py` docstring | never written |
 | `compare_tilt_robust.py` | referenced in `process_tiltmeter.py` | superseded; used the **wrong tilt axis** (`tvalx`; correct is `tvaly`) |
 | `Part_I.sav`, `V_L.tab`, `V_.tab` | `Dynamic_Analysis.dat` | legacy, not needed |
@@ -430,6 +430,15 @@ raw channel CSVs. Options, in order of preference:
 3. **Postprocess only.** If you just need figures, `postproc/` is already in git —
    the figure scripts can run without the raw CSVs, except `ch19_xval.py` and
    `profile_hysteresis.py`, which read raw channel CSVs directly.
+
+### Irreplaceable files already in git — do not delete
+
+`stratC_results_NODAMP_v6_NEW/postproc/` holds the derived experimental CSVs that
+**no script in this repo can regenerate** without the raw `EXP_DATA` xlsx files:
+`exp_Test9_metrics.csv`, `exp_Test9_tilt.csv`, `exp_Test12_tilt.csv`,
+`exp_Test9_period_psd.csv`, `exp_Test12_period_psd.csv`, `exp_US1_tiltmeter.csv`,
+`exp_US2_tiltmeter.csv`. Together with the `strategy_C_summary.csv` files and
+`vel_run_NN.txt` tables, these are the highest-value part of the repo.
 
 ---
 
