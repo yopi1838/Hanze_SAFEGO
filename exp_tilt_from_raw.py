@@ -23,8 +23,10 @@ Metrics per run (matching postprocess_stratC.py):
   peak     = max |tilt(t) - tilt(t at run start)|   (re-zeroed per run)
   residual = mean of last 5% of tilt(t)             (cumulative, rel. Run 1)
 
-Output: stratC_results_NODAMP_v6_NEW/postproc/exp_Test9_tilt.csv
-Usage:  python exp_tilt_from_raw.py [EXP_DIR] [--runs LO HI]
+Output: <SIM>/postproc/exp_Test9_tilt.csv  (SIM defaults to
+        stratC_results_NODAMP_v6_NEW; see safego_paths.py)
+Usage:  python exp_tilt_from_raw.py [EXP_DIR] [--runs LO HI] [--test {9,12}]
+        EXP_DIR defaults to ./EXP_DATA (override: SAFEGO_EXP_DATA).
 """
 import argparse, csv, json, math, os
 import numpy as np
@@ -35,9 +37,11 @@ try:
 except ImportError:
     raise SystemExit("pip install openpyxl")
 
-HERE = Path(__file__).resolve().parent
-DEF_EXP = r"C:\Users\yopi1\Documents\Itasca\3dec910\Hanze\Wall_Floor_Interaction\EXP_DATA"
-STATE = Path(os.environ.get("EXP_TILT_STATE", "/tmp/exp_tilt_state.json"))
+import safego_paths as sp
+
+HERE = sp.ROOT
+DEF_EXP = str(sp.exp_data_dir())
+STATE = Path(os.environ.get("EXP_TILT_STATE", str(sp.state_file("exp_tilt"))))
 
 # Sensor elevations differ between specimens: the bot-quarter sensor is at
 # Z=0.66 m in Test 9 (US-1) but Z=0.60 m in Test 12 (US-2, Test12_Info).
@@ -82,8 +86,7 @@ def main():
     args = ap.parse_args()
     cfg = TEST_CFG[args.test]
     SEGS = segs_for(cfg["bot_z"])
-    out_csv = (HERE / "stratC_results_NODAMP_v6_NEW" / "postproc"
-               / cfg["out"])
+    out_csv = sp.postproc_dir() / cfg["out"]
     exp_dir = Path(args.exp_dir)
     lo, hi = args.runs
 

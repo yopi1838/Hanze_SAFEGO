@@ -10,9 +10,10 @@ sim channels are referenced to Channel_5). Envelope = min/max of
 (x - x_run_start) over all runs. Normalized panels: first and last run
 peak-abs profile, normalized by the 2.06 m sensor value.
 
-Usage (staged; state in /tmp/prof_state.json):
-  python profile_hysteresis.py exp9  EXP_DIR LO HI
-  python profile_hysteresis.py exp12 EXP_DIR LO HI
+Usage (staged; state cached in ./.cache/prof_state.json):
+  python profile_hysteresis.py exp9  [EXP_DIR] LO HI
+  python profile_hysteresis.py exp12 [EXP_DIR] LO HI
+  (EXP_DIR defaults to ./EXP_DATA; override with SAFEGO_EXP_DATA)
   python profile_hysteresis.py sim
   python profile_hysteresis.py simratch
   python profile_hysteresis.py fig
@@ -21,12 +22,14 @@ import sys, json, glob
 import numpy as np
 from pathlib import Path
 
-HERE = Path(__file__).resolve().parent
-SIM = HERE / "stratC_results_NODAMP_v6_NEW"
-SIM_RATCH = HERE / "stratC_results_RATCHETING"
-PP = SIM / "postproc"
-PROC9 = Path("/sessions/epic-stoic-galileo/mnt/Hanze--EXP_DATA/processed_globalzero")
-STATE = Path("/tmp/prof_state.json")
+import safego_paths as sp
+
+HERE = sp.ROOT
+SIM = sp.sim_dir()
+SIM_RATCH = sp.sim_dir("stratC_results_RATCHETING")
+PP = sp.postproc_dir()
+PROC9 = sp.processed_dir()
+STATE = sp.state_file("prof")
 
 # heights: (label, z) per case; exp top pin at 2.85 m added in the figure
 H_EXP9 = [("bot", 0.66), ("mid", 1.26), ("top", 2.06)]
@@ -186,7 +189,7 @@ def overlay_fig(plt, st):
     plt.close(fig); print("-> figP8b_profiles_overlay.png")
 
 
-RAW9 = Path("/sessions/epic-stoic-galileo/mnt/EXP_DATA")
+RAW9 = sp.exp_data_dir()
 
 
 def ch3_hysteresis_fig(plt):

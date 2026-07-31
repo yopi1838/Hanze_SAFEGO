@@ -1,13 +1,18 @@
 # -*- coding: ascii -*-
 """Staged wrapper around exp_period_evolution.analyze_run with JSON cache.
-Usage: python exp_period_wrapper.py TEST_NO EXP_DIR LO HI
+Usage: python exp_period_wrapper.py TEST_NO [EXP_DIR] LO HI
        python exp_period_wrapper.py finalize   (applies monotonicity, CSVs)
+
+EXP_DIR defaults to ./EXP_DATA (override: SAFEGO_EXP_DATA).
+State is cached in ./.cache/period_state.json.
 """
 import sys, json, csv
 from pathlib import Path
-STATE = Path("/tmp/period_state.json")
-HERE = Path(__file__).resolve().parent
-OUT = HERE / "stratC_results_NODAMP_v6_NEW" / "postproc"
+import safego_paths as sp
+
+STATE = sp.state_file("period")
+HERE = sp.ROOT
+OUT = sp.postproc_dir()
 
 def load():
     return json.loads(STATE.read_text()) if STATE.exists() else {"9": {}, "12": {}}
@@ -42,7 +47,11 @@ if sys.argv[1] == "finalize":
     sys.exit()
 
 import exp_period_evolution as pe
-test_no, exp_dir, lo, hi = sys.argv[1], sys.argv[2], int(sys.argv[3]), int(sys.argv[4])
+# EXP_DIR is optional: "TEST_NO LO HI" or "TEST_NO EXP_DIR LO HI"
+if len(sys.argv) >= 5:
+    test_no, exp_dir, lo, hi = sys.argv[1], sys.argv[2], int(sys.argv[3]), int(sys.argv[4])
+else:
+    test_no, exp_dir, lo, hi = sys.argv[1], str(sp.exp_data_dir()), int(sys.argv[2]), int(sys.argv[3])
 st = load()
 for rn in range(lo, hi + 1):
     if str(rn) in st[test_no]:

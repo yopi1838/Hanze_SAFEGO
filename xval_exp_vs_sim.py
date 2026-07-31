@@ -2,16 +2,26 @@ import numpy as np, csv, math, glob
 import matplotlib; matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from pathlib import Path
+# NB: imported as `paths`, not `sp` -- `sp` is used below as a local for sim peak.
+import safego_paths as paths
 
-SIM = Path("/sessions/zen-brave-heisenberg/mnt/Hanze_SAFEGO/stratC_results_NODAMP_v6_NEW")
-OUT = SIM / "postproc"
+SIM = paths.sim_dir()
+OUT = paths.postproc_dir()
 REC = {1:"HU12",2:"HU12",3:"EC40",4:"HU12",5:"HU12",6:"EC40",7:"HU12",8:"EC40",
        9:"HU12",10:"HU12",11:"EC40",12:"HU12",13:"HU12",14:"HU12",15:"HU12",
        16:"HU12",17:"HU12",18:"HU12",19:"HU12",20:"HU12",21:"HU12",
        22:"FR76",23:"FR76",24:"FR76",25:"FR76"}
 
 # --- experiment ---
-exp = {int(r["run"]): r for r in csv.DictReader(open("/tmp/exp_metrics.csv"))}
+# Canonical location is <SIM>/postproc/exp_Test9_metrics.csv (tracked in git).
+# The old /tmp/exp_metrics.csv is kept as a fallback for legacy runs.
+_metrics = OUT / "exp_Test9_metrics.csv"
+if not _metrics.is_file():
+    _metrics = Path("/tmp/exp_metrics.csv")
+if not _metrics.is_file():
+    raise SystemExit("exp metrics CSV not found: expected {}".format(
+        OUT / "exp_Test9_metrics.csv"))
+exp = {int(r["run"]): r for r in csv.DictReader(open(str(_metrics)))}
 xr = sorted(exp)
 exp_peak  = np.array([float(exp[r]["peak_rel_mm"]) for r in xr])
 exp_resid = np.array([float(exp[r]["resid_rel_mm"]) for r in xr])
@@ -62,7 +72,10 @@ ax2.plot(xr, exp_resid, "c^--", ms=4, lw=0.8, alpha=0.7, label="Experiment: per-
 ax2.plot(sr, [sim_resid[r] for r in sr], "rs-", ms=5, lw=0.9, label="Sim: cumulative residual")
 ax2.set_ylim(-5, 30)
 ax2.set_xlabel("Run"); ax2.set_ylabel("Residual rel. top OOP disp (mm)")
-ax2.set_title("Residual (permanent) displacement -- sim Run 25 at %.0f mm (off scale)" % sim_resid[25])
+_last = max(sim_resid) if sim_resid else None
+ax2.set_title("Residual (permanent) displacement"
+              + ("" if _last is None else
+                 " -- sim Run %d at %.0f mm (off scale)" % (_last, sim_resid[_last])))
 ax2.grid(True, alpha=0.15); ax2.legend(fontsize=8)
 fig.suptitle("Cross-validation vs Test9: sim over-ratchets -- onset Run 14 vs exp Run ~23, "
              "peaks ~2-3x exp from Run 15", fontsize=12, fontweight="bold")

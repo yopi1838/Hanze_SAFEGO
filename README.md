@@ -37,7 +37,17 @@ search path, otherwise `block contact jmodel assign mason_v6` fails.
 Launch 3DEC with this folder as the working directory — every driver resolves its
 inputs relative to cwd.
 
-### 4. What is *not* in this repo
+### 4. Check paths resolve
+
+```bash
+python safego_paths.py
+```
+
+Prints every location the post-processing scripts will use and whether it exists.
+Everything defaults to the repo root, so a fresh clone needs no editing. Override with
+`SAFEGO_EXP_DATA`, `SAFEGO_SIM_DIR` or `SAFEGO_CACHE` if you keep data elsewhere.
+
+### 5. What is *not* in this repo
 
 ~10 GB of simulation state was excluded to keep the repo usable:
 
@@ -46,13 +56,15 @@ inputs relative to cwd.
 - `stratC_results_*/RunNN_*/` — raw per-channel history CSVs (~2.5 MB × ~23 per run)
 - `stratC_results_*/plots/` — 3DEC bitmap dumps (regenerate with `export_plots.py`)
 - `P.prj`, `P.temp`, `P.backup` — machine-specific 3DEC project files
-- The experimental `EXP_DATA` xlsx files (never lived in this folder)
+- `.cache/` — staged-script intermediate JSON
 
 **What *is* here:** all code, the 3DEC model definition, `Groningen.dec`, the target
 spectra, the velocity tables actually used (`vel_run_NN.txt`), every
-`strategy_C_summary.csv` / `strategy_C_log.csv` / `stratC_checkpoint.json`, and the
-derived `postproc/` CSVs and figures. That is enough to reproduce or re-analyse
-without re-running, for most purposes.
+`strategy_C_summary.csv` / `strategy_C_log.csv` / `stratC_checkpoint.json`, the
+derived `postproc/` CSVs and figures, and — new — the complete `EXP_DATA/`
+experimental dataset for **both** specimens (187 MB): US-1 runs 1–24, US-2 runs 1–25,
+both channel maps, both tiltmeter logs, and the processed US-1 exports. That is
+enough to reproduce or re-analyse without re-running, for most purposes.
 
 To restore the heavy data, either copy those folders across manually or re-run:
 `Geo_Prep.dat` → `ANALYSIS_PART_I_MASON.dat` → `strategy_C_3dec_nodamp.py`.
@@ -97,21 +109,26 @@ python ch19_xval.py sim  &&  python ch19_xval.py finish
 python profile_hysteresis.py sim  &&  python profile_hysteresis.py fig
 ```
 
-Several of these are **staged**, caching intermediate state in `/tmp/*.json`. That
-cache does not survive a reboot or a machine move — re-run the earlier stages before
+Several of these are **staged**, caching intermediate state in `./.cache/*.json`
+(git-ignored). On a fresh clone that cache is empty — re-run the earlier stages before
 `finish` / `finalize` / `fig`.
 
 ### Experimental data processing
 
+All of these now default to `./EXP_DATA`, so the directory argument is optional:
+
 ```bash
-python exp_tilt_from_raw.py  EXP_DIR --runs 1 24 --test 9
-python exp_period_wrapper.py 9  EXP_DIR 1 25
-python exp_period_wrapper.py 12 EXP_DIR 1 25
+python exp_tilt_from_raw.py  --runs 1 24 --test 9
+python exp_tilt_from_raw.py  --runs 1 25 --test 12
+python exp_period_wrapper.py 9  1 24
+python exp_period_wrapper.py 12 1 25
 python exp_period_wrapper.py finalize
-python process_tiltmeter.py  path/to/US1_Tilt_values.csv
+python process_tiltmeter.py  EXP_DATA/US1_Tilt_values.csv
+python process_tiltmeter.py  EXP_DATA/US2_Tilt_values.csv
 ```
 
 `exp_tilt_from_raw.py` must process **Run 1 first** (it sets the baselines).
+Note US-1 has runs 1–24 and US-2 has runs 1–25.
 
 ### 3DEC plot export (inside 3DEC)
 

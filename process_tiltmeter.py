@@ -10,17 +10,20 @@ Metrics per run:
   residual_deg : settled (median) tilt in the quiet window after the run,
                  relative to the global initial baseline (cumulative lean)
 
-Output: stratC_results_NODAMP_v6_NEW/postproc/exp_US1_tiltmeter.csv
+Output: <SIM>/postproc/exp_US1_tiltmeter.csv (name follows the input stem)
 Usage:  python process_tiltmeter.py [TILT_CSV]
+        TILT_CSV defaults to ./EXP_DATA/US1_Tilt_values.csv; pass
+        ./EXP_DATA/US2_Tilt_values.csv for the US-2 specimen.
 """
 import sys, csv
 import numpy as np
 import pandas as pd
 from pathlib import Path
 
-HERE = Path(__file__).resolve().parent
-DEF_CSV = (r"C:\Users\yopi1\Documents\000.DISSERTATION_FILES\00.Postprocess"
-           r"\dynamic\Hanze\EXP_DATA\US1_Tilt_values.csv")
+import safego_paths as sp
+
+HERE = sp.ROOT
+DEF_CSV = str(sp.tilt_csv("US1"))   # US2: pass EXP_DATA/US2_Tilt_values.csv
 # output name is derived from the input filename (US1_... -> exp_US1_tiltmeter.csv)
 
 # NOTE: the OOP axis of sensor 18 is the tiltmeter's Y axis. The settled
@@ -38,8 +41,7 @@ PRE_BASELINE_N = 3
 def main():
     csv_path = sys.argv[1] if len(sys.argv) > 1 else DEF_CSV
     stem = Path(csv_path).stem.split("_")[0]  # "US1" / "US2"
-    out_csv = (HERE / "stratC_results_NODAMP_v6_NEW" / "postproc"
-               / ("exp_{}_tiltmeter.csv".format(stem)))
+    out_csv = sp.postproc_dir() / ("exp_{}_tiltmeter.csv".format(stem))
     df = pd.read_csv(csv_path, sep=';', decimal=',')
     df['datetime'] = pd.to_datetime(df['time'], format='%d-%m-%Y_%H:%M:%S')
     sec = (df['datetime'] - df['datetime'].iloc[0]).dt.total_seconds().values

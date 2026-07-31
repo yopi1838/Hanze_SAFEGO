@@ -44,9 +44,17 @@ Hanze_SAFEGO/
 ├── ratcheting_pulse.py           asymmetric-pulse module (pure numpy, imported by drivers)
 ├── spectrum_{HU12,EC40,FR76}.csv target displacement spectra
 ├── libjmodelmason*.so            compiled `mason_v6` joint constitutive model (Linux)
+├── safego_paths.py               central path resolver — see §7
 ├── postprocess_stratC.py         main postprocessor — run OUTSIDE 3DEC
 ├── exp_*.py, process_tiltmeter.py experimental-data processing
 ├── *_figs.py, fig_*.py, ch19_xval.py, profile_hysteresis.py   figure scripts
+├── EXP_DATA/                     experimental data, TRACKED in git (187 MB)
+│   ├── Test9Run{1..24}.xlsx      US-1 raw shake-table exports
+│   ├── Test12Run{1..25}.xlsx     US-2 raw shake-table exports
+│   ├── Test9_Info.xlsx, Test12_Info.xlsx        channel maps
+│   ├── US1_Tilt_values.csv, US2_Tilt_values.csv tiltmeter logger exports
+│   └── processed_globalzero/     24 Test9Run*_processed_globalzero.xlsx
+├── .cache/                       staged-script JSON state (NOT in git)
 └── stratC_results_<VARIANT>/
     ├── strategy_C_summary.csv    ← per-run summary (TRACKED in git)
     ├── strategy_C_log.csv        ← run log (TRACKED)
@@ -59,8 +67,19 @@ Hanze_SAFEGO/
 ```
 
 **What is deliberately not in git** (~10 GB): all `*.sav`, every `RunNN_*/` raw-CSV
-folder, `plots/`, and the 3DEC project files `P.prj` / `P.temp` / `P.backup`.
-See §9 for how to get them onto a new machine.
+folder, `plots/`, the 3DEC project files `P.prj` / `P.temp` / `P.backup`, and
+`.cache/`. See §10 for how to get them onto a new machine.
+
+**`EXP_DATA/` is tracked.** It is the consolidated, canonical copy of both
+specimens' experimental data. Two stale sources on the original machine were merged
+into it and are now superseded:
+
+- `…\Itasca\3dec910\Hanze\Wall_Floor_Interaction\EXP_DATA` — a partial duplicate with
+  nothing unique and an **older `Test9Run24.xlsx`** (19 Jan vs 21 Mar). Do not use it.
+- `…\000.DISSERTATION_FILES\…\Hanze\EXP_DATA` (US-1) and `…\Hanze\EXP_DATA_2` (US-2)
+  — the canonical originals. `EXP_DATA/` is a verified byte-identical merge of both.
+
+Note the run counts differ by specimen: **US-1 has runs 1–24, US-2 has runs 1–25.**
 
 ---
 
@@ -134,7 +153,7 @@ Experimental branch (feeds the same postproc/ folder):
   Test{9,12}Run{N}.xlsx ─exp_tilt_from_raw.py──> exp_Test{9,12}_tilt.csv
   Test{9,12}Run{N}.xlsx ─exp_period_wrapper.py─> exp_Test{9,12}_period_psd.csv
   US1_Tilt_values.csv   ─process_tiltmeter.py──> exp_US{1,2}_tiltmeter.csv
-  (exp_Test9_metrics.csv — NO PRODUCER SCRIPT EXISTS, see §8)
+  (exp_Test9_metrics.csv — NO PRODUCER SCRIPT EXISTS, see §9)
 
 Side branch: export_plots.py (inside 3DEC) reads stratC_run_*.sav → plots/*.png
 ```
@@ -147,10 +166,10 @@ Side branch: export_plots.py (inside 3DEC) reads stratC_run_*.sav → plots/*.pn
   and `finalize` must precede `fig_sd_period.py`.
 - `exp_tilt_from_raw.py` must process **Run 1 first** — it raises
   `SystemExit("Run 1 must be processed first (baselines).")` otherwise.
-- Several scripts are **staged with a JSON cache in `/tmp`** (`/tmp/ch19_state.json`,
-  `/tmp/prof_state.json`, `/tmp/period_state.json`, `/tmp/exp_tilt_state.json`).
-  These do not survive a reboot or a new machine — the intermediate stages must be
-  re-run before the `finish` / `finalize` / `fig` stage.
+- Several scripts are **staged**, caching intermediate state as JSON between stages.
+  That cache now lives in `./.cache/` (was `/tmp`, which does not exist on Windows).
+  It is git-ignored, so on a fresh clone the intermediate stages must be re-run
+  before the `finish` / `finalize` / `fig` stage.
 
 ---
 
@@ -254,7 +273,7 @@ y ∈ [0.29318, 0.46909] and [2.05227, 2.22818]. `bLength = 1.292`.
 
 **Joint model `mason_v6`** (`block contact jmodel assign mason_v6`) — a **user-written
 plugin**, not a built-in 3DEC jmodel; the compiled binary is `libjmodelmason*.so`
-(see §7). Parameters from `fish define properties` in `ANALYSIS_PART_I_MASON.dat`:
+(see §8). Parameters from `fish define properties` in `ANALYSIS_PART_I_MASON.dat`:
 
 ```
 kn = ks   = 2.5e9 Pa/m
@@ -317,7 +336,46 @@ the channel-12 table-accelerometer positive direction, and must be confirmed to 
 
 ---
 
-## 7. Environment and dependencies
+## 7. Path handling — `safego_paths.py`
+
+Every post-processing script resolves its paths through `safego_paths.py`, so a fresh
+clone works with no editing. Nothing is hard-coded to a machine any more.
+
+```python
+import safego_paths as sp
+sp.ROOT              # repo root (folder containing safego_paths.py)
+sp.exp_data_dir()    # <repo>/EXP_DATA
+sp.processed_dir()   # <repo>/EXP_DATA/processed_globalzero
+sp.tilt_csv("US1")   # <repo>/EXP_DATA/US1_Tilt_values.csv
+sp.sim_dir()         # <repo>/stratC_results_NODAMP_v6_NEW
+sp.sim_dir("stratC_results_DAMP1p5")
+sp.postproc_dir()    # <sim>/postproc, created on demand
+sp.state_file("ch19")# <repo>/.cache/ch19_state.json
+```
+
+Three environment variables override the defaults if you keep data elsewhere:
+
+| Variable | Overrides | Default |
+|---|---|---|
+| `SAFEGO_EXP_DATA` | experimental data folder | `<repo>/EXP_DATA` |
+| `SAFEGO_SIM_DIR` | primary simulation folder | `<repo>/stratC_results_NODAMP_v6_NEW` |
+| `SAFEGO_CACHE` | staged-script JSON cache | `<repo>/.cache` |
+
+`python safego_paths.py` prints every resolved location and whether it exists — the
+fastest first check on a new machine.
+
+Scripts wired to it: `exp_tilt_from_raw.py`, `process_tiltmeter.py`,
+`profile_hysteresis.py`, `ch19_xval.py`, `exp_period_wrapper.py`,
+`exp_period_evolution.py`, `xval_exp_vs_sim.py`. **`safego_paths.py` is for
+post-processing only** — do not import it from the `strategy_C_3dec_*.py` drivers,
+which run inside 3DEC and resolve everything relative to 3DEC's cwd.
+
+CLI arguments still win over the defaults everywhere they existed before, and
+`EXP_DIR` is now optional in `exp_tilt_from_raw.py` and `exp_period_wrapper.py`.
+
+---
+
+## 8. Environment and dependencies
 
 - **3DEC 9.1** (`3dec910` appears in a hard-coded path). Syntax throughout is
   3DEC 7+/9 style.
@@ -337,40 +395,56 @@ the channel-12 table-accelerometer positive direction, and must be confirmed to 
 
 ---
 
-## 8. Known issues, WIP, and things that will break on a new machine
+## 9. Known issues, WIP, and things that will break on a new machine
 
-### Hard-coded absolute paths — fix these first
+### Hard-coded absolute paths — FIXED
 
-| File | Path | Overridable? |
+All machine-specific paths have been removed. Every post-processing script now
+resolves through `safego_paths.py` (§7). For the record, these were the offenders:
+
+| File | Old path | Now |
 |---|---|---|
-| `exp_tilt_from_raw.py` (~L39) | `C:\Users\yopi1\Documents\Itasca\3dec910\Hanze\Wall_Floor_Interaction\EXP_DATA` | yes, CLI arg |
-| `process_tiltmeter.py` (~L22) | `C:\Users\yopi1\Documents\000.DISSERTATION_FILES\00.Postprocess\dynamic\Hanze\EXP_DATA\US1_Tilt_values.csv` | yes, `sys.argv[1]` |
-| `xval_exp_vs_sim.py` (~L6) | `/sessions/zen-brave-heisenberg/mnt/Hanze_SAFEGO/stratC_results_NODAMP_v6_NEW` | **no** |
-| `xval_exp_vs_sim.py` (~L14) | `/tmp/exp_metrics.csv` | **no** |
-| `profile_hysteresis.py` (~L28) | `/sessions/epic-stoic-galileo/mnt/Hanze--EXP_DATA/processed_globalzero` | **no** |
-| `profile_hysteresis.py` (~L189) | `/sessions/epic-stoic-galileo/mnt/EXP_DATA` | **no** |
-| `exp_period_evolution.py` (L20–21) | `dynamic\Hanze\EXP_DATA_2`, `dynamic\results\Hanze` (Windows-relative, currently unused) | n/a |
+| `exp_tilt_from_raw.py` | `C:\Users\yopi1\...\Wall_Floor_Interaction\EXP_DATA` | `sp.exp_data_dir()` |
+| `process_tiltmeter.py` | `C:\Users\yopi1\...\Hanze\EXP_DATA\US1_Tilt_values.csv` | `sp.tilt_csv("US1")` |
+| `xval_exp_vs_sim.py` | `/sessions/zen-brave-heisenberg/mnt/...` (dead sandbox) | `sp.sim_dir()` |
+| `xval_exp_vs_sim.py` | `/tmp/exp_metrics.csv` | `postproc/exp_Test9_metrics.csv`, `/tmp` fallback |
+| `profile_hysteresis.py` | `/sessions/epic-stoic-galileo/mnt/...` (dead sandbox, ×2) | `sp.processed_dir()`, `sp.exp_data_dir()` |
+| `exp_period_evolution.py` | `dynamic\Hanze\EXP_DATA_2` (Windows-relative) | `sp.exp_data_dir()` |
+| all staged scripts | `/tmp/*_state.json` (no `/tmp` on Windows) | `sp.state_file(...)` → `./.cache/` |
 
-The `/sessions/...` paths belong to two dead cloud sandbox sessions and will never
-resolve anywhere. Many other scripts hard-wire the **relative** folder name
-`stratC_results_NODAMP_v6_NEW` next to the script (`exp_vs_sim_figs.py`,
-`ch19_xval.py`, `exp_period_wrapper.py`, `exp_tilt_from_raw.py`,
-`process_tiltmeter.py`, `fig_sd_period.py`, `profile_hysteresis.py`).
+`python safego_paths.py` prints every resolved location and whether it exists — run it
+first on a new machine.
 
-The 3DEC drivers resolve **everything** relative to 3DEC's current working directory,
-so 3DEC must be launched with this folder as cwd.
+Still hard-wired, but only to **relative** folder names inside the repo, so they work
+anywhere: `exp_vs_sim_figs.py`, `fig_sd_period.py` and `make_presentation_figs.py`
+assume `stratC_results_NODAMP_v6_NEW` sits next to the script. Worth routing through
+`safego_paths.py` too, but not urgent.
 
-### Data not in this repo
+The 3DEC drivers deliberately resolve **everything** relative to 3DEC's current
+working directory, so 3DEC must be launched with this folder as cwd. Do not import
+`safego_paths.py` from them.
 
-| File | Needed by | Where it comes from |
+### Data availability
+
+**In the repo** (`EXP_DATA/`, tracked): `Test9Run{1..24}.xlsx`,
+`Test12Run{1..25}.xlsx`, `Test9_Info.xlsx`, `Test12_Info.xlsx`,
+`US1_Tilt_values.csv`, `US2_Tilt_values.csv`, and
+`processed_globalzero/Test9Run{N}_processed_globalzero.xlsx`.
+
+**US-2 is now available.** Several scripts and comments still say the Test 12 data is
+pending — e.g. `exp_vs_sim_figs.py` ("US-2 will be added when the data is available")
+and the empty US-2 series in `profile_hysteresis.py` / `ch19_xval.py`. The data is
+here now; those comparisons can be completed. `exp_tilt_from_raw.py --test 12` and
+`exp_period_wrapper.py 12` have been verified to run against it.
+
+**Still missing:**
+
+| File | Needed by | Note |
 |---|---|---|
-| `Test{9,12}Run{1..25}.xlsx` | `exp_tilt_from_raw.py`, `ch19_xval.py`, `profile_hysteresis.py`, `exp_period_evolution.py` | raw shake-table exports (`EXP_DATA` folder) |
-| `Test9Run{N}_processed_globalzero.xlsx` | `profile_hysteresis.py` | processed exp data (`U_avg`, `base_shear_kN`) |
-| `Test{9,12}_Info.xlsx` | channel maps | `EXP_DATA` |
-| `US1_Tilt_values.csv`, `US2_…` | `process_tiltmeter.py` | 5 s tiltmeter logger; `;`-separated, decimal comma, millidegrees |
-| `exp_Test9_metrics.csv` | `exp_vs_sim_figs.py`, `make_presentation_figs.py` | **No producer script exists** — but a copy survives at `stratC_results_NODAMP_v6_NEW/postproc/exp_Test9_metrics.csv` and **is tracked in git**. Do not delete it; it cannot be regenerated from this repo. Columns: `run, peak_rel_mm, resid_rel_mm, raw_base4_mm, peak_tilt_deg, resid_tilt_deg`. |
-| `ratcheting_pulse_spec.md` | referenced in `ratcheting_pulse.py` docstring | never written |
-| `compare_tilt_robust.py` | referenced in `process_tiltmeter.py` | superseded; used the **wrong tilt axis** (`tvalx`; correct is `tvaly`) |
+| `exp_Test9_metrics.csv` | `exp_vs_sim_figs.py`, `make_presentation_figs.py` | **No producer script exists**, but a copy survives at `stratC_results_NODAMP_v6_NEW/postproc/exp_Test9_metrics.csv` and **is tracked**. Do not delete it — it cannot be regenerated from this repo. Columns: `run, peak_rel_mm, resid_rel_mm, raw_base4_mm, peak_tilt_deg, resid_tilt_deg`. There is no US-2 equivalent. |
+| `Test9Run{N}_processed_globalzero.xlsx` for US-2 | `profile_hysteresis.py figch3` | only the US-1 set exists; no `Test12Run*_processed_globalzero.xlsx` |
+| `ratcheting_pulse_spec.md` | `ratcheting_pulse.py` docstring | never written |
+| `compare_tilt_robust.py` | `process_tiltmeter.py` comment | superseded; used the **wrong tilt axis** (`tvalx`; correct is `tvaly`) |
 | `Part_I.sav`, `V_L.tab`, `V_.tab` | `Dynamic_Analysis.dat` | legacy, not needed |
 
 ### Open / half-finished
@@ -417,11 +491,12 @@ Separately, `process_tiltmeter.py` records that the out-of-plane tiltmeter axis 
 
 ---
 
-## 9. Getting the heavy data onto a new machine
+## 10. Getting the heavy data onto a new machine
 
-Git carries the code, the model definition, the run summaries and the derived
-`postproc/` outputs — about 30 MB. It does **not** carry ~10 GB of `.sav` states and
-raw channel CSVs. Options, in order of preference:
+Git carries the code, the model definition, the full `EXP_DATA/` experimental
+dataset, the run summaries and the derived `postproc/` outputs — about 200 MB. It
+does **not** carry ~10 GB of `.sav` states and raw simulation channel CSVs. Options,
+in order of preference:
 
 1. **Regenerate.** `Geo_Prep.dat` → `ANALYSIS_PART_I_MASON.dat` → the driver.
    Everything is deterministic; this is the honest route, but it is a full re-run.
@@ -435,14 +510,16 @@ raw channel CSVs. Options, in order of preference:
 
 `stratC_results_NODAMP_v6_NEW/postproc/` holds the derived experimental CSVs that
 **no script in this repo can regenerate** without the raw `EXP_DATA` xlsx files:
-`exp_Test9_metrics.csv`, `exp_Test9_tilt.csv`, `exp_Test12_tilt.csv`,
-`exp_Test9_period_psd.csv`, `exp_Test12_period_psd.csv`, `exp_US1_tiltmeter.csv`,
-`exp_US2_tiltmeter.csv`. Together with the `strategy_C_summary.csv` files and
-`vel_run_NN.txt` tables, these are the highest-value part of the repo.
+`exp_Test9_metrics.csv` in particular has no producer script at all. The others
+(`exp_Test9_tilt.csv`, `exp_Test12_tilt.csv`, `exp_Test*_period_psd.csv`,
+`exp_US{1,2}_tiltmeter.csv`) *can* now be rebuilt from `EXP_DATA/`, but only by
+re-running the staged experimental scripts. Together with `EXP_DATA/`, the
+`strategy_C_summary.csv` files and the `vel_run_NN.txt` tables, these are the
+highest-value part of the repo.
 
 ---
 
-## 10. Working agreements for Claude in this repo
+## 11. Working agreements for Claude in this repo
 
 - **Preserve the 3DEC-embedded Python style** in `strategy_C_3dec_*.py`,
   `sinus_wave_IDA_*.py`, `export_plots.py`: `.format()` not f-strings, no walrus, no
@@ -454,5 +531,10 @@ raw channel CSVs. Options, in order of preference:
   do not `git add -f` around it.
 - **Line endings are frozen** by `.gitattributes` (`* -text`). The `.dat` files are
   CRLF and 3DEC is fine with that — do not normalise them.
+- **Never reintroduce an absolute path.** Post-processing scripts resolve locations
+  through `safego_paths.py` (§7); add a helper there rather than hard-coding. Do not
+  import it from the 3DEC drivers.
+- **Do not edit anything under `EXP_DATA/`.** It is raw measured data and the only
+  copy that is version-controlled.
 - When changing a convention, a channel definition, or a path, **update this file in
   the same commit.**

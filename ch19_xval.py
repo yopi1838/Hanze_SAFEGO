@@ -20,18 +20,21 @@ Usage:
   python ch19_xval.py exp9  EXP_DIR LO HI     # US-1 runs LO..HI (staged)
   python ch19_xval.py exp12 EXP_DIR LO HI     # US-2 runs LO..HI (staged)
   python ch19_xval.py finish                  # write CSV + figure
-State is cached in /tmp/ch19_state.json so stages can run separately.
+EXP_DIR is normally ./EXP_DATA (override: SAFEGO_EXP_DATA).
+State is cached in ./.cache/ch19_state.json so stages can run separately.
 """
 import sys, json, csv, glob
 import numpy as np
 from pathlib import Path
 
-HERE = Path(__file__).resolve().parent
-SIM = HERE / "stratC_results_NODAMP_v6_NEW"
-SIM_DAMP = HERE / "stratC_results_DAMP1p5"
-SIM_RATCH = HERE / "stratC_results_RATCHETING"
-PP = SIM / "postproc"
-STATE = Path("/tmp/ch19_state.json")
+import safego_paths as sp
+
+HERE = sp.ROOT
+SIM = sp.sim_dir()
+SIM_DAMP = sp.sim_dir("stratC_results_DAMP1p5")
+SIM_RATCH = sp.sim_dir("stratC_results_RATCHETING")
+PP = sp.postproc_dir()
+STATE = sp.state_file("ch19")
 
 def load_state():
     if STATE.exists():

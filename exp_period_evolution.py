@@ -17,8 +17,12 @@ import csv, sys
 
 HAS_PLOTLIB = False
 
-EXP_DIR = Path(r"dynamic\Hanze\EXP_DATA_2")
-OUT_DIR = Path(r"dynamic\results\Hanze")
+import safego_paths as sp
+
+# Module-level defaults. analyze_run() takes exp_dir as an argument, so these
+# only matter if you import this module and call it without one.
+EXP_DIR = sp.exp_data_dir()
+OUT_DIR = sp.postproc_dir()
 
 COL_TIME = 1
 COL_TABLE_DISP = 6
