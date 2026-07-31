@@ -1,0 +1,147 @@
+; =====================================================================
+; TILT INSTRUMENTATION v2  --  experiment-matched
+; =====================================================================
+; Call this AFTER instrument_history_new.dat. It adds tilt channels
+; whose definitions match the physical instrumentation, and leaves the
+; original tilt_* channels untouched so old comparisons still work.
+;
+; WHY THIS EXISTS
+; ---------------
+; Two different quantities were both being called "tilt":
+;
+;   (1) CHORD TILT     - derived from displacement transducers, i.e.
+;                        atan(dz_top / height). This is what
+;                        exp_Test9_tilt.csv / exp_Test12_tilt.csv hold.
+;                        The original FISH tilt_* channels are this.
+;
+;   (2) LOCAL ROTATION - what the inclinometer ("sensor 18",
+;                        exp_US1_tiltmeter.csv) measures. Its settled value
+;                        cannot be the wall's chord rotation: 2.77 deg over
+;                        the 2.06 m chord would be 99 mm of permanent top
+;                        displacement, while the absolute transducer records
+;                        -1.18 mm. It must therefore be a LOCAL rotation --
+;                        but of what, exactly, is NOT documented in the data
+;                        available here. The tiltmeter does not appear in
+;                        Test9_Info.xlsx or Test12_Info.xlsx.
+;
+; These differ by roughly two orders of magnitude in the US-1 data
+; (run 21: chord tilt -0.029 deg, inclinometer +2.768 deg), so the model
+; must output BOTH or the comparison is meaningless. It previously
+; output only (1) and it was being plotted against (2).
+;
+; Note also that the raw inclinometer PEAK values are unusable. The device
+; is gravity-referenced (its logger file carries 3-axis accelerometer packs
+; whose resting vector is constant at 16750 counts, 16745 of it on z), so
+; during shaking it reads horizontal acceleration as apparent tilt; and both
+; its tilt channel (+/-25.75 deg) and its accelerometers (+/-1.96 g) clip in
+; the strong runs. Only the settled/quiet-window value is a rotation.
+; See tilt_experiment_match.py and MODELLING_DISCREPANCIES.md section 1.
+;
+; WHAT CHANGES vs instrument_history_new.dat
+; ------------------------------------------
+;   a) d_top is the MEAN of the two top quarter points (x=0.106 and
+;      x=1.186), matching the experiment, which averages channels 3
+;      and 4. The original used the centreline gridpoint (x=0.646).
+;      On the existing v6 run set this changes results by <0.6% -- the
+;      wall spans one-way, so the centreline barely bulges relative to
+;      the quarter chord -- but it removes a definitional objection.
+;   b) The bottom sensor elevation is a variable, because it differs
+;      between specimens: 0.66 m for US-1 (Test 9), 0.60 m for US-2
+;      (Test 12). The original hard-coded 0.66, so every model-vs-US-2
+;      segment-tilt comparison was using the wrong chord.
+;   c) Adds tilt_local_incl, the rotation of the instrumented unit.
+;
+; SET THESE BEFORE CALLING
+; ------------------------
+;   [bot_sensor_y]  0.66 to compare against US-1, 0.60 against US-2
+;   [incl_y_lo] / [incl_y_hi]  the extent of whatever the inclinometer is
+;                    mounted on. THESE ARE PLACEHOLDERS AND CANNOT BE
+;                    VERIFIED FROM THE DATA IN THIS REPO -- the tiltmeter is
+;                    absent from Test9_Info.xlsx and Test12_Info.xlsx.
+;                    Recover the mounting from the test report, the
+;                    instrumentation photographs, or the lab before trusting
+;                    tilt_local_incl. A wrong height gives a plausible but
+;                    wrong number, which is worse than no number.
+; =====================================================================
+
+[bot_sensor_y = 0.66]      ; 0.66 = US-1 (Test 9) ; 0.60 = US-2 (Test 12)
+[incl_y_lo    = 2.33]      ; Table 3 of the paper puts the tiltmeter (sensor 18) at
+[incl_y_hi    = 2.53]      ; X=0, Z=2.43 m. This 0.20 m chord (~3 courses) is centred on
+                           ; it and is the LOCAL rotation to compare against
+                           ; exp_US{1,2}_tiltmeter.csv settled values. The existing
+                           ; tilt_beam_seg (2.06 -> 2.68) also brackets 2.43 and is a
+                           ; usable coarser proxy.
+[x_centre     = 0.646]
+[x_qleft      = 0.106]     ; = Channel_3 x
+[x_qright     = 1.186]     ; = Channel_4 x
+[z_face       = 0.21]
+
+fish define tilt_exp_match
+    ; ---- reference points -------------------------------------------
+    ; Table reference. The wall transducers are frame-mounted, so they
+    ; already read wall-relative-to-table; subtracting the table
+    ; gridpoint here reproduces that.
+    local gp_table = block.gp.near(x_centre, 0.00,         z_face)
+    local gp_bot   = block.gp.near(x_centre, bot_sensor_y, z_face)
+    local gp_mid   = block.gp.near(x_centre, 1.26,         z_face)
+    ; top: MEAN of the two quarter points, as the experiment does
+    local gp_tl    = block.gp.near(x_qleft,  2.06,         z_face)
+    local gp_tr    = block.gp.near(x_qright, 2.06,         z_face)
+    local gp_beam  = block.gp.near(x_centre, 2.68,         z_face)
+
+    local dz_table = block.gp.disp.z(gp_table)
+    local dz_bot   = block.gp.disp.z(gp_bot)
+    local dz_mid   = block.gp.disp.z(gp_mid)
+    local dz_top   = 0.5 * (block.gp.disp.z(gp_tl) + block.gp.disp.z(gp_tr))
+    local dz_beam  = block.gp.disp.z(gp_beam)
+
+    local rad2deg  = 180.0 / math.pi
+
+    ; ---- chord tilts, experiment definition --------------------------
+    tiltx_bot_seg   = math.atan((dz_bot  - dz_table) / bot_sensor_y)        * rad2deg
+    tiltx_low_seg   = math.atan((dz_mid  - dz_bot)   / (1.26 - bot_sensor_y)) * rad2deg
+    tiltx_up_seg    = math.atan((dz_top  - dz_mid)   / 0.80)               * rad2deg
+    tiltx_beam_seg  = math.atan((dz_beam - dz_top)   / 0.62)               * rad2deg
+    tiltx_full_wall = math.atan((dz_top  - dz_table) / 2.06)               * rad2deg
+
+    ; ---- relative top displacement, experiment definition ------------
+    ; mean of Ch3/Ch4 minus table, in mm
+    rel_disp_top_exp_mm = (dz_top - dz_table) * 1000.0
+
+    ; ---- LOCAL rotation of the instrumented unit ---------------------
+    ; This is the counterpart of the bonded inclinometer. It is a chord
+    ; INSIDE one masonry unit, so it captures the unit's own rotation
+    ; rather than the wall's overall lean. Compare its settled value to
+    ; residual_deg in exp_US1_tiltmeter.csv / exp_US2_tiltmeter.csv --
+    ; never to the inclinometer's peak columns.
+    local gp_il = block.gp.near(x_centre, incl_y_lo, z_face)
+    local gp_ih = block.gp.near(x_centre, incl_y_hi, z_face)
+    local dz_il = block.gp.disp.z(gp_il)
+    local dz_ih = block.gp.disp.z(gp_ih)
+    tilt_local_incl = math.atan((dz_ih - dz_il) / (incl_y_hi - incl_y_lo)) * rad2deg
+
+    ; ---- diagnostic: how much does the centreline bulge? --------------
+    ; centreline minus quarter-point mean at the top, in mm. If this
+    ; grows, the wall has started spanning two-way and the single-chord
+    ; tilt definition is no longer adequate for either model or test.
+    local gp_tc  = block.gp.near(x_centre, 2.06, z_face)
+    bulge_top_mm = (block.gp.disp.z(gp_tc) - dz_top) * 1000.0
+end
+
+@tilt_exp_match
+
+; ---------------------------------------------------------------------
+; Register the histories. Indices continue after the 16 already used by
+; instrument_history_new.dat, so nothing is renumbered.
+; NOTE: instrument_history_export_new.dat exports FISH histories BY
+; NUMERIC INDEX. If you add these, extend that export file to match, or
+; they will simply not be written out.
+; ---------------------------------------------------------------------
+fish history tiltx_bot_seg          ;17
+fish history tiltx_low_seg          ;18
+fish history tiltx_up_seg           ;19
+fish history tiltx_beam_seg         ;20
+fish history tiltx_full_wall        ;21
+fish history rel_disp_top_exp_mm    ;22
+fish history tilt_local_incl        ;23
+fish history bulge_top_mm           ;24

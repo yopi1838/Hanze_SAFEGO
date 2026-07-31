@@ -1,44 +1,54 @@
 # -*- coding: ascii -*-
 """
-Strategy C (SYMMETRIC PULSE, NO DAMPING) : Adaptive Sequential IDA
-=======================================================================
-Production driver for the mason_v7 model. Writes to stratC_results_NODAMP_v7.
+Strategy C -- diagnostic variant: raised G_I, ratcheting OFF, no viscous damping.
 
-USE_RATCHETING is now FALSE, so this runs the original symmetric pulse and
-ASYM_K is inert. The reason is in MODELLING_DISCREPANCIES.md section 0: the
-source paper attributes the experimental asymmetry to the timber floors
-applying a moment to one side of the wall, and measures 8-12 mm of cumulative
-joist slip, with the bow-tie specimen (which removed that slip) reversing the
-sign of its residual tilt. Both mechanisms are already in this model
-geometrically, whereas ASYM_K imposes an asymmetric INPUT PULSE -- a different
-mechanism, and very likely a double count. Any residual tilt this run produces
-therefore comes from the joists alone, which is the quantity worth comparing.
+GENERATED FROM strategy_C_3dec_nodamp.py by targeted substitution, so the two
+stay diffable. Everything not listed below is byte-identical to that file. If
+you fix a bug in one, fix it in the other -- there are now five drivers sharing
+~90% of their code (CLAUDE.md section 3).
 
-Set USE_RATCHETING = True to restore the asymmetric (record-derived) pulse from
-ratcheting_pulse.py. The marked  # >>> RATCHETING  blocks are the only places
-the two paths differ.
+WHAT THIS RUN IS TESTING
+    MODELLING_DISCREPANCIES.md section 3 / IMPROVEMENT_STRATEGY.md section 4:
+    the model forms a full-height rocking mechanism at run 14 that neither
+    specimen ever formed, its peak base shear then decays to 2-3 kN while US-1
+    climbed to 32 kN, and it dissipates about half as much as the specimen
+    before the mechanism forms. Two candidate causes are separated here:
+      (a) joints too brittle in mode I  -> G_I raised, see below
+      (b) the ratcheting is double-counted -- the paper attributes the
+          asymmetry to eccentric joist loading and 8-12 mm of cumulative joist
+          slip, which this model already contains geometrically, whereas
+          ASYM_K imposes an asymmetric INPUT PULSE. Turning ratcheting off
+          shows how much residual tilt the joists alone produce.
 
-Relationship to strategy_C_3dec_GI.py: both run the symmetric pulse, both record
-the same channels, and both have the working damping branch. The pair is now a
-CONTROLLED test of the fracture-energy hypothesis, differing only in:
-    G_I / G_II   13.2 J/m2 here (as computed in ANALYSIS_PART_I_MASON.dat)
-                 vs 20 J/m2 in GI
-    OUT_DIR      stratC_results_NODAMP_v7 vs stratC_results_GI_NORATCH
-GI additionally exposes COH_RESIDUAL, but it is 0.0 there, which matches the
-base model, so it changes nothing.
+DIFFERENCES FROM strategy_C_3dec_nodamp.py
+    1. OUT_DIR              -> stratC_results_GI_NORATCH
+    2. USE_RATCHETING       -> False   (symmetric pulse; ASYM_K inert)
+    3. G_I / G_II           -> reassigned after restore, see G_I_NEW below
+    4. damping branch       -> the dead `if DAMP_RATIO > 0: pass` trap is
+                               replaced by a working branch that actually
+                               applies Rayleigh damping when asked and prints
+                               the truth either way. DAMP_RATIO stays 0.0.
+    5. instrumentation      -> also calls instrument_tilt_v2.dat and exports
+                               through instrument_history_export_v2.dat, so
+                               the experiment-matched tilt and the local
+                               rotation at the tiltmeter height (Z = 2.43 m,
+                               Table 3 of the paper) are actually recorded.
 
-Instrumentation: this driver calls instrument_tilt_v2.dat after
-instrument_history_new.dat at both registration points, and exports through
-instrument_history_export_v2.dat. FISH histories export BY NUMBER, so if you
-add or remove any `fish history` line in either .dat the indices shift and the
-export file must be updated to match.
+ON THE G_I VALUE -- read this before changing it
+    The existing model computes G_I = 0.025*(2*f_t)^0.7*1e3 = 13.2 J/m^2 at
+    f_t = 0.2 MPa. Van der Pluijm's clay-brick bed-joint data gives mode-I
+    fracture energy in the range 5-20 J/m^2, so the ORIGINAL VALUE IS ALREADY
+    INSIDE THE PHYSICAL RANGE -- it is not obviously wrong, and raising it is
+    a bounded experiment, not a correction. G_I_NEW below is set to 20 J/m^2,
+    the top of that band (a 52% increase). Going materially beyond that leaves
+    the range the measurements support.
 
-ratcheting_pulse.py must sit in the same directory as this script (or on
-sys.path). Run inside 3DEC:
-    python-reset-state false
-    call 'strategy_C_3dec_nodamp.py'
-
-To force a full restart, delete or rename the stratC_results folder.
+    If this run does not change the mechanism, G_I is not the lever. The more
+    likely candidate is that cracked joints retain NOTHING: cohesion-residual
+    is set to 0 in ANALYSIS_PART_I_MASON.dat, so once a joint opens there is no
+    residual tension, no cohesion, and friction cannot mobilise without normal
+    stress. COH_RESIDUAL below exposes that; it is left at 0.0 so this run
+    changes one thing at a time, but flipping it is the natural next test.
 """
 
 import itasca as it
@@ -78,15 +88,11 @@ FFT_F_MAX  = 50.0
 T_MIN_PHYS = 0.02
 T_MAX_PHYS = 1.0
 
-OUT_DIR = "stratC_results_NODAMP_v7"
+OUT_DIR = "stratC_results_GI_NORATCH"
 STATE_FILE_NAME = "stratC_checkpoint.json"
 
 # >>> RATCHETING : controls
-USE_RATCHETING = False   # OFF. The paper attributes the asymmetry to eccentric joist
-                         # loading and 8-12 mm of cumulative joist slip, both of which
-                         # this model already contains geometrically, whereas ASYM_K
-                         # imposes an asymmetric INPUT PULSE. Any residual tilt that
-                         # still appears now comes from the joists alone. ASYM_K is inert.
+USE_RATCHETING = False   # OFF for this variant: symmetric pulse, ASYM_K inert
 ASYM_K         = 1.0     # global asymmetry sharpening (>=1 sharpens); calibrate out-of-sample
 # Damping is exposed here so it is explicit and printed at startup.
 # The conference paper used FULL Rayleigh at 3%. The pasted driver used
@@ -94,6 +100,18 @@ ASYM_K         = 1.0     # global asymmetry sharpening (>=1 sharpens); calibrate
 # choice for a collapse study. Default below is full Rayleigh 3%; change if needed.
 DAMP_RATIO = 0.0         # fraction of critical at the centre frequency
 DAMP_TYPE  = ""          # "" = full Rayleigh (mass+stiffness); "mass"; "stiffness"
+
+# >>> GI VARIANT : joint property overrides applied after every model restore.
+# Set G_I_NEW to None to leave the properties exactly as the base save has them.
+G_I_NEW      = 20.0      # J/m^2 (N/m). Base model computes 13.2; van der Pluijm
+                         # band for clay-brick bed joints is 5-20, so this is the
+                         # top of the physically supported range.
+G_II_RATIO   = 10.0      # G_II = G_II_RATIO * G_I, as in ANALYSIS_PART_I_MASON.dat
+COH_RESIDUAL = 0.0       # Pa. Base model uses 0 -- cracked joints retain nothing.
+                         # This is very likely the bigger lever; change it ONLY
+                         # after seeing what G_I alone does, so the runs stay
+                         # interpretable one variable at a time.
+# <<< GI VARIANT
 # <<< RATCHETING
 
 # =====================================================================
@@ -174,7 +192,7 @@ def state_file_path():
 # =====================================================================
 def save_checkpoint(run_no, T_current, summary):
     state = {"last_completed_run": run_no, "T_current": T_current, "summary": summary}
-    with open(state_file_path(), "w", newline="\n") as f:
+    with open(state_file_path(), "w") as f:
         json.dump(state, f, indent=2)
 
 def load_checkpoint():
@@ -289,7 +307,7 @@ def build_velocity_file(A, T, run_no, out_dir):
     fname = "vel_run_{:02d}.txt".format(run_no)
     fpath = os.path.join(out_dir, fname)
     N = len(t)
-    with open(fpath, "w", newline="\n") as f:
+    with open(fpath, "w") as f:
         f.write("StratC_run{:02d}_T{:.4f}\n".format(run_no, T))
         f.write("{}\t0\n".format(N))
         for ti, vi in zip(t, v):
@@ -465,8 +483,9 @@ def setup_model_for_dynamic(save_file):
     block mech damp local 0.0
     block mech damp global 0.0
     """)
-    # The command used to be commented out here with `pass` as the body, so
-    # setting DAMP_RATIO non-zero silently produced an undamped run while
+    # >>> GI VARIANT : working damping branch. The base driver had the command
+    # commented out inside this branch with `pass` as the body, so setting
+    # DAMP_RATIO non-zero there silently produced an undamped run while
     # preflight_checks() reported damping as active.
     if DAMP_RATIO > 0:
         cmd = "block mechanical damping rayleigh {ratio} {freq} {dtype}".format(
@@ -475,6 +494,18 @@ def setup_model_for_dynamic(save_file):
         print("  Rayleigh damping applied: {}".format(cmd))
     else:
         print("  (no Rayleigh damping applied; contact dissipation only)")
+
+    # Joint property overrides. Applied after the restore so the base save can be
+    # shared between variants without rebuilding the model.
+    if G_I_NEW is not None:
+        it.command("block contact property G_I {:g} G_II {:g}".format(
+            G_I_NEW, G_II_RATIO * G_I_NEW))
+        print("  G_I -> {:g} J/m2 , G_II -> {:g} J/m2 (base model computes 13.2)".format(
+            G_I_NEW, G_II_RATIO * G_I_NEW))
+    if COH_RESIDUAL:
+        it.command("block contact property cohesion-residual {:g}".format(COH_RESIDUAL))
+        print("  cohesion-residual -> {:g} Pa".format(COH_RESIDUAL))
+    # <<< GI VARIANT
     print("  Model setup complete (BCs + damping + joist contact groups applied).")
 
 # =====================================================================
@@ -615,7 +646,7 @@ def run_strategy_C():
 
     log_path = os.path.join(OUT_DIR, "strategy_C_log.csv")
     log_is_new = (resume_from == 1) or not os.path.exists(log_path)
-    log_f = open(log_path, "w" if log_is_new else "a", newline="\n")
+    log_f = open(log_path, "w" if log_is_new else "a")
     if log_is_new:
         log_f.write("run,record,scale,T_excite,T_over_Tinit,"
                     "Sd_record_mm,Sd_target_mm,Sd_fixedT1_mm,amplification,"
