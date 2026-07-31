@@ -204,12 +204,24 @@ mechanism at run 14 when the specimen never did" are:
    so the strength is about right and the *ductility* is the free parameter. Too brittle a
    mode-I response forces damage to localise into one mechanism instead of distributing.
    This is my primary suspect now.
-2. **The top boundary condition.** The paper: the top beam "is restrained horizontally,
-   but it is free to rotate", and the horizontal displacement at the top of the wall "is
-   always zero". Your driver applies the table velocity to **both** group `'S'` and group
-   `'T_B'`, which imposes the table motion on the top beam rather than holding it fixed
-   in space. Those are different boundary conditions. Check this — it is cheap and it
-   directly controls whether a full-height single-curvature mechanism can form.
+2. ~~The top boundary condition.~~ **Checked and cleared — the driver is right.**
+   The paper's wording ("restrained horizontally… free to rotate", "the horizontal
+   displacement at the top of the wall is always zero") reads as if the top were held
+   fixed in space while the base rides the table. The data says otherwise, and the EC40
+   runs make it decisive because they have huge table stroke and almost no wall response:
+
+   | Run | Table stroke | Wall relative disp | Ratio |
+   |---|---|---|---|
+   | 3 | 27.3 mm | 0.018 mm | 0.1% |
+   | 8 | 55.5 mm | 0.785 mm | 1.4% |
+   | 11 | 69.1 mm | 0.965 mm | 1.4% |
+
+   A top grounded to the lab would force the wall to absorb the *full* table stroke as
+   relative displacement — 69 mm at run 11, not 1 mm. The restraint frame therefore moves
+   with the table, and "restrained horizontally" means restrained relative to that moving
+   frame. Fig. 15's deformed shapes agree: they show zero at both the base and 2.85 m in a
+   table-relative frame. **Driving both group `'S'` and group `'T_B'` with the same table
+   motion is correct — do not change it.**
 3. **Hinge locations.** The paper reports cracks at the base *and at the floor levels*,
    with a hinge at the lower slab level in the unstrengthened specimens (Fig. 15, Fig. 17).
    Check where the model's joints actually open at run 14 — if they are not at the floor
@@ -339,9 +351,10 @@ have. Priority order:
    strength is 0.28 MPa (CoV 22%) and wallette flexural strength 0.41–0.45 MPa, so the
    *peak* strength is about right — it is the post-peak behaviour that is wrong.
 2. **Check the arching path.** A wall restrained top and bottom develops arching thrust,
-   which is the main reason the real specimen kept gaining strength. If the top boundary
-   condition is wrong (§2.2 item 2) the thrust never develops, which would produce exactly
-   this collapse in capacity.
+   which is the main reason the real specimen kept gaining strength. The top boundary
+   condition is *not* the culprit (§2.2 item 2, checked), so if the thrust is failing to
+   develop the cause is in the joints: an opening joint carries no normal stress, so no
+   friction and — with `cohesion-residual = 0` — nothing else either.
 3. **Only then** revisit viscous damping — and if you keep it, stiffness-proportional only,
    so it does not penalise the low-frequency rocking.
 
@@ -397,9 +410,10 @@ absorbing the error from all of the above, can finally be fitted to something me
    double-counting and should be dropped rather than fitted.
 2. **Re-pair the tilt comparisons** (§1.1) and set the sensor height to 2.43 m (§1.4).
    Free, immediate, removes a category error.
-3. **Check the top boundary condition** (§2.2 item 2). The paper holds the top beam
-   horizontally fixed but free to rotate; the driver drives it with the table motion.
-   Cheap to test and it directly controls whether a full-height mechanism can form.
+3. **Run `strategy_C_3dec_GI.py`** — G_I at the top of its literature band (20 J/m²),
+   ratcheting off, no viscous damping, experiment-matched tilt recorded. This tests
+   items 1 and the ASYM_K double-count together. If the mechanism still forms at ~run 14,
+   G_I is not the lever and the next run should set `COH_RESIDUAL` non-zero.
 4. **Compare cumulative joist slip against the measured 8–12 mm** using channels 8–11.
    A quantitative target that needs no new instrumentation.
 5. **Add the mechanism-onset flag and the `period_id_ok` flag** (§2.1, §3.1), then
