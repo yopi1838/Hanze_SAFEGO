@@ -29,10 +29,15 @@ pip install -r requirements.txt
 
 ### 3. 3DEC
 
-Install **Itasca 3DEC 9.1**. The custom joint constitutive model `mason_v6` is a
-compiled plugin — `libjmodelmason009.so` / `libjmodelmasonv6009.so` in this repo are
-the **Linux** builds. On Windows you need the equivalent `.dll` on 3DEC's plugin
-search path, otherwise `block contact jmodel assign mason_v6` fails.
+Install **Itasca 3DEC 9.1**. The joint constitutive model is a compiled plugin, not
+a built-in jmodel. The model files assign **`mason_v7`**, provided by
+`jmodelmasonv7_1009.dll` (Windows) — included in this repo. Put it on 3DEC's plugin
+search path, or `block contact jmodel assign mason_v7` will fail.
+
+Also in the repo are `libjmodelmasonv6009.so` and `libjmodelmason009.so`, the **Linux**
+builds of the older models. Be aware these register `mason_v6H` and `mason_v5H`
+respectively — plugin filenames do not reliably indicate the keyword they register.
+CLAUDE.md §8 has the full mapping and how to check any binary yourself.
 
 Launch 3DEC with this folder as the working directory — every driver resolves its
 inputs relative to cwd.
