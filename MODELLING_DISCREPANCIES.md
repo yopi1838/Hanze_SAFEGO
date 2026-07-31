@@ -16,13 +16,15 @@ decompose into four distinct problems, and only two of them are constitutive:
 
 | # | Problem | Kind | Severity |
 |---|---|---|---|
+| 0 | The tiltmeter's tilt channel disagrees with its own two accelerometers by 20–30× | Instrumentation | **Decides whether problem 3 exists** |
 | 1 | "Tilt" names two incommensurable quantities; the model outputs only one of them | Measurement / definition | **Invalidates the comparison** |
 | 2 | Period identification failed at run 23, so run 24 was excited at the undamaged period | Algorithmic bug | **Explains the run-24 under-prediction entirely** |
 | 3 | The model forms a full-height rocking mechanism at run 14; the specimens never do | Constitutive / mechanism | Real, and the important one |
 | 4 | No single damping value works across the amplitude range | Constitutive / energy | Real |
 
-Problems 1 and 2 have to be cleared before problem 3 can be assessed honestly,
-because at present a good deal of the apparent disagreement is bookkeeping.
+Problems 0, 1 and 2 have to be cleared before problem 3 can be assessed honestly,
+because at present a good deal of the apparent disagreement is bookkeeping. Problem 0 in
+particular may remove most of the ratcheting discrepancy on its own.
 
 ---
 
@@ -85,13 +87,69 @@ reproduce the magnitudes** (it predicts 5.7°–62.7° in windows where the devi
 25.1°–25.8°), largely because both channels are clipping. The mechanism is established;
 a quantitative transfer function is not.
 
-**What the device is attached to is not documented in the data available here.**
-`Test9_Info.xlsx` and `Test12_Info.xlsx` list only the 17 displacement/force/acceleration
-channels — the tiltmeter is not in either. So while the kinematics rule out its reading
-being a global chord rotation (2.77° over 2.06 m would be 99 mm of permanent top
-displacement, against −1.18 mm on the absolute transducer), **what local rotation it does
-represent cannot be determined without the mounting record.** That record is the single
-most valuable missing piece for this comparison.
+**Mounting.** The tiltmeter appears in neither `Test9_Info.xlsx` nor
+`Test12_Info.xlsx` (both list only the 17 displacement/force/acceleration channels). The
+only description is the paper's one sentence: *pre- and post-run tilt measurements on top
+of the wall, for in-plane and out-of-plane residual movements.* That settles three things:
+the device sits at the **top of the wall** (so `[incl_y_lo]`/`[incl_y_hi]` ≈ 1.95–2.06 m
+is the right region); its two axes are **in-plane (`tvalx`) and OOP (`tvaly`)**, matching
+`process_tiltmeter.py`'s choice of `tvaly`; and it was only ever intended to be read
+**statically, before and after each run**. The peak columns were never a measurement —
+which independently confirms that they should not be plotted against anything.
+
+### The tilt channel disagrees with its own accelerometers by a factor of 20–30
+
+This is the most consequential thing in this document, and it needs resolving before the
+ratcheting comparison can be trusted at all.
+
+At rest the accelerometer vector *is* the gravity direction, so `atan2(a_y, a_z)` is an
+independent measurement of exactly the rotation the tilt channel reports. Measured well
+after all shaking has stopped, with both readings stable (tilt sd = 1 mdeg over the final
+7 logger windows):
+
+| Permanent rotation, final state | US-1 | US-2 |
+|---|---|---|
+| Tilt channel `tvaly` — **the published curve** | **+6.038°** | **+2.367°** |
+| Accelerometer pack 1 | +0.275° | +0.074° |
+| Accelerometer pack 2 | +0.238° | +0.073° |
+| Disagreement | **22×** | **32×** |
+
+The two accelerometer packs are independent chips, and they agree with each other to
+r = 0.995 across all 24 run-by-run settled values. Where two independent sensors agree
+with each other and not with a third, the third is the outlier.
+
+The displacement transducers agree with the accelerometers, not with the tilt channel:
+
+| Final-run residual | US-1 | US-2 |
+|---|---|---|
+| Upper-segment chord (1.26→2.06 m), nearest the sensor | +0.069° | −0.035° |
+| Full-wall chord | +0.048° | +0.038° |
+| Tiltmeter accelerometers | +0.275° | +0.074° |
+| Tiltmeter tilt channel | +6.038° | +2.367° |
+
+On US-2 the accelerometers (+0.074°) and the chord tilts (+0.038 to +0.11°) are the same
+order of magnitude. On US-1 the accelerometers read ~4× the chord, which is what you would
+expect for a genuinely *local* rotation at the top of a damaged wall. The tilt channel is
+90–125× the chord on US-1 and 60× on US-2.
+
+It is **not a constant scale error.** The ratio grows monotonically with amplitude —
+2.8× at run 2, 7× at run 13, 19.6× at run 21, 22× at run 24 — following
+`tilt_channel ≈ (accelerometer angle)^2.04`, i.e. very nearly quadratic. A unit or
+calibration mistake would give a fixed factor.
+
+I cannot tell you which channel is right; that needs the instrument's documentation. But
+the stakes are clear:
+
+- If the **accelerometers** are right, the specimens' permanent local rotation is 0.27°
+  (US-1) and 0.074° (US-2). The model's +0.396° cumulative chord tilt at run 21 is then
+  within a factor of ~3 of the experiment, not a factor of 12, and **"the model ratchets
+  and the experiment does not" largely dissolves** — leaving only §3's premature
+  mechanism formation to explain.
+- If the **tilt channel** is right, the specimens accumulated 6° of local rotation at the
+  top while their top-of-wall displacement transducers returned to within 0.2 mm of plumb,
+  and the model under-predicts local rotation by ~15×.
+
+`check_tiltmeter_consistency.py` reproduces this table from the raw logger files.
 
 `process_tiltmeter.py` is already right to extract settled quiet-window values rather
 than peaks.
@@ -302,6 +360,10 @@ and is the one worth comparing, once the model actually emits a local rotation.
 
 ## Recommended order of work
 
+0. **Resolve the tiltmeter channel disagreement** (§1). Everything about ratcheting
+   depends on whether the experimental permanent rotation is 6° or 0.27°. Check the
+   instrument's calibration/datasheet, and if possible re-read the raw device rather than
+   the exported summary. Run `check_tiltmeter_consistency.py` to see the evidence.
 1. **Fix the period-ID fallback** (§2) before any further runs. Everything downstream of
    a silent fallback is uninterpretable, and it hit the two most important runs.
 2. **Re-plot every tilt comparison** with the right pairing (§1): chord vs chord,

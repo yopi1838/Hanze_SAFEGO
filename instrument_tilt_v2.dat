@@ -65,8 +65,8 @@
 ; =====================================================================
 
 [bot_sensor_y = 0.66]      ; 0.66 = US-1 (Test 9) ; 0.60 = US-2 (Test 12)
-[incl_y_lo    = 1.95]      ; PLACEHOLDER - bottom of instrumented unit
-[incl_y_hi    = 2.06]      ; PLACEHOLDER - top of instrumented unit
+[incl_y_lo    = 1.95]      ; tiltmeter is "on top of the wall" (paper); this is the
+[incl_y_hi    = 2.06]      ; top-of-masonry region. Refine if the exact unit is known.
 [x_centre     = 0.646]
 [x_qleft      = 0.106]     ; = Channel_3 x
 [x_qright     = 1.186]     ; = Channel_4 x
