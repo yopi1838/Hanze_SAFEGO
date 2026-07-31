@@ -197,10 +197,11 @@ failed at 0.28 of a *single-leaf* thickness, still low but far more plausible.
 With the collar joint withdrawn, the candidates for "why does the model form a full-height
 mechanism at run 14 when the specimen never did" are:
 
-1. **Bed-joint fracture energy is too brittle.** `G_I = 0.025·(2·f_t)^0.7 × 10³` ≈
-   **5.4 J/m²** at `f_t` = 0.2 MPa. The paper's measured bond-wrench strength is
-   **0.28 MPa** (CoV 22%) and the wallette flexural strength 0.41–0.45 MPa, so the
-   strength is about right but the *ductility* is the free parameter. Too brittle a
+1. **Bed-joint fracture energy is too brittle.** `G_I = 0.025·(2·f_t)^0.7 × 10³` =
+   **13.2 J/m²** at `f_t` = 0.2 MPa — *inside* van der Pluijm's 5–20 J/m² band for
+   clay-brick bed joints, so not obviously wrong. The paper's measured bond-wrench
+   strength is **0.28 MPa** (CoV 22%) and the wallette flexural strength 0.41–0.45 MPa,
+   so the strength is about right and the *ductility* is the free parameter. Too brittle a
    mode-I response forces damage to localise into one mechanism instead of distributing.
    This is my primary suspect now.
 2. **The top boundary condition.** The paper: the top beam "is restrained horizontally,
@@ -327,8 +328,9 @@ joints contributing nothing. The specimen, still developing 32 kN, plainly retai
 substantial flexural and arching capacity throughout.
 
 **What that points at.** The bed joints lose *all* cohesive capacity once cracked:
-`cohesion-residual 0` is set explicitly, and `G_I = 0.025·(2·f_t)^0.7 × 10³` ≈ **5.4 J/m²**
-at `f_t` = 0.2 MPa is very brittle. Once a joint opens there is no residual tension, no
+`cohesion-residual 0` is set explicitly, and `G_I = 0.025·(2·f_t)^0.7 × 10³` = **13.2 J/m²**
+at `f_t` = 0.2 MPa — which is *within* van der Pluijm's 5–20 J/m² range for clay-brick bed
+joints, so G_I is the weaker suspect of the two. Once a joint opens there is no residual tension, no
 cohesion, and friction only mobilises under normal stress — which an opening joint does not
 have. Priority order:
 

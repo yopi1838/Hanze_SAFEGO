@@ -360,8 +360,10 @@ applied to a wall that has already become a one-sided rocking block will ratchet
 whatever value it takes. Candidates for the actual cause, in the order I would test them:
 
 1. **Joint tensile/cohesive softening is too brittle.** `G_I` is derived as
-   `0.025·(2·f_t)^0.7` ≈ 5.4 J/m² for `f_t` = 0.2 MPa. Once a course opens it cannot
-   recover, so damage cannot redistribute. A more ductile mode-I response, or the
+   `0.025·(2·f_t)^0.7 × 10³` = 13.2 J/m² for `f_t` = 0.2 MPa — which is *inside* van der
+   Pluijm's 5–20 J/m² band for clay-brick bed joints, so G_I is not obviously the
+   culprit. The stronger suspect is `cohesion-residual 0`: once a course opens it
+   retains nothing at all, so damage cannot redistribute. A more ductile mode-I response, or the
    `mason_v7` healing behaviour, should let cracking spread rather than localise.
 2. **Insufficient joints available to crack.** If the collar joint and bed-joint
    discretisation give only a few candidate planes, localisation is forced by the mesh
