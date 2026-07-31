@@ -10,6 +10,9 @@ overridden by an environment variable if you keep data outside the repo.
   SAFEGO_SIM_DIR    primary simulation folder  (default: <repo>/stratC_results_NODAMP_v6_NEW)
   SAFEGO_CACHE      staged-script JSON cache   (default: <repo>/.cache)
 
+Derived experimental CSVs are resolved with exp_derived(), which falls back to
+the canonical copies under stratC_results_NODAMP_v6_NEW/postproc/.
+
 Style note: this module is deliberately Python-2/3 compatible (no f-strings)
 to match the rest of the codebase, some of which runs inside 3DEC's embedded
 interpreter.
@@ -67,6 +70,24 @@ def postproc_dir(name=None):
         except OSError:
             pass
     return d
+
+
+def exp_derived(name):
+    """A *derived experimental* CSV -- exp_Test{9,12}_metrics.csv,
+    exp_Test*_tilt.csv, exp_Test*_period_psd.csv, exp_US*_tiltmeter.csv.
+
+    These describe the physical specimens, not any one simulation, but they
+    live inside a simulation's postproc/ folder for historical reasons. The
+    canonical copies sit in DEFAULT_SIM's postproc/ and several cannot be
+    regenerated from this repo (see CLAUDE.md section 10).
+
+    Look in the active sim's postproc/ first, then fall back to the canonical
+    copy, so pointing SAFEGO_SIM_DIR at a fresh results folder keeps the
+    experimental comparison instead of failing on a missing file."""
+    active = postproc_dir() / name
+    if active.is_file():
+        return active
+    return postproc_dir(DEFAULT_SIM) / name
 
 
 def cache_dir():

@@ -207,6 +207,23 @@ scaling — the ratio is logged as `amplification = Sd_target / Sd_fixedT1`.
 21 HU12 6.00 | 22 FR76 1.00 | 23 FR76 1.50 | 24 FR76 1.75 | 25 FR76 2.00
 ```
 
+### Line endings in generated files
+`.gitattributes` freezes line endings (`* -text`), so git will not normalise what the
+drivers write. Every generated text file is therefore pinned to **LF on both
+platforms** by passing `newline="\n"` to `open()`:
+
+| File | Mechanism |
+|---|---|
+| `strategy_C_summary.csv` | `newline=""` + `csv.writer` (CRLF, per the csv module) |
+| `strategy_C_log.csv` | `open(..., newline="\n")`, manual `\n` |
+| `stratC_checkpoint.json` | `open(..., newline="\n")` + `json.dump` |
+| `vel_run_NN.txt` | `open(..., newline="\n")`, manual `\n` |
+
+Without this, a Windows run rewrites all 25 `vel_run_NN.txt` files plus the log and
+checkpoint with CRLF, and every tracked line shows as modified. Nothing breaks
+functionally — 3DEC's `table import` and `np.genfromtxt` both accept either — but the
+diffs become useless. Applied in all four drivers; keep it when editing them.
+
 ### History-CSV format
 3DEC `history export … vs "time" file …` writes **2 header lines, then
 whitespace-separated 2 columns**: col 0 = dynamic time-total (s), col 1 = the
@@ -365,6 +382,7 @@ sp.sim_dir()         # <repo>/stratC_results_NODAMP_v6_NEW
 sp.sim_dir("stratC_results_DAMP1p5")
 sp.postproc_dir()    # <sim>/postproc, created on demand
 sp.state_file("ch19")# <repo>/.cache/ch19_state.json
+sp.exp_derived("exp_Test9_metrics.csv")   # active postproc/, else canonical
 ```
 
 Three environment variables override the defaults if you keep data elsewhere:
@@ -378,9 +396,17 @@ Three environment variables override the defaults if you keep data elsewhere:
 `python safego_paths.py` prints every resolved location and whether it exists — the
 fastest first check on a new machine.
 
+`exp_derived(name)` resolves a *derived experimental* CSV (`exp_Test*_metrics.csv`,
+`exp_Test*_tilt.csv`, `exp_Test*_period_psd.csv`, `exp_US*_tiltmeter.csv`). These
+describe the specimens rather than any one simulation, but they live in a sim's
+`postproc/`. It prefers the active sim's copy and falls back to the canonical copies
+under `stratC_results_NODAMP_v6_NEW/postproc/`, so pointing `SAFEGO_SIM_DIR` at a
+fresh results folder keeps the experimental comparison instead of failing.
+
 Scripts wired to it: `exp_tilt_from_raw.py`, `process_tiltmeter.py`,
 `profile_hysteresis.py`, `ch19_xval.py`, `exp_period_wrapper.py`,
-`exp_period_evolution.py`, `xval_exp_vs_sim.py`. **`safego_paths.py` is for
+`exp_period_evolution.py`, `xval_exp_vs_sim.py`, `exp_vs_sim_figs.py`,
+`fig_sd_period.py`. **`safego_paths.py` is for
 post-processing only** — do not import it from the `strategy_C_3dec_*.py` drivers,
 which run inside 3DEC and resolve everything relative to 3DEC's cwd.
 
@@ -399,28 +425,53 @@ CLI arguments still win over the defaults everywhere they existed before, and
   keyword the binary *registers*, which is often **not** what its filename suggests.
   Verified by reading the keyword out of each binary:
 
-  | Binary | Registers | In this repo? |
-  |---|---|---|
-  | `jmodelmasonv7_1009.dll` | `mason_v7` | **yes** (Windows) |
-  | `libjmodelmasonv6009.so` | `mason_v6H` | yes (Linux) |
-  | `libjmodelmason009.so` | `mason_v5H` | yes (Linux) |
-  | `jmodelmasonv6009.dll` | `mason_v7` ← filename says v6 | no |
-  | `jmodelmasonv7009.dll` | `mason_debug1` | no |
-  | `jmodelmasonv8009.dll` | `mason_v5` | no |
-  | `jmodelmasonv5009.dll` | `mason_v5` | no |
-  | `jmodelmasonv1009.dll` | `masonv1` (no underscore) | no |
-  | `jmodelmason009.dll` | `mason` | no |
-  | `jmodelmasonhealing009.dll` | `masonhealing` | no |
+  | Binary | Registers | In this repo? | Verified |
+  |---|---|---|---|
+  | `jmodelmasonv7_1009.dll` | `mason_v7` | **yes** (Windows) | yes |
+  | `libjmodelmasonv6009.so` | `mason_v6` | yes (Linux) | yes |
+  | `libjmodelmason009.so` | `mason_v5` | yes (Linux) | yes |
+  | `jmodelmasonv6009.dll` | `mason_v7` ← filename says v6 | no | no |
+  | `jmodelmasonv7009.dll` | `mason_debug1` | no | no |
+  | `jmodelmasonv8009.dll` | `mason_v5` | no | no |
+  | `jmodelmasonv5009.dll` | `mason_v5` | no | no |
+  | `jmodelmasonv1009.dll` | `masonv1` (no underscore) | no | no |
+  | `jmodelmason009.dll` | `mason` | no | no |
+  | `jmodelmasonhealing009.dll` | `masonhealing` | no | no |
 
   The unlisted ones live in `C:\Users\yopi1\source\repos\MASON\ItascaConstutitiveModel1\Release`
   on the original machine. All link `base009.dll` / `jmodels009.dll`, i.e. the
   **3DEC 9.x** series — the `1009` in `jmodelmasonv7_1009.dll` is a naming quirk, not
   3DEC 10.
-  Note that **no available binary registers a plain `mason_v6`**; the Linux `.so`
-  registers `mason_v6H`, which the old `.dat` presumably matched via 3DEC's keyword
-  prefix matching. If you ever need to reproduce the original v6 results on Windows,
-  that DLL does not currently exist and would have to be built.
-  To check any binary yourself: `strings -a <file> | grep -i '^mason'`.
+
+  **How to read a keyword correctly — `strings` is not enough.** GCC stores a
+  keyword of 8 characters or fewer as an *inline immediate* in the instruction
+  stream (small-string optimisation), not as a NUL-terminated entry in the string
+  table. `strings` therefore runs the keyword together with the opcode bytes that
+  follow it and appends a spurious character. In both Linux `.so` files the byte
+  after the keyword is `0x48`, the REX.W prefix of the next instruction, which
+  prints as `H`:
+
+  ```
+  48 89 f8            mov    rax, rdi
+  48 8d 4f 10         lea    rcx, [rdi+0x10]
+  48 89 0f            mov    [rdi], rcx
+  48 b9 "mason_v6"    movabs rcx, 'mason_v6'    <- the keyword, 8 bytes inline
+  48 89 4f 10         mov    [rdi+0x10], rcx
+  48 c7 47 08 08      mov    qword [rdi+8], 8   <- and its length: 8
+  ```
+
+  So the `.so` registers **`mason_v6`** exactly — the old `.dat` matched it
+  directly, with no prefix matching involved. Read the NUL-delimited token instead
+  of trusting `strings`:
+
+  ```python
+  d = open(path, "rb").read(); i = d.find(b"mason_v")
+  print(d[d.rfind(b"\0", 0, i) + 1 : d.find(b"\0", i)])
+  ```
+
+  MSVC-built `.dll` files store these as ordinary NUL-terminated literals, so the
+  DLL rows above are probably sound — but only the three marked *verified* have
+  actually been read this way. Re-check any other row before relying on it.
 - **Python** — the drivers run in 3DEC's embedded interpreter, so they are written in
   a Python-2/3-compatible style (`.format()`, no f-strings, ASCII coding headers).
   Preserve that style when editing `strategy_C_3dec_*.py`, `export_plots.py`,
@@ -452,10 +503,10 @@ resolves through `safego_paths.py` (§7). For the record, these were the offende
 `python safego_paths.py` prints every resolved location and whether it exists — run it
 first on a new machine.
 
-Still hard-wired, but only to **relative** folder names inside the repo, so they work
-anywhere: `exp_vs_sim_figs.py`, `fig_sd_period.py` and `make_presentation_figs.py`
-assume `stratC_results_NODAMP_v6_NEW` sits next to the script. Worth routing through
-`safego_paths.py` too, but not urgent.
+`exp_vs_sim_figs.py` and `fig_sd_period.py` now resolve through `safego_paths.py`
+and follow `SAFEGO_SIM_DIR`. `make_presentation_figs.py` still assumes
+`stratC_results_NODAMP_v6_NEW` sits next to the script, but takes the sim folder as
+its first positional argument, so it can be pointed anywhere without editing.
 
 The 3DEC drivers deliberately resolve **everything** relative to 3DEC's current
 working directory, so 3DEC must be launched with this folder as cwd. Do not import
@@ -610,8 +661,9 @@ highest-value part of the repo.
   import it from the 3DEC drivers.
 - **Do not edit anything under `EXP_DATA/`.** It is raw measured data and the only
   copy that is version-controlled.
-- **Never trust a jmodel plugin's filename.** Before changing `jmodel assign`, read the
-  keyword out of the binary (`strings -a <file> | grep -i '^mason'`) — see §8.
+- **Never trust a jmodel plugin's filename — or `strings`.** Before changing
+  `jmodel assign`, read the NUL-delimited keyword out of the binary; `strings` appends
+  spurious characters to short GCC-stored keywords. See §8 for the method.
 - **A run is only "fresh" if its `OUT_DIR` has no `stratC_checkpoint.json`.** The
   driver resumes from that file; pointing a new run at a completed folder makes it
   print "All 25 runs already completed" and exit. New model version → new `OUT_DIR`.

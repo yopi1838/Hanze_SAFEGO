@@ -1,7 +1,12 @@
 # -*- coding: ascii -*-
 """
-Presentation figures: experiment (US-1 / Test 9) vs simulation
-(stratC_results_NODAMP_v6_NEW), styled after the IMC2026 paper figures.
+Presentation figures: experiment (US-1 / Test 9, US-2 / Test 12) vs
+simulation, styled after the IMC2026 paper figures.
+
+Paths resolve through safego_paths.py, so this follows SAFEGO_SIM_DIR rather
+than being pinned to one results folder:
+
+    SAFEGO_SIM_DIR=stratC_results_NODAMP_v7 python exp_vs_sim_figs.py
 
 Inputs:
   <SIM>/postproc/postproc_summary.csv       (from postprocess_stratC.py)
@@ -14,7 +19,11 @@ Outputs (into <SIM>/postproc/):
                                    period evolution (sim; exp period TBD)
   figP3_residual_tilt.png          residual disp + peak tilt, exp vs sim
 
-US-2 (Test 12) will be added when the data is available.
+The sim-derived inputs come from the active simulation's postproc/. The
+derived experimental CSVs (exp_*) describe the specimens rather than any one
+run, so they fall back to the canonical copies under
+stratC_results_NODAMP_v6_NEW/postproc/ when the active sim has none -- see
+safego_paths.exp_derived(). US-2 series are drawn when their CSV is present.
 """
 import csv
 import numpy as np
@@ -22,9 +31,12 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from pathlib import Path
+import safego_paths as sp
 
-SIM = Path(__file__).resolve().parent / "stratC_results_NODAMP_v6_NEW"
-PP = SIM / "postproc"
+SIM = sp.sim_dir()
+PP = sp.postproc_dir()
+print("sim dir : {}".format(SIM))
+print("postproc: {}".format(PP))
 
 # ---- paper-like style
 plt.rcParams.update({
@@ -51,9 +63,9 @@ def col(rows, k):
     return np.array([float(r[k]) for r in rows])
 
 sim = fread(PP / "postproc_summary.csv")
-exp = fread(PP / "exp_Test9_metrics.csv")
+exp = fread(sp.exp_derived("exp_Test9_metrics.csv"))
 runs_s = col(sim, "run"); runs_e = col(exp, "run")
-t12f = PP / "exp_Test12_tilt.csv"
+t12f = sp.exp_derived("exp_Test12_tilt.csv")
 exp2 = fread(t12f) if t12f.exists() else None
 if exp2 is not None:
     runs_e2 = col(exp2, "run")
@@ -137,7 +149,7 @@ sim_res = col(sim, "residual_tilt_deg")
 sim_peak_tilt = col(sim, "peak_tilt_deg")
 # measured tilt from the raw Test9 dataset (exp_tilt_from_raw.py); falls
 # back to the ch4-derived chord tilt if the raw extraction is absent
-tiltf = PP / "exp_Test9_tilt.csv"
+tiltf = sp.exp_derived("exp_Test9_tilt.csv")
 if tiltf.exists():
     expt = fread(tiltf)
     runs_t = col(expt, "run")
@@ -250,7 +262,7 @@ if expt is not None:
 # ---------------------------------------------------------------- fig P5
 # Residual tilt angle vs run: US-1 tiltmeter (sensor 18, settled values,
 # OOP = sensor Y axis) against the simulation cumulative residual tilt.
-tmf = PP / "exp_US1_tiltmeter.csv"
+tmf = sp.exp_derived("exp_US1_tiltmeter.csv")
 if tmf.exists():
     tm = fread(tmf)
     runs_m = col(tm, "run")
@@ -258,7 +270,7 @@ if tmf.exists():
     fig, ax = plt.subplots(figsize=(9.2, 5.0))
     ax.plot(runs_m, exp_res_tilt, "o--", color=C_EXP1, ms=6, lw=1.2,
             label="US-1 tiltmeter (settled, cumulative)")
-    tmf2 = PP / "exp_US2_tiltmeter.csv"
+    tmf2 = sp.exp_derived("exp_US2_tiltmeter.csv")
     if tmf2.exists():
         tm2 = fread(tmf2)
         ax.plot(col(tm2, "run"), col(tm2, "residual_deg"), "o--",

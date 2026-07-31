@@ -6,7 +6,13 @@ Paper Fig-4-style figure per model: adaptive Sd target + amplification
 (PSD/Welch method, monotonicity-corrected values).
 
 Usage: python fig_sd_period.py
-Outputs: figP2_nodamp.png, figP2_ratcheting.png in postproc/.
+       SAFEGO_SIM_DIR=stratC_results_NODAMP_v7 python fig_sd_period.py
+
+Paths resolve through safego_paths.py, so this follows SAFEGO_SIM_DIR instead
+of being pinned to one results folder. The derived experimental period CSVs
+fall back to the canonical copies if the active sim has none.
+
+Outputs: figP2_nodamp.png, figP2_ratcheting.png in the active postproc/.
 """
 import csv
 import numpy as np
@@ -14,9 +20,11 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from pathlib import Path
+import safego_paths as sp
 
-HERE = Path(__file__).resolve().parent
-PP = HERE / "stratC_results_NODAMP_v6_NEW" / "postproc"
+PP = sp.postproc_dir()
+print("sim dir : {}".format(sp.sim_dir()))
+print("postproc: {}".format(PP))
 
 plt.rcParams.update({
     "font.family": "serif", "font.serif": ["DejaVu Serif"],
@@ -35,20 +43,23 @@ def fread(p):
 def col(rows, k, cast=float):
     return np.array([cast(r[k]) for r in rows if r.get(k) not in ("", None)])
 
-exp9 = fread(PP / "exp_Test9_period_psd.csv")
-exp12 = fread(PP / "exp_Test12_period_psd.csv")
+exp9 = fread(sp.exp_derived("exp_Test9_period_psd.csv"))
+exp12 = fread(sp.exp_derived("exp_Test12_period_psd.csv"))
 r9 = np.array([int(r["run"]) for r in exp9 if r["T1_best_s"]])
 T9 = np.array([float(r["T1_best_s"]) for r in exp9 if r["T1_best_s"]])
 r12 = np.array([int(r["run"]) for r in exp12 if r["T1_best_s"]])
 T12 = np.array([float(r["T1_best_s"]) for r in exp12 if r["T1_best_s"]])
 
-CASES = [("figP2_nodamp.png", "NUM: undamped",
-          HERE / "stratC_results_NODAMP_v6_NEW"),
+CASES = [("figP2_nodamp.png", "NUM: undamped", sp.sim_dir()),
          ("figP2_ratcheting.png", "NUM: 3% Rayleigh",
-          HERE / "stratC_results_RATCHETING")]
+          sp.sim_dir("stratC_results_RATCHETING"))]
 
 for fname, lbl, simdir in CASES:
-    sim = fread(simdir / "strategy_C_summary.csv")
+    summary = simdir / "strategy_C_summary.csv"
+    if not summary.is_file():
+        print("   skip {}: no strategy_C_summary.csv in {}".format(fname, simdir))
+        continue
+    sim = fread(summary)
     runs = col(sim, "run")
     sd = col(sim, "Sd_target_mm")
     amp = col(sim, "amplification")

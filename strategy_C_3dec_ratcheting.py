@@ -120,7 +120,7 @@ def state_file_path():
 # =====================================================================
 def save_checkpoint(run_no, T_current, summary):
     state = {"last_completed_run": run_no, "T_current": T_current, "summary": summary}
-    with open(state_file_path(), "w") as f:
+    with open(state_file_path(), "w", newline="\n") as f:
         json.dump(state, f, indent=2)
 
 def load_checkpoint():
@@ -235,7 +235,7 @@ def build_velocity_file(A, T, run_no, out_dir):
     fname = "vel_run_{:02d}.txt".format(run_no)
     fpath = os.path.join(out_dir, fname)
     N = len(t)
-    with open(fpath, "w") as f:
+    with open(fpath, "w", newline="\n") as f:
         f.write("StratC_run{:02d}_T{:.4f}\n".format(run_no, T))
         f.write("{}\t0\n".format(N))
         for ti, vi in zip(t, v):
@@ -513,7 +513,7 @@ def run_strategy_C():
 
     log_path = os.path.join(OUT_DIR, "strategy_C_log.csv")
     log_is_new = (resume_from == 1) or not os.path.exists(log_path)
-    log_f = open(log_path, "w" if log_is_new else "a")
+    log_f = open(log_path, "w" if log_is_new else "a", newline="\n")
     if log_is_new:
         log_f.write("run,record,scale,T_excite,T_over_Tinit,"
                     "Sd_record_mm,Sd_target_mm,Sd_fixedT1_mm,amplification,"
