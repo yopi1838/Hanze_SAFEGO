@@ -14,20 +14,43 @@ summary (strategy_C_summary.csv), and writes:
   <SIM_DIR>/postproc/fig4_tilt_segments.png      all tilt channels vs run
   <SIM_DIR>/postproc/fig5_channel_grid.png       small multiples, all channels
 
+ONE SIMULATION vs THE EXPERIMENTS
+    This script compares a single results folder against the shake-table
+    specimens US-1 (Test 9) and US-2 (Test 12). The former sim-vs-sim
+    --compare / --compare-labels options have been removed; to put two
+    simulations side by side, post-process each and overlay the resulting
+    postproc_summary.csv files.
+
+    Experimental series are overlaid on fig1-fig4 and come from the derived
+    CSVs, resolved via safego_paths.exp_derived() (this folder's postproc/
+    first, then the canonical copies):
+
+      exp_Test9_tilt.csv  / exp_Test12_tilt.csv        fig1, fig4
+      exp_Test9_metrics.csv                            fig2   (US-1 only --
+                                                       there is no US-2 set)
+      exp_Test9_period_psd.csv / exp_Test12_..._psd    fig3
+
+    Any missing file is skipped with a note; the figure still renders.
+
 Runs and their record/scale are auto-discovered from folder names
-(RunNN_REC_sXpYY); nothing is hardcoded. Comparison folders are always
-re-extracted from raw CSVs (key channels only); no cached postproc files
-are reused.
+(RunNN_REC_sXpYY); nothing is hardcoded.
 
 Metric definitions (unchanged from the previous postproc):
   peak      = max |x(t) - x(t0)|            within the run
   residual  = mean of last 5% of x(t), minus x at start of Run 1
 
+  The experimental resid_* columns are likewise referenced to each
+  specimen's Run-1 baseline (exp_tilt_from_raw.py sets the baselines from
+  Run 1), so residuals are compared like for like. Peaks are per-run in both.
+
+  fig3 normalisation differs by necessity: the simulation reports
+  T_end/T_init against the fixed T1_init = 0.092 s, while each specimen is
+  normalised by its own Run-1 identified period (US-1 0.09153 s,
+  US-2 0.08818 s). Read fig3 as relative period growth, not absolute period.
+
 Usage:
-    python postprocess_stratC.py [SIM_DIR]
-        [--label LBL] [--compare DIR ...] [--compare-labels LBL ...]
-Defaults: SIM_DIR = stratC_results_NODAMP_v6_NEW,
-          compare = stratC_results_DAMP1p5, stratC_results_NODAMP_v6
+    python postprocess_stratC.py [SIM_DIR] [--label LBL]
+Default SIM_DIR: stratC_results_NODAMP_v6_NEW
 """
 import numpy as np
 import matplotlib
@@ -36,11 +59,35 @@ import matplotlib.pyplot as plt
 import csv, re, sys, argparse
 from pathlib import Path
 
+try:
+    import safego_paths as sp
+except ImportError:          # allow running from a copy outside the repo
+    sp = None
+
 RUN_RE = re.compile(r"^Run(\d+)_([A-Za-z0-9]+)_s(\d+)p(\d+)$")
 REC_COLOR = {"HU12": "tab:blue", "EC40": "tab:orange", "FR76": "tab:red"}
 KEY_TILT = "tilt_full_wall"
 KEY_DISP = "rel_disp_top_mm"
 TAIL_FRAC = 0.05  # last 5% of samples -> residual
+
+# Experimental specimens. Colours follow the project figure convention:
+# red squares = simulation, blue circles = US-1, orange circles = US-2.
+EXP_SPECS = [
+    {"label": "US-1 (Test 9)", "color": "royalblue", "marker": "o",
+     "tilt": "exp_Test9_tilt.csv", "metrics": "exp_Test9_metrics.csv",
+     "period": "exp_Test9_period_psd.csv", "ls": "--"},
+    {"label": "US-2 (Test 12)", "color": "darkorange", "marker": "^",
+     "tilt": "exp_Test12_tilt.csv", "metrics": None,
+     "period": "exp_Test12_period_psd.csv", "ls": ":"},
+]
+
+# sim tilt channel -> (experimental peak column, experimental residual column)
+TILT_SEG_MAP = {
+    "tilt_bot_seg":   ("peak_tilt_bot_seg",   "resid_tilt_bot_seg"),
+    "tilt_low_seg":   ("peak_tilt_low_seg",   "resid_tilt_low_seg"),
+    "tilt_up_seg":    ("peak_tilt_up_seg",    "resid_tilt_up_seg"),
+    "tilt_full_wall": ("peak_tilt_full_wall", "resid_tilt_full_wall"),
+}
 
 
 # ----------------------------------------------------------------- reading
@@ -144,6 +191,90 @@ def join_driver_summary(data, sim_dir):
     return cols
 
 
+# ------------------------------------------------------------ experimental
+def exp_csv(name, out_dir):
+    """Locate a derived experimental CSV: this run's own postproc/ first,
+    then whatever safego_paths.exp_derived() resolves (active sim, then the
+    canonical copies under stratC_results_NODAMP_v6_NEW/postproc/).
+    Returns None if it cannot be found anywhere."""
+    local = Path(out_dir) / name
+    if local.is_file():
+        return local
+    if sp is not None:
+        try:
+            p = Path(sp.exp_derived(name))
+            if p.is_file():
+                return p
+        except Exception:
+            pass
+    return None
+
+
+def read_exp_csv(path):
+    """-> {column_name: {run_no: value}}, skipping blanks and non-numerics."""
+    out = {}
+    with open(str(path)) as f:
+        for row in csv.DictReader(f):
+            try:
+                rn = int(float(row["run"]))
+            except (TypeError, ValueError, KeyError):
+                continue
+            for k, v in row.items():
+                if k == "run" or v in ("", None):
+                    continue
+                try:
+                    out.setdefault(k, {})[rn] = float(v)
+                except (TypeError, ValueError):
+                    pass
+    return out
+
+
+def load_exp(out_dir):
+    """Load every available experimental specimen. Missing files are skipped
+    with a note rather than raising -- the figures degrade gracefully."""
+    exps = []
+    for spec in EXP_SPECS:
+        e = {"label": spec["label"], "color": spec["color"],
+             "marker": spec["marker"], "ls": spec["ls"]}
+        found = []
+        for group in ("tilt", "metrics", "period"):
+            name = spec[group]
+            e[group] = None
+            if not name:
+                continue
+            p = exp_csv(name, out_dir)
+            if p is None:
+                print("  ! experimental file not found, skipped: {}".format(name))
+                continue
+            e[group] = read_exp_csv(p)
+            found.append(name)
+        if found:
+            exps.append(e)
+            print("  experiment '{}': {}".format(spec["label"], ", ".join(found)))
+    if not exps:
+        print("  ! no experimental data found -- figures will show simulation only")
+    return exps
+
+
+def exp_series(e, group, col):
+    """(runs, values) for one experimental column; empty arrays if absent."""
+    d = e.get(group) or {}
+    d = d.get(col) or {}
+    if not d:
+        return np.array([]), np.array([])
+    rn = sorted(d)
+    return np.array(rn), np.array([d[r] for r in rn])
+
+
+def exp_period_ratio(e):
+    """Measured T1 normalised by that specimen's own Run-1 period, so it is
+    comparable to the simulation's T_end/T_init."""
+    rn, T = exp_series(e, "period", "T1_best_s")
+    if not len(rn) or T[0] <= 0:
+        return np.array([]), np.array([])
+    return rn, T / T[0]
+
+
 # ------------------------------------------------------------------ helpers
 def chan_series(data, ch, metric):
     rn = sorted(r for r in data if ch in data[r]["channels"])
@@ -164,19 +295,23 @@ def all_channels(data):
 
 
 # ------------------------------------------------------------------ figures
-def fig_tilt(main, main_lbl, cmps, out_dir):
+def fig_tilt(main, main_lbl, exps, out_dir):
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5.5))
-    for ax, metric, ttl in ((ax1, "peak", "Peak tilt (deg)"),
-                            (ax2, "residual", "Residual (permanent) tilt (deg)")):
+    pk_col, rs_col = TILT_SEG_MAP[KEY_TILT]
+    for ax, metric, ttl, ecol in (
+            (ax1, "peak", "Peak tilt (deg)", pk_col),
+            (ax2, "residual", "Residual (permanent) tilt (deg)", rs_col)):
         x, y = chan_series(main, KEY_TILT, metric)
-        ax.plot(x, y, "rs-", ms=5, lw=0.8, label=main_lbl, zorder=3)
-        for lbl, d, style in cmps:
-            xc, yc = chan_series(d, KEY_TILT, metric)
-            if len(xc):
-                ax.plot(xc, yc, style, ms=4, lw=0.8, alpha=0.7, label=lbl)
+        ax.plot(x, y, "s-", color="red", ms=5, lw=1.2, label=main_lbl, zorder=3)
+        for e in exps:
+            xe, ye = exp_series(e, "tilt", ecol)
+            if len(xe):
+                ax.plot(xe, ye, marker=e["marker"], ls=e["ls"], color=e["color"],
+                        ms=5, lw=1.0, mfc="none", alpha=0.9, label=e["label"],
+                        zorder=2)
         ax.set_xlabel("Run"); ax.set_title(ttl)
         ax.grid(True, alpha=0.15); ax.legend(fontsize=9)
-    fig.suptitle("Full-wall tilt: peak and residual per run",
+    fig.suptitle("Full-wall tilt: simulation vs experiment, peak and residual",
                  fontsize=13, fontweight="bold")
     fig.tight_layout()
     fig.savefig(str(Path(out_dir) / "fig1_tilt_compare.png"), dpi=300,
@@ -184,7 +319,7 @@ def fig_tilt(main, main_lbl, cmps, out_dir):
     plt.close(fig); print("  -> fig1_tilt_compare.png")
 
 
-def fig_disp(main, main_lbl, cmps, out_dir):
+def fig_disp(main, main_lbl, exps, out_dir):
     fig, ax = plt.subplots(figsize=(9, 5))
     x, y = chan_series(main, KEY_DISP, "peak")
     ax.plot(x, y, "-", color="gray", lw=0.8, zorder=1)
@@ -194,12 +329,15 @@ def fig_disp(main, main_lbl, cmps, out_dir):
         ax.plot(rn, v, "o", color=REC_COLOR.get(rec, "k"), ms=7,
                 label=rec if rec not in seen else None, zorder=3)
         seen.add(rec)
-    for lbl, d, style in cmps:
-        xc, yc = chan_series(d, KEY_DISP, "peak")
-        if len(xc):
-            ax.plot(xc, yc, style, ms=4, lw=0.8, alpha=0.6, label=lbl)
+    for e in exps:
+        xe, ye = exp_series(e, "metrics", "peak_rel_mm")
+        if len(xe):
+            ax.plot(xe, ye, marker=e["marker"], ls=e["ls"], color=e["color"],
+                    ms=5, lw=1.0, mfc="none", alpha=0.9, label=e["label"],
+                    zorder=2)
     ax.set_xlabel("Run"); ax.set_ylabel("Peak relative top OOP disp (mm)")
-    ax.set_title("Peak relative top OOP displacement per run ({})".format(main_lbl))
+    ax.set_title("Peak relative top OOP displacement: simulation vs experiment\n({})"
+                 .format(main_lbl))
     ax.grid(True, alpha=0.15); ax.legend(fontsize=9)
     fig.tight_layout()
     fig.savefig(str(Path(out_dir) / "fig2_disp.png"), dpi=300,
@@ -207,13 +345,21 @@ def fig_disp(main, main_lbl, cmps, out_dir):
     plt.close(fig); print("  -> fig2_disp.png")
 
 
-def fig_activation(main, out_dir):
+def fig_activation(main, exps, out_dir):
     fig, ax = plt.subplots(figsize=(9, 5))
     x1, y1 = run_series(main, "T_end_over_Tinit")
     if len(x1):
-        ax.plot(x1, y1, "^-", color="tab:purple", ms=5, lw=1.2)
+        ax.plot(x1, y1, "^-", color="tab:purple", ms=5, lw=1.2,
+                label="NUM  T_end/T_init")
+    for e in exps:
+        xe, ye = exp_period_ratio(e)
+        if len(xe):
+            ax.plot(xe, ye, marker=e["marker"], ls=e["ls"], color=e["color"],
+                    ms=5, lw=1.0, mfc="none", alpha=0.9,
+                    label="{}  T1/T1(run 1)".format(e["label"]), zorder=2)
+    ax.legend(fontsize=9, loc="upper left")
     ax.set_xlabel("Run")
-    ax.set_ylabel("T_end / T_init (purple)", color="tab:purple")
+    ax.set_ylabel("Period ratio (see docstring)", color="tab:purple")
     ax.axhline(1.05, color="tab:purple", ls=":", lw=0.8, alpha=0.6)
     ax.axhline(1.20, color="tab:purple", ls=":", lw=0.8, alpha=0.6)
     ax2 = ax.twinx()
@@ -221,7 +367,7 @@ def fig_activation(main, out_dir):
     if len(x2):
         ax2.plot(x2, y2, "s-", color="tab:green", ms=5, lw=1.2)
     ax2.set_ylabel("beta applied  (1=symmetric)", color="tab:green")
-    ax.set_title("Period elongation and asymmetry activation per run",
+    ax.set_title("Period elongation vs experiment, and asymmetry activation",
                  fontsize=11, fontweight="bold")
     ax.grid(True, alpha=0.15)
     fig.tight_layout()
@@ -230,19 +376,51 @@ def fig_activation(main, out_dir):
     plt.close(fig); print("  -> fig3_activation.png")
 
 
-def fig_tilt_segments(main, out_dir):
+def fig_tilt_segments(main, exps, out_dir):
+    """Colour encodes the segment, line style encodes the source, so the
+    simulated and measured curves for one segment sit on the same colour.
+    Only the segments the experiment actually measured get an overlay."""
     tilt_chs = [c for c in all_channels(main) if c.startswith("tilt")]
     if not tilt_chs:
         return
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5.5))
-    for ax, metric, ttl in ((ax1, "peak", "Peak tilt (deg)"),
-                            (ax2, "residual", "Residual tilt (deg)")):
+    cmap = plt.get_cmap("tab10")
+    seg_color = {ch: cmap(i % 10) for i, ch in enumerate(tilt_chs)}
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 5.8))
+    for ax, metric, ttl, col_idx in ((ax1, "peak", "Peak tilt (deg)", 0),
+                                     (ax2, "residual", "Residual tilt (deg)", 1)):
         for ch in tilt_chs:
             x, y = chan_series(main, ch, metric)
-            ax.plot(x, y, "o-", ms=4, lw=0.9, label=ch)
+            ax.plot(x, y, "o-", ms=4, lw=1.1, color=seg_color[ch], zorder=3)
+            ecol = TILT_SEG_MAP.get(ch, (None, None))[col_idx]
+            if ecol is None:
+                continue
+            for e in exps:
+                xe, ye = exp_series(e, "tilt", ecol)
+                if len(xe):
+                    ax.plot(xe, ye, marker=e["marker"], ls=e["ls"],
+                            color=seg_color[ch], ms=4, lw=0.9, mfc="none",
+                            alpha=0.75, zorder=2)
         ax.set_xlabel("Run"); ax.set_title(ttl)
-        ax.grid(True, alpha=0.15); ax.legend(fontsize=8)
-    fig.suptitle("Tilt channels: segment-by-segment evolution",
+        ax.grid(True, alpha=0.15)
+
+    # two legends: one for the segment colours, one for the source styles
+    seg_handles = [plt.Line2D([], [], color=seg_color[ch], lw=2, label=ch)
+                   for ch in tilt_chs]
+    src_handles = [plt.Line2D([], [], color="0.35", marker="o", ls="-", lw=1.1,
+                              label="NUM (simulation)")]
+    for e in exps:
+        src_handles.append(plt.Line2D([], [], color="0.35", marker=e["marker"],
+                                      ls=e["ls"], lw=0.9, mfc="none",
+                                      label=e["label"]))
+    leg1 = ax2.legend(handles=seg_handles, fontsize=8, loc="upper left",
+                      title="segment", title_fontsize=8)
+    ax2.add_artist(leg1)
+    ax2.legend(handles=src_handles, fontsize=8, loc="lower right",
+               title="source", title_fontsize=8)
+
+    fig.suptitle("Tilt segments: simulation vs experiment "
+                 "(colour = segment, style = source)",
                  fontsize=13, fontweight="bold")
     fig.tight_layout()
     fig.savefig(str(Path(out_dir) / "fig4_tilt_segments.png"), dpi=300,
@@ -339,18 +517,16 @@ def console_table(main_data):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("sim_dir", nargs="?",
-                    default="stratC_results_GI_NORATCH")
-    ap.add_argument("--label", default="No viscous damping (hysteretic only), asym. pulse")
-    ap.add_argument("--compare", nargs="*",
-                    default=["stratC_results_DAMP1p5",
-                             "stratC_results_NODAMP_v6"])
-    ap.add_argument("--compare-labels", nargs="*",
-                    default=["1.5% Rayleigh", "NODAMP v6 (previous)"])
+                    default="stratC_results_NODAMP_v6_NEW")
+    ap.add_argument("--label", default=None,
+                    help="legend label for the simulation "
+                         "(default: the results folder name)")
     args = ap.parse_args()
 
     sim_dir = Path(args.sim_dir)
     out_dir = sim_dir / "postproc"
     out_dir.mkdir(exist_ok=True)
+    label = args.label if args.label else "NUM: {}".format(sim_dir.name)
 
     print("Extracting ALL channels: {}".format(sim_dir))
     main_data = extract_case(sim_dir, channels=None, verbose=True)
@@ -358,28 +534,17 @@ def main():
     print("  channels found: {}".format(len(all_channels(main_data))))
     driver_cols = join_driver_summary(main_data, sim_dir)
 
-    styles = ["o--", "d--", "v--"]
-    cmps = []
-    for i, cdir in enumerate(args.compare):
-        if not Path(cdir).exists():
-            print("  ! comparison folder missing, skipped: {}".format(cdir))
-            continue
-        lbl = (args.compare_labels[i] if i < len(args.compare_labels)
-               else Path(cdir).name)
-        print("Extracting comparison (key channels): {}".format(cdir))
-        d = extract_case(cdir, channels=[KEY_TILT, KEY_DISP])
-        if d:
-            cmps.append((lbl, d, styles[i % len(styles)]))
-            print("  comparison '{}': {} runs".format(lbl, len(d)))
+    print("Loading experimental data")
+    exps = load_exp(out_dir)
 
     write_long_csv(main_data, out_dir)
     write_wide_csv(main_data, driver_cols, out_dir)
     console_table(main_data)
 
-    fig_tilt(main_data, args.label, cmps, out_dir)
-    fig_disp(main_data, args.label, cmps, out_dir)
-    fig_activation(main_data, out_dir)
-    fig_tilt_segments(main_data, out_dir)
+    fig_tilt(main_data, label, exps, out_dir)
+    fig_disp(main_data, label, exps, out_dir)
+    fig_activation(main_data, exps, out_dir)
+    fig_tilt_segments(main_data, exps, out_dir)
     fig_channel_grid(main_data, out_dir)
     print("\nDone. Output: {}".format(out_dir))
 
