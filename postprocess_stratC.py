@@ -339,7 +339,7 @@ def console_table(main_data):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("sim_dir", nargs="?",
-                    default="stratC_results_NODAMP_v6_NEW")
+                    default="stratC_results_GI_NORATCH")
     ap.add_argument("--label", default="No viscous damping (hysteretic only), asym. pulse")
     ap.add_argument("--compare", nargs="*",
                     default=["stratC_results_DAMP1p5",
