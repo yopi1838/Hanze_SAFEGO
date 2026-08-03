@@ -104,10 +104,14 @@ handling and restore a base save that is no longer produced.**
 
 ```bash
 python postprocess_stratC.py stratC_results_NODAMP_v7 \
-    --label "mason_v7, no viscous damping, asym. pulse" \
-    --compare stratC_results_NODAMP_v6_NEW stratC_results_DAMP1p5 \
-    --compare-labels "mason_v6" "1.5% Rayleigh"
+    --label "mason_v7, no viscous damping"
 ```
+
+Compares **one** simulation against the shake-table specimens US-1 (Test 9) and
+US-2 (Test 12); the experimental curves are overlaid on fig1-fig4. The old
+sim-vs-sim `--compare` / `--compare-labels` options were removed — to put two
+simulations side by side, post-process each and overlay the two
+`postproc/postproc_summary.csv` files.
 
 Run this **first** — it creates `postproc/`, which every figure script writes into.
 

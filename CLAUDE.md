@@ -114,7 +114,7 @@ current and cross-platform.
   `strategy_C_3dec_*` drivers have `USE_RATCHETING = True`. What actually
   distinguishes that folder is **3% Rayleigh damping** and the non-`_v6` base save.
 - **`stratC_results_NODAMP_v6` and `stratC_results_NODAMP_v6_NEW` are different runs.**
-  The former is used as a `--compare` baseline; the latter is current.
+  The former was the previous baseline; the latter is the v6 reference set.
 
 ---
 
@@ -142,6 +142,8 @@ Groningen.dec
         │
         ▼  python postprocess_stratC.py            (outside 3DEC)
   postproc/postproc_all_channels.csv, postproc_summary.csv, fig1–fig5.png
+  (one sim vs US-1/US-2; experimental curves overlaid on fig1–fig4 via
+   safego_paths.exp_derived(). No sim-vs-sim --compare any more.)
         │
         ├─> exp_vs_sim_figs.py         → figP1…figP5
         ├─> make_presentation_figs.py  → figP1…figP3 into presentation_figs/
@@ -621,8 +623,8 @@ delete that one file first.
 Afterwards, point the analysis at the new folder:
 
 ```bash
-python postprocess_stratC.py stratC_results_NODAMP_v7 --label "mason_v7, no viscous damping" \
-    --compare stratC_results_NODAMP_v6_NEW --compare-labels "mason_v6"
+python postprocess_stratC.py stratC_results_NODAMP_v7 --label "mason_v7, no viscous damping"
+# ^ overlays US-1/US-2 on fig1-fig4; sim-vs-sim --compare was removed (see below)
 # scripts that resolve through safego_paths.py:
 SAFEGO_SIM_DIR=stratC_results_NODAMP_v7 python ch19_xval.py sim
 ```
