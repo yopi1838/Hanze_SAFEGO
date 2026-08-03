@@ -455,7 +455,7 @@ def setup_model_for_dynamic(save_file):
     block contact group 'Joist_S2_contact' range pos-y 2.0 2.5 pos-z 0.9 1.5
     """)
     it.command("call 'instrument_history_new.dat'")
-    it.command("call 'instrument_tilt_v2.dat'")
+    
     it.command("""
     block free velocity-z range group 'S'
     """)
@@ -529,8 +529,7 @@ def execute_run(run_no, record, scale, T_current):
     it.command("table '{}' delete".format(tbl_name))
     it.command("history delete")
     it.command("call 'instrument_history_new.dat'")
-    it.command("call 'instrument_tilt_v2.dat'")
-
+    
     run_summary = {
         "run": run_no, "record": record, "scale": scale,
         "T_excitation": round(T_current, 6),
@@ -555,7 +554,7 @@ def execute_run(run_no, record, scale, T_current):
 # 11.  MAIN DRIVER
 # =====================================================================
 SPECTRA_FILES = ["spectrum_HU12.csv", "spectrum_EC40.csv", "spectrum_FR76.csv"]
-DAT_FILES     = ["instrument_history_new.dat", "instrument_tilt_v2.dat",
+DAT_FILES     = ["instrument_history_new.dat",
                  "instrument_history_export_v2.dat"]
 BASE_SAVE     = "Part_I_MASON_v7.sav"
 

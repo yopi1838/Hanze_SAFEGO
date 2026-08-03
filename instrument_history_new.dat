@@ -137,6 +137,8 @@ fish history tilt_beam_seg ;14
 fish history tilt_full_wall ;15
 fish history rel_disp_top_mm ; 16
 
+call 'instrument_tilt_v2.dat'       
+
 [Record_Disp]
 ; =====================================================================
 ; DISPLACEMENT CHANNELS
