@@ -108,7 +108,11 @@ python postprocess_stratC.py stratC_results_NODAMP_v7 \
 ```
 
 Compares **one** simulation against the shake-table specimens US-1 (Test 9) and
-US-2 (Test 12); the experimental curves are overlaid on fig1-fig4. The old
+US-2 (Test 12); the experimental curves are overlaid on fig1-fig4, and fig6 adds
+the top-quarter-right peak OOP displacement comparison (simulated `Channel_4`
+referenced to `Channel_5`, matching the experimental sensor position, with
+`Channel_19` shown thin for reference). `--ycap MM` overrides fig6's automatic
+y-axis cap. The old
 sim-vs-sim `--compare` / `--compare-labels` options were removed — to put two
 simulations side by side, post-process each and overlay the two
 `postproc/postproc_summary.csv` files.

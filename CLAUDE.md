@@ -141,7 +141,12 @@ Groningen.dec
   stratC_results_NODAMP_v7/          (v6 runs live in stratC_results_NODAMP_v6_NEW)
         │
         ▼  python postprocess_stratC.py            (outside 3DEC)
-  postproc/postproc_all_channels.csv, postproc_summary.csv, fig1–fig5.png
+  postproc/postproc_all_channels.csv, postproc_summary.csv, fig1–fig6.png
+  (fig6 = top-quarter-right peak OOP disp, table-referenced, vs US-1/US-2.
+   Simulated series is Channel_4 (x = 1.186 m), which is the same position
+   as the experimental sensor; Channel_19 is drawn thin as a reference
+   because ch19_xval.py / figP6 use it despite it sitting on the wall
+   centreline. Ch19 referenced to Ch5 reproduces rel_disp_top_mm exactly.)
   (one sim vs US-1/US-2; experimental curves overlaid on fig1–fig4 via
    safego_paths.exp_derived(). No sim-vs-sim --compare any more.)
         │
