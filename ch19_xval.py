@@ -31,7 +31,7 @@ import safego_paths as sp
 
 HERE = sp.ROOT
 SIM = sp.sim_dir()
-SIM_DAMP = sp.sim_dir("stratC_results_DAMP1p5")
+SIM_DAMP = sp.sim_dir("stratC_results_GI_NORATCH")
 SIM_RATCH = sp.sim_dir("stratC_results_RATCHETING")
 PP = sp.postproc_dir()
 STATE = sp.state_file("ch19")
