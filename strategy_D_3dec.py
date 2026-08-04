@@ -1,3 +1,4 @@
+=======
 # -*- coding: ascii -*-
 """
 Strategy D -- prescribed, record-invariant intensity.
@@ -867,7 +868,7 @@ def preflight_checks():
     print("   all required inputs found.")
     print("=" * 70)
 
-def run_strategy_C():
+def run_strategy_D():
     os.makedirs(OUT_DIR, exist_ok=True)
     preflight_checks()
     print("\n--- Checking for existing runs ---")
@@ -887,7 +888,7 @@ def run_strategy_C():
         print("  T_current = {:.4f} s ({:.2f}x T_init)".format(T_current, T_current / T1_init))
         setup_model_for_dynamic(save_file_path(last_done))
 
-    log_path = os.path.join(OUT_DIR, "strategy_C_log.csv")
+    log_path = os.path.join(OUT_DIR, "strategy_D_log.csv")
     log_is_new = (resume_from == 1) or not os.path.exists(log_path)
     log_f = open(log_path, "w" if log_is_new else "a", newline="\n")
     LOG_COLS = ["run", "record", "scale", "PGD_target_mm", "PGD_applied_mm",
@@ -910,7 +911,7 @@ def run_strategy_C():
     log_f.close()
 
     print("\n" + "=" * 70)
-    print("Strategy C (ratcheting={}) complete: {} runs".format(USE_RATCHETING, len(PROTOCOL)))
+    print("Strategy D (ratcheting={}) complete: {} runs".format(USE_RATCHETING, len(PROTOCOL)))
     print("=" * 70)
     print("\nProtocol as applied (intensity is prescribed, not adapted):")
     print("  {:>4} {:>6} {:>9} {:>9} {:>7} {:>8} {:>9} {:>9}".format(
@@ -935,4 +936,4 @@ def run_strategy_C():
 # =====================================================================
 # ENTRY POINT
 # =====================================================================
-run_strategy_C()
+run_strategy_D()
