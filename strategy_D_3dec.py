@@ -1,4 +1,4 @@
-=======
+#=======
 # -*- coding: ascii -*-
 """
 Strategy D -- prescribed, record-invariant intensity.
