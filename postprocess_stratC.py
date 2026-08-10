@@ -655,7 +655,7 @@ def console_table(main_data):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("sim_dir", nargs="?",
-    default="stratC_results_SECANT")
+    default="stratC_results_GI_NORATCH")
     ap.add_argument("--ycap", type=float, default=None,
                     help="fig6 y-axis cap in mm (default: automatic, only "
                          "applied when the simulation dwarfs the experiment)")
