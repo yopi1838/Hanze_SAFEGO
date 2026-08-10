@@ -1,44 +1,77 @@
 # -*- coding: ascii -*-
 """
-Strategy C (SYMMETRIC PULSE, NO DAMPING) : Adaptive Sequential IDA
-=======================================================================
-Production driver for the mason_v7 model. Writes to stratC_results_NODAMP_v7.
+Strategy F (FULL) -- significant-duration-truncated records, runs 1-25.
 
-USE_RATCHETING is now FALSE, so this runs the original symmetric pulse and
-ASYM_K is inert. The reason is in MODELLING_DISCREPANCIES.md section 0: the
-source paper attributes the experimental asymmetry to the timber floors
-applying a moment to one side of the wall, and measures 8-12 mm of cumulative
-joist slip, with the bow-tie specimen (which removed that slip) reversing the
-sign of its residual tilt. Both mechanisms are already in this model
-geometrically, whereas ASYM_K imposes an asymmetric INPUT PULSE -- a different
-mechanism, and very likely a double count. Any residual tilt this run produces
-therefore comes from the joists alone, which is the quantity worth comparing.
+The fidelity counterpart to the pulse strategies, run as the FULL cumulative
+sequence from run 1. Each run applies the actual shake-table motion the
+specimen saw (HU12 / EC40 / FR76, already scaled by the table), converted to a
+3DEC velocity table by make_record_tables_full.py. Nothing is synthesised, no
+spectrum is read, no intensity is prescribed. It is the reference the cheap
+pulse strategies are measured against.
 
-Set USE_RATCHETING = True to restore the asymmetric (record-derived) pulse from
-ratcheting_pulse.py. The marked  # >>> RATCHETING  blocks are the only places
-the two paths differ.
+TRUNCATION (see make_record_tables_full.py for the full rationale)
+    Each record is kept from t = 0 and cut at the table-velocity zero-crossing
+    nearest its 95% Arias time, so the applied motion starts and ends at rest
+    with no velocity step. Starting at t = 0 (rather than the 5% Arias time)
+    preserves the low-frequency build-up that a 5% lower cut discards. A
+    zero-endpoint half-sine baseline removes the residual net table drift so the
+    base does not walk across the 24-25 run sequence.
 
-Relationship to strategy_C_3dec_GI.py: both run the symmetric pulse, both record
-the same channels, and both have the working damping branch. The pair is now a
-CONTROLLED test of the fracture-energy hypothesis, differing only in:
-    G_I / G_II   13.2 J/m2 here (as computed in ANALYSIS_PART_I_MASON.dat)
-                 vs 20 J/m2 in GI
-    OUT_DIR      stratC_results_NODAMP_v7 vs stratC_results_GI_NORATCH
-GI additionally exposes COH_RESIDUAL, but it is 0.0 there, which matches the
-base model, so it changes nothing.
+WHY IT EXISTS
+    The diagnostic profile figure showed the model reaching about a sixth of
+    the experimental out-of-plane displacement while reproducing the mechanism
+    shape. Two causes are possible: intensity starvation (a loading problem the
+    pulse strategies can fix) or the model itself under-responding. The single
+    thing that separates them is applying the REAL motion and seeing whether
+    the wall then reaches the experimental displacement. This driver does that.
 
-Instrumentation: this driver calls instrument_tilt_v2.dat after
-instrument_history_new.dat at both registration points, and exports through
-instrument_history_export_v2.dat. FISH histories export BY NUMBER, so if you
-add or remove any `fish history` line in either .dat the indices shift and the
-export file must be updated to match.
+    Run it against a pulse strategy at the same damage state:
+      - if the record reaches the experimental displacement and the pulse does
+        not, the gap is the pulse's missing cycles (a loading limitation), and
+        the fidelity-vs-cost trade is real and quantified.
+      - if the record ALSO falls short, the gap is in the model (boundary
+        conditions, large-strain, damping), and no loading change fixes it.
 
-ratcheting_pulse.py must sit in the same directory as this script (or on
-sys.path). Run inside 3DEC:
-    python-reset-state false
-    call 'strategy_C_3dec_nodamp.py'
+TWO WAYS TO RUN IT
+    Full cumulative sequence: START_SAVE at the base save, RUN_FROM/RUN_TO
+        spanning all runs. About 180 s of model time for US-1's 24 records,
+        roughly 11 h at ~230 s wall per s model. This is the complete fidelity
+        model, directly comparable run-for-run to the pulse strategies.
+    Targeted benchmark (cheaper, and the decisive test): START_SAVE at a
+        damaged save from a pulse run, RUN_FROM/RUN_TO at just the FR76 runs
+        22-24. One to three records, ~1 h, answers the loading-vs-model
+        question without the full sequence.
 
-To force a full restart, delete or rename the stratC_results folder.
+    NB a warm start from another strategy's save inherits that strategy's
+    damage history. For a clean run-for-run comparison, start both the record
+    and the pulse analysis from the same state.
+
+INPUTS
+    The folder record_tables_full/ (TABLE_DIR), holding
+    record_tables_full_manifest_US{n}.csv and the vel_expfull_T{T}_run{NN}.txt
+    tables, all written by make_record_tables_full.py. Generate them first:
+        python make_record_tables_full.py            # US-1, runs 1-24
+        python make_record_tables_full.py --test 12  # US-2, runs 1-25
+
+REPORTED
+    T_end from the ring-down after each record, as a damage measure. It drives
+    nothing. Run folders are Run{NN}_{class}_s{PGD}, so postprocess_stratC.py
+    parses them unchanged and the comparison figures work as-is.
+
+LIMITATIONS
+    Same model caveats as the pulse strategies: the top beam is driven with the
+    base motion, and large-strain is off, so a large-displacement or collapse
+    result needs large-strain on to be trusted. What this driver removes is the
+    loading approximation, not the model approximations.
+
+GENERATED FROM strategy_F_3dec.py: only the config block (manifest name, table
+prefix, RUN_FROM/RUN_TO = 1..25, OUT_DIR) differs. The pulse-synthesis helpers
+(pulse_arrays, calibrate_amplitude_pgd, newmark_sd, ...) remain in the file but
+are unused here. Preserve the 3DEC-embedded Python style. run_strategy_C() is
+kept as the entry-point name only, for diff-ability against the siblings.
+
+OUTPUT
+    stratF_full_results_US{n}/
 """
 
 import itasca as it
@@ -67,11 +100,7 @@ it.command("program automatic-model-save active off")
 T1_init     = 0.092
 xi          = 0.05
 delta_t     = 0.005
-n_cycles    = 3.0     # was 1.5. A cracked wall is a rocking mechanism; 1.5
-                      # cycles delivered acceleration but too few reversals to
-                      # build the rocking amplitude that drives collapse. 3.0
-                      # gives the pulse enough cycles for the FR76 runs to
-                      # accumulate rocking.
+n_cycles    = 1.5
 tail_sec    = 2.5
 phase_accel = math.pi / 2
 inter_run_gap = 0.5
@@ -82,15 +111,11 @@ FFT_F_MAX  = 50.0
 T_MIN_PHYS = 0.02
 T_MAX_PHYS = 1.0
 
-OUT_DIR = "stratC_results_NODAMP_v7"
+OUT_DIR = None   # set just below, once RECORD_TEST exists
 STATE_FILE_NAME = "stratC_checkpoint.json"
 
 # >>> RATCHETING : controls
-USE_RATCHETING = False   # OFF. The paper attributes the asymmetry to eccentric joist
-                         # loading and 8-12 mm of cumulative joist slip, both of which
-                         # this model already contains geometrically, whereas ASYM_K
-                         # imposes an asymmetric INPUT PULSE. Any residual tilt that
-                         # still appears now comes from the joists alone. ASYM_K is inert.
+USE_RATCHETING = False   # OFF for this variant: symmetric pulse, ASYM_K inert
 ASYM_K         = 1.0     # global asymmetry sharpening (>=1 sharpens); calibrate out-of-sample
 # Damping is exposed here so it is explicit and printed at startup.
 # The conference paper used FULL Rayleigh at 3%. The pasted driver used
@@ -98,22 +123,175 @@ ASYM_K         = 1.0     # global asymmetry sharpening (>=1 sharpens); calibrate
 # choice for a collapse study. Default below is full Rayleigh 3%; change if needed.
 DAMP_RATIO = 0.0         # fraction of critical at the centre frequency
 DAMP_TYPE  = ""          # "" = full Rayleigh (mass+stiffness); "mass"; "stiffness"
+
+# >>> STRATEGY D : the protocol is a table, not a feedback loop.
+#
+# Each run is defined by two numbers measured from the corresponding
+# shake-table record, and by nothing about the model:
+#
+#   PGD_amp_mm  amplitude of the table displacement (half its peak-to-peak)
+#   T_eq_s      equivalent period, pi * PGD / PGV
+#
+# Both are properties of the ground motion, so the intensity measure is
+# record-invariant. That is the defect that sank the Strategy C variants:
+# Sd(record, T_current) is a function of the damaged structure, so it created
+# an intensity-damage feedback loop with no stable regime, and its values were
+# not comparable between runs or against any other study.
+#
+# The pulse amplitude is calibrated so the applied table displacement equals
+# PGD_amp_mm exactly. The pulse period is T_eq_s. Nothing here adapts.
+# T_end is still identified from the ring-down and logged, purely as a damage
+# measure. It does not influence the excitation.
+# >>> STRATEGY F (FULL) : significant-duration-truncated records, runs 1-25.
+RECORD_TEST   = 9          # 9 = US-1, 12 = US-2
+TABLE_DIR     = "record_tables_full"   # folder holding the tables + manifest,
+                                       # written by make_record_tables_full.py
+MANIFEST_FILE = "record_tables_full_manifest_US{}.csv".format(
+                    1 if RECORD_TEST == 9 else 2)
+RUN_FROM      = 1          # first run to apply (inclusive)
+RUN_TO        = 25         # last run to apply (inclusive); 99 = all available.
+                           # US-1 (Test 9) has 24 measured runs, so 1-24 are
+                           # generated and applied; US-2 (Test 12) has 25.
+START_SAVE    = "Part_I_MASON_v7.sav"   # base state. This is the FULL cumulative
+                           # sequence from run 1, so it must start undamaged.
+TAIL_SEC_RECORD = 2.5      # ring-down appended after each record, for the
+                           # period identification only
+# <<< STRATEGY F (FULL)
+
+OUT_DIR = "stratF_full_results_US{}".format(1 if RECORD_TEST == 9 else 2)
+# <<< STRATEGY D
+
+# >>> RETIRED : the Strategy C feedback controls. None is read in Strategy D;
+# they are kept so the stratC_results_* folders stay reproducible from history.
+#
+# THE PROBLEM THIS FIXES
+#   Sd_target = scale * Sd(record, T). Until now T was the period identified
+#   from the post-run free-vibration ring-down, which is a SMALL-AMPLITUDE
+#   measurement. For a wall that has cracked into a rocking mechanism that
+#   period stays short (it saturated at ~1.30 * T1 in stratC_results_GI_NORATCH)
+#   while the effective response period migrates long. Because all three target
+#   spectra are near their minimum at 0.09-0.12 s and rise steeply beyond it,
+#   the identified period pinned the whole IDA to the flat part of the spectrum:
+#
+#     Sd(HU12) = 0.53 mm at 0.092 s ... 4.23 mm at 0.40 s
+#     Sd(FR76) = 1.30 mm at 0.092 s ... 28.78 mm at 0.40 s
+#
+#   GI_NORATCH therefore topped out at Sd_target = 6.77 mm, against ~37 mm in
+#   the calibration study and 61 mm of measured table displacement in the run
+#   that failed the specimen. The IDA never reached collapse intensity.
+#
+# THE FIX
+#   Look the spectrum up at the SECANT period instead, obtained by equivalent
+#   linearisation at the peak response of the preceding run:
+#
+#       k_sec = V_peak / d_peak                (kN/m, from that run's histories)
+#       T_sec = 2*pi*sqrt(M_EFF / k_sec)       (s)
+#
+#   M_EFF and the initial stiffness are the equivalent-SDOF values from the
+#   calibration study: 1.47 t and 6875 kN/m, which reproduce T1 = 0.092 s. This
+#   is standard equivalent linearisation, as used in displacement-based
+#   assessment, and it is the period the rocking wall actually responds at.
+#
+#   The ring-down period is still identified and logged as T_end. It remains a
+#   damage indicator. It no longer sets the intensity.
+USE_SECANT_PERIOD = False  # OFF. The V/d estimator is not sound -- see the
+                           # header. True restores it for comparison only.
+M_EFF_T           = 1.47   # tonnes, equivalent SDOF mass (calibration study)
+K_INIT_KNPM       = 6875.0 # kN/m, equivalent SDOF initial stiffness
+T_SEC_MAX         = 0.60   # s. Hard clamp on the lookup period.
+SECANT_MONOTONIC  = True   # never let the lookup period shorten. Damage is
+                           # irreversible; a smaller excursion in a low-intensity
+                           # run legitimately has a stiffer secant, but using it
+                           # would drop the demand and make the ladder oscillate.
+SD_GROWTH_CAP     = 3.0    # None to disable. Sd_target may not exceed this
+                           # multiple of the previous run's, so a bad period
+                           # estimate cannot reproduce the v7 runaway. Every
+                           # time it binds it is printed and logged.
+SCALE_MULT        = 1.0    # RETIRED in Strategy D. Was: multiplier on the
+                           # what primes the loop. Calibrated on the observed
+                           # stratC_results_SECANT response: the wall cracks
+                           # open at Sd_target ~ 7.8 mm, and with the ring-down
+                           # lookup nothing below 1.5 ever gets there (1.00 and
+                           # 1.25 both stall at T1 for all 25 runs, exactly as
+                           # stratC_results_GI_NORATCH did). 1.5 primes at
+                           # run 20, 2.0 at run 18 but overshoots from run 19.
+                           # Does NOT affect run folder names or the reported
+                           # 'scale' column; only Sd_target. See scale_eff.
+# <<< SECANT PERIOD
+
+# >>> GI VARIANT : joint property overrides applied after every model restore.
+# Set G_I_NEW to None to leave the properties exactly as the base save has them.
+G_I_NEW      = None      # None = leave the base save's properties alone.
+                         # Deliberately OFF here. G_I was raised to 20 in the
+                         # GI variant to suppress the NODAMP_v7 period runaway,
+                         # but that runaway is now understood as an artefact of
+                         # the intensity bug this driver fixes. Keeping G_I at
+                         # the base 13.2 makes this a ONE-VARIABLE change from
+                         # stratC_results_NODAMP_v7. Set 20.0 to re-test G_I on
+                         # top of the corrected intensity ladder.
+G_II_RATIO   = 10.0      # G_II = G_II_RATIO * G_I, as in ANALYSIS_PART_I_MASON.dat
+COH_RESIDUAL = 0.0       # Pa. Base model uses 0 -- cracked joints retain nothing.
+                         # This is very likely the bigger lever; change it ONLY
+                         # after seeing what G_I alone does, so the runs stay
+                         # interpretable one variable at a time.
+# <<< GI VARIANT
 # <<< RATCHETING
 
 # =====================================================================
 # 2.  PROTOCOL (Table 2)
 # =====================================================================
-PROTOCOL = [
-    ( 1, "HU12", 0.50),  ( 2, "HU12", 0.75),  ( 3, "EC40", 0.20),
-    ( 4, "HU12", 1.00),  ( 5, "HU12", 1.25),  ( 6, "EC40", 0.30),
-    ( 7, "HU12", 1.50),  ( 8, "EC40", 0.40),  ( 9, "HU12", 1.75),
-    (10, "HU12", 2.00),  (11, "EC40", 0.50),  (12, "HU12", 2.25),
-    (13, "HU12", 2.50),  (14, "HU12", 2.75),  (15, "HU12", 3.00),
-    (16, "HU12", 3.50),  (17, "HU12", 4.00),  (18, "HU12", 4.50),
-    (19, "HU12", 5.00),  (20, "HU12", 5.50),  (21, "HU12", 6.00),
-    (22, "FR76", 1.00),  (23, "FR76", 1.50),  (24, "FR76", 1.75),
-    (25, "FR76", 2.00),
-]
+def record_class(T_eq):
+    """Label runs by equivalent period so the record families stay visible
+    downstream. The bands fall out of the measured data with no ambiguity:
+    HU12-type runs cluster at 0.167-0.180 s, FR76 at 0.49-0.52 s and EC40 at
+    1.11-1.13 s, with nothing in between."""
+    if T_eq < 0.30:
+        return "HU12"
+    if T_eq < 0.80:
+        return "FR76"
+    return "EC40"
+
+
+def _teq_from_pgd_pgv(pgd_mm, pgv_mps):
+    if pgv_mps <= 0:
+        return 0.0
+    return math.pi * (pgd_mm / 1000.0) / pgv_mps
+
+
+def load_record_protocol(manifest_path):
+    """Read record_tables_full_manifest_US{n}.csv from make_record_tables_full.py.
+
+    Each entry names the pre-built velocity table to import, its solve
+    duration, and the record's measured PGD, so nothing about the model's
+    state enters. Runs outside [RUN_FROM, RUN_TO] and tables that are not on
+    disk are dropped with a note."""
+    rows = []
+    with open(manifest_path) as f:
+        for r in csv.DictReader(f):
+            try:
+                rn = int(float(r["run"]))
+                dur = float(r["dur_s"])
+                pgd = float(r["pgd_amp_mm"])
+                pgv = float(r["pgv_mps"])
+            except (KeyError, TypeError, ValueError):
+                continue
+            if rn < RUN_FROM or rn > RUN_TO:
+                continue
+            tpath = os.path.join(TABLE_DIR, r["table_file"])
+            if not os.path.exists(tpath):
+                print("  ! table missing, run skipped: {}".format(tpath))
+                continue
+            rows.append({"run": rn, "table_file": r["table_file"],
+                         "dur_s": dur, "pgd_mm": pgd, "pgv_mps": pgv,
+                         "label": record_class(_teq_from_pgd_pgv(pgd, pgv))})
+    rows.sort(key=lambda x: x["run"])
+    if not rows:
+        raise RuntimeError("no usable rows in {} for runs {}-{}".format(
+            manifest_path, RUN_FROM, RUN_TO))
+    return rows
+
+
+PROTOCOL = load_record_protocol(os.path.join(TABLE_DIR, MANIFEST_FILE))
 
 # Reference only (the driver reads CSVs by filename, never by index).
 # Indices match instrument_history_new.dat + instrument_tilt_v2.dat, and are
@@ -169,6 +347,66 @@ def ch19_csv_path(run_no, record=None, scale=None):
     # Last resort: flat path (the caller already handles a missing file).
     return os.path.join(OUT_DIR,
         "Channel_19_DispTopQRight_run{:02d}.csv".format(run_no))
+
+def run_folder_path(run_no, record, scale):
+    scale_str = "{:.2f}".format(scale).replace(".", "p")
+    return os.path.join(OUT_DIR,
+                        "Run{:02d}_{}_s{}".format(run_no, record, scale_str))
+
+
+def _read_hist(path):
+    """3DEC history export: 2 header lines, whitespace separated."""
+    try:
+        a = np.genfromtxt(path, skip_header=2)
+    except Exception:
+        return None
+    if a.ndim < 2 or a.shape[1] < 2:
+        return None
+    m = np.isfinite(a[:, 0]) & np.isfinite(a[:, 1])
+    a = a[m]
+    return a if len(a) >= 5 else None
+
+
+def secant_period(run_no, record, scale):
+    """Equivalent-linearised period from the run just completed.
+
+        k_sec = V_peak / d_peak,   T_sec = 2*pi*sqrt(M_EFF / k_sec)
+
+    V_peak comes from 'total_shear' (kN, base reaction plus both joist
+    reactions) and d_peak from 'rel_disp_top_mm' (mm, top centreline relative
+    to the table). Both are exported for every run.
+
+    Returns (T_sec, info) or (None, info) when the histories are unusable, in
+    which case the caller falls back to the ring-down period.
+    """
+    info = {"V_peak_kN": None, "disp_peak_mm": None, "k_sec_kNpm": None}
+    folder = run_folder_path(run_no, record, scale)
+    fv = _find_channel_csv(folder, "total_shear")
+    fd = _find_channel_csv(folder, "rel_disp_top_mm")
+    if not (fv and fd):
+        print("  ! secant: total_shear / rel_disp_top_mm not found in {}"
+              .format(folder))
+        return None, info
+    av, ad = _read_hist(fv), _read_hist(fd)
+    if av is None or ad is None:
+        print("  ! secant: history unreadable, falling back to ring-down period")
+        return None, info
+
+    v = av[:, 1]
+    u = ad[:, 1]
+    V_peak = float(np.max(np.abs(v - v[0])))          # kN
+    d_peak = float(np.max(np.abs(u - u[0]))) / 1000.0  # mm -> m
+    info["V_peak_kN"] = round(V_peak, 4)
+    info["disp_peak_mm"] = round(d_peak * 1000.0, 4)
+    if d_peak <= 0 or V_peak <= 0:
+        print("  ! secant: zero peak response, falling back to ring-down period")
+        return None, info
+
+    k_sec = V_peak / d_peak                            # kN/m
+    info["k_sec_kNpm"] = round(k_sec, 2)
+    T_sec = 2.0 * math.pi * math.sqrt(M_EFF_T / k_sec)
+    return T_sec, info
+
 
 def state_file_path():
     return os.path.join(OUT_DIR, STATE_FILE_NAME)
@@ -269,12 +507,16 @@ def calibrate_amplitude(T, Sd_target):
         raise RuntimeError("Trial Sd=0 at T={:.4f}".format(T))
     return (Sd_target / sd0) * A_trial
 
-def build_velocity_file(A, T, run_no, out_dir):
+def pulse_arrays(A, T):
+    """(t, v) for the cosine-acceleration pulse plus its ramped zero tail.
+
+    3DEC is given velocity, and v(0) = 0 exactly because the acceleration is a
+    cosine, so the model starts from rest. Factored out of build_velocity_file
+    so the PGD calibration integrates the same array that gets written."""
     w = 2.0 * math.pi / T
     n = int(round(n_cycles * T / delta_t)) + 1
     t = np.arange(n) * delta_t
-    V0 = A / w
-    v = V0 * np.sin(w * t)
+    v = (A / w) * np.sin(w * t)
     ramp_sec = max(0.5 * T, delta_t)
     n_tail = int(round(tail_sec / delta_t))
     n_ramp = min(int(round(ramp_sec / delta_t)), n_tail)
@@ -283,18 +525,42 @@ def build_velocity_file(A, T, run_no, out_dir):
     v_end = float(v[-1])
     if n_ramp > 1:
         s = np.linspace(0.0, 1.0, n_ramp)
-        wcos = 0.5 * (1.0 + np.cos(math.pi * s))
-        v_ramp = v_end * wcos
+        v_ramp = v_end * 0.5 * (1.0 + np.cos(math.pi * s))
     else:
         v_ramp = np.array([0.0])
     v_tail = np.zeros(n_tail)
     v_tail[:len(v_ramp)] = v_ramp
-    v = np.r_[v, v_tail]
+    return t, np.r_[v, v_tail]
+
+
+def table_displacement(t, v):
+    """Displacement the base will trace out, by trapezoidal integration."""
+    return np.concatenate(([0.0],
+                           np.cumsum(0.5 * (v[1:] + v[:-1]) * np.diff(t))))
+
+
+def calibrate_amplitude_pgd(T, PGD_target):
+    """Acceleration amplitude giving a table displacement of amplitude
+    PGD_target, defined as half the peak-to-peak.
+
+    Analytically A = PGD * w^2 for a pure sinusoid, but the ramped tail shifts
+    that slightly, so this calibrates on the actual array. One trial pass is
+    enough because the table scales linearly with A."""
+    t, v = pulse_arrays(1.0, T)
+    d = table_displacement(t, v)
+    amp = 0.5 * (float(np.max(d)) - float(np.min(d)))
+    if amp <= 0:
+        raise RuntimeError("zero trial table displacement at T={:.4f}".format(T))
+    return PGD_target / amp
+
+
+def build_velocity_file(A, T, run_no, out_dir):
+    t, v = pulse_arrays(A, T)
     fname = "vel_run_{:02d}.txt".format(run_no)
     fpath = os.path.join(out_dir, fname)
     N = len(t)
     with open(fpath, "w", newline="\n") as f:
-        f.write("StratC_run{:02d}_T{:.4f}\n".format(run_no, T))
+        f.write("StratD_run{:02d}_T{:.4f}\n".format(run_no, T))
         f.write("{}\t0\n".format(N))
         for ti, vi in zip(t, v):
             f.write("{:.6f}\t{:.9e}\n".format(ti, vi))
@@ -330,16 +596,7 @@ def generate_pulse(record, T, Sd_target, run_no, out_dir):
 # =====================================================================
 RMS_ALIVE_MM  = 0.05
 RMS_CHUNK_S   = 0.15
-MAX_RD_WINDOW = 1.50  # was 0.50. After a hard rocking run that recovers (e.g.
-                      # run 23, peak 58 mm), the 0.5 s window saw too few cycles
-                      # and its large residual offset masked the rocking peak,
-                      # so autocorr found no peak and fell back to T1_init
-                      # (0.092 s). That reset starved the next run (run 24 got a
-                      # 0.092 s pulse, Sd ~2.3 mm, moved 17 mm instead of
-                      # escalating). Verified on run 23's ring-down: 0.5 s ->
-                      # 0.092 s fallback; 1.5 s -> 0.576 s (autocorr and FFT
-                      # agree in the rocking band). 1.5 s recovers the true
-                      # period and keeps the escalation intact.
+MAX_RD_WINDOW = 0.50
 
 def extract_last_segment(t_all, u_all):
     dt = np.diff(t_all)
@@ -468,7 +725,6 @@ def setup_model_for_dynamic(save_file):
     block contact group 'Joist_S2_contact' range pos-y 2.0 2.5 pos-z 0.9 1.5
     """)
     it.command("call 'instrument_history_new.dat'")
-    
     it.command("""
     block free velocity-z range group 'S'
     """)
@@ -478,8 +734,9 @@ def setup_model_for_dynamic(save_file):
     block mech damp local 0.0
     block mech damp global 0.0
     """)
-    # The command used to be commented out here with `pass` as the body, so
-    # setting DAMP_RATIO non-zero silently produced an undamped run while
+    # >>> GI VARIANT : working damping branch. The base driver had the command
+    # commented out inside this branch with `pass` as the body, so setting
+    # DAMP_RATIO non-zero there silently produced an undamped run while
     # preflight_checks() reported damping as active.
     if DAMP_RATIO > 0:
         cmd = "block mechanical damping rayleigh {ratio} {freq} {dtype}".format(
@@ -488,88 +745,85 @@ def setup_model_for_dynamic(save_file):
         print("  Rayleigh damping applied: {}".format(cmd))
     else:
         print("  (no Rayleigh damping applied; contact dissipation only)")
+
+    # Joint property overrides. Applied after the restore so the base save can be
+    # shared between variants without rebuilding the model.
+    if G_I_NEW is not None:
+        it.command("block contact property G_I {:g} G_II {:g}".format(
+            G_I_NEW, G_II_RATIO * G_I_NEW))
+        print("  G_I -> {:g} J/m2 , G_II -> {:g} J/m2 (base model computes 13.2)".format(
+            G_I_NEW, G_II_RATIO * G_I_NEW))
+    if COH_RESIDUAL:
+        it.command("block contact property cohesion-residual {:g}".format(COH_RESIDUAL))
+        print("  cohesion-residual -> {:g} Pa".format(COH_RESIDUAL))
+    # <<< GI VARIANT
     print("  Model setup complete (BCs + damping + joist contact groups applied).")
 
 # =====================================================================
 # 10.  EXECUTE ONE RUN
 # =====================================================================
-def execute_run(run_no, record, scale, T_current):
-    Sd_unit_Tcurr = interpolate_sd(record, T_current)
-    Sd_target     = scale * Sd_unit_Tcurr
-    Sd_unit_T1    = interpolate_sd(record, T1_init)
-    Sd_fixed_T1   = scale * Sd_unit_T1
-    amp_factor    = Sd_target / Sd_fixed_T1 if Sd_fixed_T1 > 0 else 0
-
-    # >>> RATCHETING : pulse generation (symmetric or asymmetric per toggle)
-    vel_path, pulse_dur, v_peak, pinfo = generate_pulse(
-        record, T_current, Sd_target, run_no, OUT_DIR)
-    A_cal = pinfo["A"]
-    sine_dur = n_cycles * T_current
-    # <<< RATCHETING
+def execute_run(entry):
+    """Replay one full measured record. The velocity table was built offline
+    by make_record_tables.py from the shake-table channel-5 displacement, so
+    the base of the model traces the motion the specimen actually saw. Nothing
+    is synthesised and nothing adapts."""
+    run_no = entry["run"]
+    record = entry["label"]
+    scale  = entry["pgd_mm"]                 # folder name carries PGD in mm
+    dur    = entry["dur_s"]
+    tpath  = os.path.join(TABLE_DIR, entry["table_file"])
 
     tbl_name = "run{:02d}".format(run_no)
-    it.command("table '{}' import '{}'".format(tbl_name, cmd_path(vel_path)))
+    it.command("table '{}' import '{}'".format(tbl_name, cmd_path(tpath)))
 
     print("\n" + "=" * 70)
-    print("  Run {:02d}: {} x {:.2f}  |  T = {:.4f} s ({:.2f}x T_init)".format(
-        run_no, record, scale, T_current, T_current/T1_init))
-    print("  Sd_target = {:.3f} mm  (fixed-T1: {:.3f} mm, amp: {:.1f}x)".format(
-        Sd_target*1000, Sd_fixed_T1*1000, amp_factor))
-    print("  A = {:.3f} m/s2,  PGA = {:.3f} g,  Vpeak = {:.4f} m/s".format(
-        A_cal, A_cal/9.80665, v_peak))
-    # >>> RATCHETING : report asymmetry actually applied
-    print("  pulse: {}  beta={:.3f}  s={:+d}".format(
-        "ASYMMETRIC" if USE_RATCHETING else "symmetric", pinfo["beta"], pinfo["s"]))
-    # <<< RATCHETING
+    print("  Run {:02d}: {}  full record   PGD = {:.2f} mm   "
+          "duration = {:.2f} s".format(run_no, record, entry["pgd_mm"], dur))
+    print("  table: {}   (+{:.1f} s ring-down)".format(
+        entry["table_file"], TAIL_SEC_RECORD))
     print("=" * 70)
 
     it.command("model dynamic time-total 0")
     for grp in ["S", "T_B"]:
-        it.command("block apply velocity-z 1.0 table '{}' range group '{}'".format(tbl_name, grp))
-    it.command("model solve dynamic time {:.6f}".format(pulse_dur))
+        it.command("block apply velocity-z 1.0 table '{}' range group '{}'"
+                   .format(tbl_name, grp))
+    it.command("model solve dynamic time {:.6f}".format(dur))
     for grp in ["S", "T_B"]:
-        it.command("block gridpoint apply-remove velocity-z range group '{}'".format(grp))
-    if inter_run_gap > 0:
-        it.command("model solve dynamic time {:.6f}".format(inter_run_gap))
+        it.command("block gridpoint apply-remove velocity-z range group '{}'"
+                   .format(grp))
+    if TAIL_SEC_RECORD > 0:
+        it.command("model solve dynamic time {:.6f}".format(TAIL_SEC_RECORD))
 
     it.command("model save '{}'".format(cmd_path(save_file_path(run_no))))
     export_all_histories(run_no, record, scale, OUT_DIR)
 
-    ringdown_start = sine_dur
-    T_end = identify_Tend_from_csv(ch19_csv_path(run_no, record, scale), ringdown_start)
-    print("  T_end = {:.4f} s  ({:.2f}x T_init)".format(T_end, T_end/T1_init))
+    # T_end is a damage measure only.
+    T_end = identify_Tend_from_csv(
+        ch19_csv_path(run_no, record, scale), dur)
+    print("  T_end = {:.4f} s ({:.2f}x T1_init)   [damage measure]".format(
+        T_end, T_end / T1_init))
 
     it.command("table '{}' delete".format(tbl_name))
     it.command("history delete")
     it.command("call 'instrument_history_new.dat'")
-    
-    run_summary = {
-        "run": run_no, "record": record, "scale": scale,
-        "T_excitation": round(T_current, 6),
-        "T_over_Tinit": round(T_current / T1_init, 4),
-        "Sd_record_mm": round(Sd_unit_Tcurr * 1000, 4),
-        "Sd_target_mm": round(Sd_target * 1000, 4),
-        "Sd_fixedT1_mm": round(Sd_fixed_T1 * 1000, 4),
-        "amplification": round(amp_factor, 2),
-        "A_mps2": round(A_cal, 4),
-        "PGA_g": round(A_cal / 9.80665, 4),
-        "V_peak_mps": round(v_peak, 6),
+
+    return {
+        "run": run_no, "record": record, "scale": round(scale, 4),
+        "PGD_mm": round(entry["pgd_mm"], 4),
+        "PGV_mps": round(entry["pgv_mps"], 5),
+        "record_dur_s": round(dur, 4),
+        "table_file": entry["table_file"],
         "T_end": round(T_end, 6),
         "T_end_over_Tinit": round(T_end / T1_init, 4),
-        # >>> RATCHETING : record the asymmetry applied
-        "beta_applied": round(pinfo["beta"], 4),
-        "s_applied": pinfo["s"],
-        # <<< RATCHETING
     }
-    return T_end, run_summary
 
 # =====================================================================
 # 11.  MAIN DRIVER
 # =====================================================================
-SPECTRA_FILES = ["spectrum_HU12.csv", "spectrum_EC40.csv", "spectrum_FR76.csv"]
-DAT_FILES     = ["instrument_history_new.dat",
+SPECTRA_FILES = [MANIFEST_FILE]   # Strategy F reads the record manifest
+DAT_FILES     = ["instrument_history_new.dat", 
                  "instrument_history_export_v2.dat"]
-BASE_SAVE     = "Part_I_MASON_v7.sav"
+BASE_SAVE     = START_SAVE
 
 def preflight_checks():
     """Fail loudly, before any solving, if inputs or config are not in order."""
@@ -607,17 +861,25 @@ def preflight_checks():
 def run_strategy_C():
     os.makedirs(OUT_DIR, exist_ok=True)
     preflight_checks()
-    load_spectra()
     print("\n--- Checking for existing runs ---")
     resume_from, T_current, summary = load_checkpoint()
     if resume_from > len(PROTOCOL):
         print("\nAll {} runs already completed.".format(len(PROTOCOL)))
         print("Delete '{}' to restart.".format(state_file_path()))
         return summary
+    _tot = sum(e["dur_s"] for e in PROTOCOL) + len(PROTOCOL) * TAIL_SEC_RECORD
+    print("\n  Strategy F: {} full records, {:.0f} s of model time total.".format(
+        len(PROTOCOL), _tot))
+    print("  This is the fidelity benchmark and it is SLOW. On a machine that "
+          "solves")
+    print("  at ~230 s wall per s model, that is roughly {:.0f} h. For the "
+          "decisive".format(_tot * 230.0 / 3600.0))
+    print("  'does the record reach the experimental displacement' test, set "
+          "START_SAVE")
+    print("  to a damaged state and RUN_FROM/RUN_TO to just the FR76 runs.")
     if resume_from == 1:
-        print("\n--- Starting fresh from run 1 ---")
-        print("    USE_RATCHETING = {}   ASYM_K = {}".format(USE_RATCHETING, ASYM_K))
-        setup_model_for_dynamic("Part_I_MASON_v7.sav")
+        print("\n--- Starting fresh from {} ---".format(START_SAVE))
+        setup_model_for_dynamic(START_SAVE)
     else:
         last_done = resume_from - 1
         print("\n--- Resuming: restoring run {:02d}, will execute run {:02d} next ---".format(
@@ -628,36 +890,32 @@ def run_strategy_C():
     log_path = os.path.join(OUT_DIR, "strategy_C_log.csv")
     log_is_new = (resume_from == 1) or not os.path.exists(log_path)
     log_f = open(log_path, "w" if log_is_new else "a", newline="\n")
+    LOG_COLS = ["run", "record", "scale", "PGD_mm", "PGV_mps",
+                "record_dur_s", "table_file", "T_end", "T_end_over_Tinit"]
     if log_is_new:
-        log_f.write("run,record,scale,T_excite,T_over_Tinit,"
-                    "Sd_record_mm,Sd_target_mm,Sd_fixedT1_mm,amplification,"
-                    "A_mps2,PGA_g,V_peak_mps,T_end,T_end_over_Tinit,"
-                    "beta_applied,s_applied\n")
+        log_f.write(",".join(LOG_COLS) + "\n")
 
     for idx in range(resume_from - 1, len(PROTOCOL)):
-        run_no, record, scale = PROTOCOL[idx]
-        T_end, run_summary = execute_run(run_no, record, scale, T_current)
+        entry = PROTOCOL[idx]
+        run_summary = execute_run(entry)
         summary.append(run_summary)
         s = run_summary
-        log_f.write("{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}\n".format(
-            s["run"], s["record"], s["scale"], s["T_excitation"], s["T_over_Tinit"],
-            s["Sd_record_mm"], s["Sd_target_mm"], s["Sd_fixedT1_mm"], s["amplification"],
-            s["A_mps2"], s["PGA_g"], s["V_peak_mps"], s["T_end"], s["T_end_over_Tinit"],
-            s["beta_applied"], s["s_applied"]))
+        log_f.write(",".join(str(s.get(c, "")) for c in LOG_COLS) + "\n")
         log_f.flush()
-        T_current = T_end
-        save_checkpoint(run_no, T_current, summary)
-        print("  Checkpoint saved after run {:02d}.".format(run_no))
+        # stored only so a resume can report it; it drives nothing
+        save_checkpoint(entry["run"], run_summary["T_end"], summary)
+        print("  Checkpoint saved after run {:02d}.".format(entry["run"]))
     log_f.close()
 
     print("\n" + "=" * 70)
-    print("Strategy C (ratcheting={}) complete: {} runs".format(USE_RATCHETING, len(PROTOCOL)))
+    print("Strategy F (full records) complete: {} runs".format(len(PROTOCOL)))
     print("=" * 70)
-    print("\nPeriod evolution:")
+    print("\nRecords applied (full measured motion, nothing synthesised):")
+    print("  {:>4} {:>6} {:>9} {:>9} {:>9}".format(
+        "run", "rec", "PGD_mm", "dur_s", "T_end_s"))
     for s in summary:
-        print("  Run {:02d} ({} x{:.2f}):  T_ex={:.4f}s -> T_end={:.4f}s  Sd_tgt={:.2f}mm  "
-              "beta={:.2f}".format(s["run"], s["record"], s["scale"], s["T_excitation"],
-              s["T_end"], s["Sd_target_mm"], s.get("beta_applied", 1.0)))
+        print("  {:>4} {:>6} {:>9.2f} {:>9.2f} {:>9.4f}".format(
+            s["run"], s["record"], s["PGD_mm"], s["record_dur_s"], s["T_end"]))
 
     csv_path = os.path.join(OUT_DIR, "strategy_C_summary.csv")
     if summary:
