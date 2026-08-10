@@ -67,7 +67,11 @@ it.command("program automatic-model-save active off")
 T1_init     = 0.092
 xi          = 0.05
 delta_t     = 0.005
-n_cycles    = 1.5
+n_cycles    = 3.0     # was 1.5. A cracked wall is a rocking mechanism; 1.5
+                      # cycles delivered acceleration but too few reversals to
+                      # build the rocking amplitude that drives collapse. 3.0
+                      # gives the pulse enough cycles for the FR76 runs to
+                      # accumulate rocking.
 tail_sec    = 2.5
 phase_accel = math.pi / 2
 inter_run_gap = 0.5
@@ -326,7 +330,16 @@ def generate_pulse(record, T, Sd_target, run_no, out_dir):
 # =====================================================================
 RMS_ALIVE_MM  = 0.05
 RMS_CHUNK_S   = 0.15
-MAX_RD_WINDOW = 0.50
+MAX_RD_WINDOW = 1.50  # was 0.50. After a hard rocking run that recovers (e.g.
+                      # run 23, peak 58 mm), the 0.5 s window saw too few cycles
+                      # and its large residual offset masked the rocking peak,
+                      # so autocorr found no peak and fell back to T1_init
+                      # (0.092 s). That reset starved the next run (run 24 got a
+                      # 0.092 s pulse, Sd ~2.3 mm, moved 17 mm instead of
+                      # escalating). Verified on run 23's ring-down: 0.5 s ->
+                      # 0.092 s fallback; 1.5 s -> 0.576 s (autocorr and FFT
+                      # agree in the rocking band). 1.5 s recovers the true
+                      # period and keeps the escalation intact.
 
 def extract_last_segment(t_all, u_all):
     dt = np.diff(t_all)

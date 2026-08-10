@@ -137,8 +137,8 @@ RECORD_TEST   = 9          # 9 = US-1, 12 = US-2
 TABLE_DIR     = "."        # where the vel_exp_T*_run*.txt tables live
 MANIFEST_FILE = "record_tables_manifest_US{}.csv".format(1 if RECORD_TEST == 9
                                                          else 2)
-RUN_FROM      = 1          # first run to apply (inclusive)
-RUN_TO        = 99         # last run to apply (inclusive); 99 = all available
+RUN_FROM      = 22          # first run to apply (inclusive)
+RUN_TO        = 24         # last run to apply (inclusive); 99 = all available
 START_SAVE    = "Part_I_MASON_v7.sav"   # state to begin from. For the full
                            # cumulative sequence leave this at the base save.
                            # For a targeted benchmark, point it at a damaged

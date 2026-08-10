@@ -102,7 +102,7 @@ it.command("program automatic-model-save active off")
 T1_init     = 0.092
 xi          = 0.05
 delta_t     = 0.005
-n_cycles    = 1.5
+n_cycles    = 3.0
 tail_sec    = 2.5
 phase_accel = math.pi / 2
 inter_run_gap = 0.5
@@ -491,7 +491,7 @@ def generate_pulse(record, T, Sd_target, run_no, out_dir):
 # =====================================================================
 RMS_ALIVE_MM  = 0.05
 RMS_CHUNK_S   = 0.15
-MAX_RD_WINDOW = 0.50
+MAX_RD_WINDOW = 1.50
 
 def extract_last_segment(t_all, u_all):
     dt = np.diff(t_all)
