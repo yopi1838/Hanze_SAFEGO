@@ -1,6 +1,6 @@
 {
-  "last_completed_run": 7,
-  "T_current": 0.274285,
+  "last_completed_run": 8,
+  "T_current": 0.388536,
   "summary": [
     {
       "run": 1,
@@ -78,6 +78,17 @@
       "table_file": "vel_expfull_T9_run07.txt",
       "T_end": 0.274285,
       "T_end_over_Tinit": 2.9814
+    },
+    {
+      "run": 8,
+      "record": "EC40",
+      "scale": 49.6766,
+      "PGD_mm": 49.6766,
+      "PGV_mps": 0.14123,
+      "record_dur_s": 35.4869,
+      "table_file": "vel_expfull_T9_run08.txt",
+      "T_end": 0.388536,
+      "T_end_over_Tinit": 4.2232
     }
   ]
 }
