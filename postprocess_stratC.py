@@ -14,6 +14,7 @@ summary (strategy_C_summary.csv), and writes:
   <SIM_DIR>/postproc/fig4_tilt_segments.png      all tilt channels vs run
   <SIM_DIR>/postproc/fig5_channel_grid.png       small multiples, all channels
   <SIM_DIR>/postproc/fig6_top_quarter_oop.png    top-quarter peak OOP disp vs run
+  <SIM_DIR>/postproc/fig7_period_compare.png     period elongation vs exp (abs + log)
 
 ONE SIMULATION vs THE EXPERIMENTS
     This script compares a single results folder against the shake-table
@@ -444,6 +445,85 @@ def fig_activation(main, exps, out_dir):
     plt.close(fig); print("  -> fig3_activation.png")
 
 
+def fig_period_compare(main, main_lbl, exps, out_dir):
+    """Dedicated period-elongation comparison: the simulation ring-down period
+    (T_end) against each specimen's small-amplitude PSD period (T1), shown both
+    in absolute seconds (left) and normalised to each series' own run-1 value on
+    a log axis (right).
+
+    IMPORTANT caveat, annotated on the figure: the two are NOT the same
+    measurement once the wall rocks. T_end is the LARGE-amplitude rocking
+    ring-down period; the experimental T1 is the SMALL-amplitude PSD period of
+    the re-closed cracked wall between runs. They are comparable only in the
+    pre-rocking (elastic/cracking) regime -- the divergence at rocking onset is
+    expected, not a model error."""
+    xs, ys_abs = run_series(main, "T_end")
+    _, ys_rat = run_series(main, "T_end_over_Tinit")
+    if not len(xs):
+        print("  ! no T_end column -- fig7 skipped")
+        return
+
+    # rocking-onset run: first run whose ring-down period exceeds 2x initial
+    onset = None
+    xr, yr = run_series(main, "T_end_over_Tinit")
+    for xi, yi in zip(xr, yr):
+        if yi >= 2.0:
+            onset = xi
+            break
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
+
+    # ---- panel A: absolute period ----
+    ax1.plot(xs, ys_abs, "-o", color="tab:purple", lw=2, ms=6,
+             label=r"Sim  ring-down $T_{end}$", zorder=3)
+    for e in exps:
+        xe, ye = exp_series(e, "period", "T1_best_s")
+        if len(xe):
+            ax1.plot(xe, ye, marker=e["marker"], ls=e["ls"], color=e["color"],
+                     ms=5, lw=1.2, mfc="none", alpha=0.9,
+                     label="{}  PSD $T_1$".format(e["label"]), zorder=2)
+    ax1.set_xlabel("Run"); ax1.set_ylabel("Identified period  T  (s)")
+    ax1.set_title("Absolute period vs run")
+    ax1.grid(True, alpha=0.2); ax1.legend(fontsize=9, loc="upper left")
+
+    # ---- panel B: normalised elongation, log-y ----
+    ax2.plot(xs, ys_rat, "-o", color="tab:purple", lw=2, ms=6,
+             label=r"Sim  $T_{end}/T_{init}$", zorder=3)
+    for e in exps:
+        xe, ye = exp_period_ratio(e)
+        if len(xe):
+            ax2.plot(xe, ye, marker=e["marker"], ls=e["ls"], color=e["color"],
+                     ms=5, lw=1.2, mfc="none", alpha=0.9,
+                     label=r"{}  $T_1/T_1$(run 1)".format(e["label"]), zorder=2)
+    ax2.set_yscale("log")
+    ax2.set_yticks([1, 1.5, 2, 3, 5, 8])
+    ax2.set_yticklabels(["1.0", "1.5", "2.0", "3.0", "5.0", "8.0"])
+    ax2.axhline(1.0, color="0.7", lw=0.8)
+    ax2.set_xlabel("Run")
+    ax2.set_ylabel("Period elongation factor  (log scale)")
+    ax2.set_title("Period elongation, normalised to run 1")
+    ax2.grid(True, alpha=0.2, which="both")
+    ax2.legend(fontsize=9, loc="upper left")
+
+    # rocking-regime shading + measurement-basis note
+    if onset is not None:
+        for ax in (ax1, ax2):
+            ax.axvspan(onset - 0.5, float(max(xs)) + 0.5, color="0.9", zorder=0)
+            ax.axvline(onset - 0.5, color="0.6", ls="--", lw=1)
+        ax1.annotate("rocking regime: sim ring-down is the large-\n"
+                     "amplitude rocking period, exp $T_1$ the small-\n"
+                     "amplitude PSD period -- not directly comparable",
+                     xy=(0.97, 0.03), xycoords="axes fraction",
+                     ha="right", va="bottom", fontsize=8, color="0.35")
+
+    fig.suptitle("Period elongation: simulation vs experiment\n({})".format(main_lbl),
+                 fontsize=13, fontweight="bold")
+    fig.tight_layout()
+    fig.savefig(str(Path(out_dir) / "fig7_period_compare.png"), dpi=300,
+                bbox_inches="tight")
+    plt.close(fig); print("  -> fig7_period_compare.png")
+
+
 def fig_tilt_segments(main, exps, out_dir):
     """Colour encodes the segment, line style encodes the source, so the
     simulated and measured curves for one segment sit on the same colour.
@@ -655,7 +735,7 @@ def console_table(main_data):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("sim_dir", nargs="?",
-    default="stratC_results_DAMP1p5")
+    default="stratC_results_RATCHETING")
     ap.add_argument("--ycap", type=float, default=None,
                     help="fig6 y-axis cap in mm (default: automatic, only "
                          "applied when the simulation dwarfs the experiment)")
@@ -697,6 +777,7 @@ def main():
     fig_tilt(main_data, label, exps, out_dir)
     fig_disp(main_data, label, exps, out_dir)
     fig_activation(main_data, exps, out_dir)
+    fig_period_compare(main_data, label, exps, out_dir)
     fig_tilt_segments(main_data, exps, out_dir)
     fig_top_quarter(ch4, ch19, label, exps, out_dir, ycap=args.ycap)
     fig_channel_grid(main_data, out_dir)
