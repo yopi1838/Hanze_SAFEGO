@@ -1,0 +1,5 @@
+run,record,scale,PGD_mm,PGV_mps,record_dur_s,table_file,T_end,T_end_over_Tinit
+1,HU12,0.9805,0.9805,0.04012,17.566,vel_expfull_T9_run01.txt,0.099623,1.0829
+2,HU12,1.6167,1.6167,0.0393,22.2912,vel_expfull_T9_run02.txt,0.099159,1.0778
+3,EC40,24.5722,24.5722,0.07071,33.5616,vel_expfull_T9_run03.txt,0.092,1.0
+4,HU12,1.992,1.992,0.04119,35.9817,vel_expfull_T9_run04.txt,0.092,1.0

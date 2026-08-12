@@ -1,6 +1,6 @@
 {
-  "last_completed_run": 8,
-  "T_current": 0.388536,
+  "last_completed_run": 4,
+  "T_current": 0.092,
   "summary": [
     {
       "run": 1,
@@ -10,8 +10,8 @@
       "PGV_mps": 0.04012,
       "record_dur_s": 17.566,
       "table_file": "vel_expfull_T9_run01.txt",
-      "T_end": 0.099805,
-      "T_end_over_Tinit": 1.0848
+      "T_end": 0.099623,
+      "T_end_over_Tinit": 1.0829
     },
     {
       "run": 2,
@@ -21,8 +21,8 @@
       "PGV_mps": 0.0393,
       "record_dur_s": 22.2912,
       "table_file": "vel_expfull_T9_run02.txt",
-      "T_end": 0.102873,
-      "T_end_over_Tinit": 1.1182
+      "T_end": 0.099159,
+      "T_end_over_Tinit": 1.0778
     },
     {
       "run": 3,
@@ -32,8 +32,8 @@
       "PGV_mps": 0.07071,
       "record_dur_s": 33.5616,
       "table_file": "vel_expfull_T9_run03.txt",
-      "T_end": 0.356219,
-      "T_end_over_Tinit": 3.8719
+      "T_end": 0.092,
+      "T_end_over_Tinit": 1.0
     },
     {
       "run": 4,
@@ -43,52 +43,8 @@
       "PGV_mps": 0.04119,
       "record_dur_s": 35.9817,
       "table_file": "vel_expfull_T9_run04.txt",
-      "T_end": 0.331621,
-      "T_end_over_Tinit": 3.6046
-    },
-    {
-      "run": 5,
-      "record": "HU12",
-      "scale": 2.5182,
-      "PGD_mm": 2.5182,
-      "PGV_mps": 0.0466,
-      "record_dur_s": 35.6118,
-      "table_file": "vel_expfull_T9_run05.txt",
-      "T_end": 0.337324,
-      "T_end_over_Tinit": 3.6666
-    },
-    {
-      "run": 6,
-      "record": "EC40",
-      "scale": 37.209,
-      "PGD_mm": 37.209,
-      "PGV_mps": 0.10537,
-      "record_dur_s": 40.1867,
-      "table_file": "vel_expfull_T9_run06.txt",
-      "T_end": 0.472071,
-      "T_end_over_Tinit": 5.1312
-    },
-    {
-      "run": 7,
-      "record": "HU12",
-      "scale": 3.0303,
-      "PGD_mm": 3.0303,
-      "PGV_mps": 0.05516,
-      "record_dur_s": 22.7263,
-      "table_file": "vel_expfull_T9_run07.txt",
-      "T_end": 0.274285,
-      "T_end_over_Tinit": 2.9814
-    },
-    {
-      "run": 8,
-      "record": "EC40",
-      "scale": 49.6766,
-      "PGD_mm": 49.6766,
-      "PGV_mps": 0.14123,
-      "record_dur_s": 35.4869,
-      "table_file": "vel_expfull_T9_run08.txt",
-      "T_end": 0.388536,
-      "T_end_over_Tinit": 4.2232
+      "T_end": 0.092,
+      "T_end_over_Tinit": 1.0
     }
   ]
 }
