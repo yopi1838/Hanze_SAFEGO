@@ -28,8 +28,8 @@ block property density [5510*1.034] range group "Joist"
 fish define properties
     kn= 2.5e9
     ks = 2.5e9
-    tension=0.34e6                              ; f_t = 0.8*f_x1, f_x1=0.43 MPa (Moshfeghi et al. 2024, wallette OOP flexural)
-    cohesion=0.75e6                             ; c = 2.18*f_t (Jafari, Rots & Esposito 2022, Fig.10b; CoV 0.66)
+    tension=0.2e6                              ; f_t = 0.8*f_x1, f_x1=0.43 MPa (Moshfeghi et al. 2024, wallette OOP flexural)
+    cohesion=0.4e6                             ; c = 2.18*f_t (Jafari, Rots & Esposito 2022, Fig.10b; CoV 0.66)
     friction=36.9
     fc_comp=20e6
     Gt = (0.16*(tension*1e-6))*10^3             ; G_I = 0.16*f_t (Jafari 2022, Table 13); replaces Van der Pluijm

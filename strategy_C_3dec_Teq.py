@@ -103,7 +103,7 @@ FFT_F_MAX  = 50.0
 T_MIN_PHYS = 0.02
 T_MAX_PHYS = 1.0
 
-OUT_DIR = "stratC_results_TEQ"
+OUT_DIR = "stratC_results_TEQ_Maxwell_1p5"
 STATE_FILE_NAME = "stratC_checkpoint.json"
 
 # >>> RATCHETING : controls
@@ -120,6 +120,11 @@ ASYM_K         = 1.0     # global asymmetry sharpening (>=1 sharpens); calibrate
 DAMP_RATIO = 0.0         # fraction of critical at the centre frequency
 DAMP_TYPE  = ""          # "" = full Rayleigh (mass+stiffness); "mass"; "stiffness"
 # <<< RATCHETING
+# Maxwell (frequency-band) damping: ~1.5% of critical over 1-40 Hz, three
+# Maxwell elements (weight, frequency) pairs. Unlike mass-proportional Rayleigh
+# it stays near-constant across the band and does not over-damp the slow rocking.
+MAXWELL_DAMP = ("block mech damp maxwell "
+                "0.0120 1.0006 0.0093 9.0193 0.0104 40.0000")  # 1.5% (1-40 Hz)
 
 # =====================================================================
 # 2.  PROTOCOL (Table 2)
@@ -506,6 +511,7 @@ def setup_model_for_dynamic(save_file):
     block mech damp local 0.0
     block mech damp global 0.0
     """)
+    it.command(MAXWELL_DAMP)
     # The command used to be commented out here with `pass` as the body, so
     # setting DAMP_RATIO non-zero silently produced an undamped run while
     # preflight_checks() reported damping as active.
