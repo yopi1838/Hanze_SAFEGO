@@ -154,9 +154,9 @@ TABLE_DIR     = "velocity_output"        # folder holding vel_HU.txt / vel_EC.tx
 # applies its record's base table SCALED by the Table-2 factor, via the
 # velocity-z multiplier (e.g. run 1 -> velocity-z 0.50 table 'vel_HU').
 BASE_TABLES = {
-    "HU12": ("vel_HU", "velocity_output/vel_HU.txt"),
-    "EC40": ("vel_EC", "velocity_output/vel_EC.txt"),
-    "FR76": ("vel_FR", "velocity_output/vel_FR.txt"),
+    "HU12": ("vel_HU", "vel_HU.txt"),
+    "EC40": ("vel_EC", "vel_EC.txt"),
+    "FR76": ("vel_FR", "vel_FR.txt"),
 }
 RUN_FROM      = 1          # first run to apply (inclusive)
 RUN_TO        = 25         # last run to apply (inclusive)
