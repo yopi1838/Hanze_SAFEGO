@@ -148,15 +148,25 @@ DAMP_TYPE  = ""          # "" = full Rayleigh (mass+stiffness); "mass"; "stiffne
 # measure. It does not influence the excitation.
 # >>> STRATEGY F (FULL) : significant-duration-truncated records, runs 1-25.
 RECORD_TEST   = 9          # only used for the output-folder suffix
+<<<<<<< HEAD
 TABLE_DIR     = "."        # folder holding vel_HU.txt / vel_EC.txt / vel_FR.txt
+=======
+TABLE_DIR     = "velocity_output"        # folder holding vel_HU.txt / vel_EC.txt / vel_FR.txt
+>>>>>>> e6d098d0a418f034ee9880349c92e9e89f5a5954
 # record class -> (3DEC table name, table file). These are the 100%-intensity
 # truncated velocity tables written by integrate_table_accel.py. Each run
 # applies its record's base table SCALED by the Table-2 factor, via the
 # velocity-z multiplier (e.g. run 1 -> velocity-z 0.50 table 'vel_HU').
 BASE_TABLES = {
+<<<<<<< HEAD
     "HU12": ("vel_HU", "vel_HU.txt"),
     "EC40": ("vel_EC", "vel_EC.txt"),
     "FR76": ("vel_FR", "vel_FR.txt"),
+=======
+    "HU12": ("vel_HU", "velocity_output/vel_HU.txt"),
+    "EC40": ("vel_EC", "velocity_output/vel_EC.txt"),
+    "FR76": ("vel_FR", "velocity_output/vel_FR.txt"),
+>>>>>>> e6d098d0a418f034ee9880349c92e9e89f5a5954
 }
 RUN_FROM      = 1          # first run to apply (inclusive)
 RUN_TO        = 25         # last run to apply (inclusive)
