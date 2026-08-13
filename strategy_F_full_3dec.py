@@ -3,19 +3,25 @@
 Strategy F (FULL) -- significant-duration-truncated records, runs 1-25.
 
 The fidelity counterpart to the pulse strategies, run as the FULL cumulative
-sequence from run 1. Each run applies the actual shake-table motion the
-specimen saw (HU12 / EC40 / FR76, already scaled by the table), converted to a
-3DEC velocity table by make_record_tables_full.py. Nothing is synthesised, no
-spectrum is read, no intensity is prescribed. It is the reference the cheap
-pulse strategies are measured against.
+sequence from run 1. There are THREE base velocity tables -- the HU12 / EC40 /
+FR76 records at 100% intensity (vel_HU.txt / vel_EC.txt / vel_FR.txt, written by
+integrate_table_accel.py) -- and each run applies its record's table SCALED by
+the Table-2 factor through the 3DEC velocity-z multiplier. Nothing is
+synthesised, no spectrum is read, no intensity is prescribed; the only per-run
+quantity is the linear scale factor from Table 2.
 
-TRUNCATION (see make_record_tables_full.py for the full rationale)
-    Each record is kept from t = 0 and cut at the table-velocity zero-crossing
-    nearest its 95% Arias time, so the applied motion starts and ends at rest
-    with no velocity step. Starting at t = 0 (rather than the 5% Arias time)
-    preserves the low-frequency build-up that a 5% lower cut discards. A
-    zero-endpoint half-sine baseline removes the residual net table drift so the
-    base does not walk across the 24-25 run sequence.
+SCALING (Table 2)
+    Run 1  -> velocity-z 0.50 table 'vel_HU'      (HU12 x 0.50)
+    Run 3  -> velocity-z 0.20 table 'vel_EC'      (EC40 x 0.20)
+    Run 22 -> velocity-z 1.00 table 'vel_FR'      (FR76 x 1.00)
+    ... 25 runs, HU12 0.50-6.00, EC40 0.20-0.50, FR76 1.00-2.00. See
+    PROTOCOL_TABLE2. The velocity-z coefficient multiplies the base table, so
+    the record shape is fixed and only its amplitude scales run to run.
+
+TRUNCATION (done upstream in integrate_table_accel.py)
+    Each base table is the channel-12 acceleration integrated to velocity, kept
+    from t = 0 and cut at the velocity zero-crossing nearest its 95% Arias time,
+    so the applied motion starts and ends at rest with no velocity step.
 
 WHY IT EXISTS
     The diagnostic profile figure showed the model reaching about a sixth of
@@ -47,15 +53,13 @@ TWO WAYS TO RUN IT
     and the pulse analysis from the same state.
 
 INPUTS
-    The folder record_tables_full/ (TABLE_DIR), holding
-    record_tables_full_manifest_US{n}.csv and the vel_expfull_T{T}_run{NN}.txt
-    tables, all written by make_record_tables_full.py. Generate them first:
-        python make_record_tables_full.py            # US-1, runs 1-24
-        python make_record_tables_full.py --test 12  # US-2, runs 1-25
+    vel_HU.txt, vel_EC.txt, vel_FR.txt in TABLE_DIR (the 100%-intensity base
+    tables), written by integrate_table_accel.py. Generate them first:
+        python integrate_table_accel.py
 
 REPORTED
     T_end from the ring-down after each record, as a damage measure. It drives
-    nothing. Run folders are Run{NN}_{class}_s{PGD}, so postprocess_stratC.py
+    nothing. Run folders are Run{NN}_{record}_s{scale}, so postprocess_stratC.py
     parses them unchanged and the comparison figures work as-is.
 
 LIMITATIONS
@@ -143,19 +147,21 @@ DAMP_TYPE  = ""          # "" = full Rayleigh (mass+stiffness); "mass"; "stiffne
 # T_end is still identified from the ring-down and logged, purely as a damage
 # measure. It does not influence the excitation.
 # >>> STRATEGY F (FULL) : significant-duration-truncated records, runs 1-25.
-RECORD_TEST   = 9          # 9 = US-1, 12 = US-2
-TABLE_DIR     = "record_tables_full"   # folder holding the tables + manifest,
-                                       # written by make_record_tables_full.py
-MANIFEST_FILE = "record_tables_full_manifest_US{}.csv".format(
-                    1 if RECORD_TEST == 9 else 2)
+RECORD_TEST   = 9          # only used for the output-folder suffix
+TABLE_DIR     = "velocity_output"        # folder holding vel_HU.txt / vel_EC.txt / vel_FR.txt
+# record class -> (3DEC table name, table file). These are the 100%-intensity
+# truncated velocity tables written by integrate_table_accel.py. Each run
+# applies its record's base table SCALED by the Table-2 factor, via the
+# velocity-z multiplier (e.g. run 1 -> velocity-z 0.50 table 'vel_HU').
+BASE_TABLES = {
+    "HU12": ("vel_HU", "velocity_output/vel_HU.txt"),
+    "EC40": ("vel_EC", "velocity_output/vel_EC.txt"),
+    "FR76": ("vel_FR", "velocity_output/vel_FR.txt"),
+}
 RUN_FROM      = 1          # first run to apply (inclusive)
-RUN_TO        = 25         # last run to apply (inclusive); 99 = all available.
-                           # US-1 (Test 9) has 24 measured runs, so 1-24 are
-                           # generated and applied; US-2 (Test 12) has 25.
-START_SAVE    = "Part_I_MASON_v7.sav"   # base state. This is the FULL cumulative
-                           # sequence from run 1, so it must start undamaged.
-TAIL_SEC_RECORD = 2.5      # ring-down appended after each record, for the
-                           # period identification only
+RUN_TO        = 25         # last run to apply (inclusive)
+START_SAVE    = "Part_I_MASON_v7.sav"   # undamaged base state (full sequence)
+TAIL_SEC_RECORD = 2.5      # ring-down appended after each record (period ID)
 # <<< STRATEGY F (FULL)
 
 OUT_DIR = "stratF_full_results_US{}".format(1 if RECORD_TEST == 9 else 2)
@@ -240,58 +246,68 @@ COH_RESIDUAL = 0.0       # Pa. Base model uses 0 -- cracked joints retain nothin
 # =====================================================================
 # 2.  PROTOCOL (Table 2)
 # =====================================================================
-def record_class(T_eq):
-    """Label runs by equivalent period so the record families stay visible
-    downstream. The bands fall out of the measured data with no ambiguity:
-    HU12-type runs cluster at 0.167-0.180 s, FR76 at 0.49-0.52 s and EC40 at
-    1.11-1.13 s, with nothing in between."""
-    if T_eq < 0.30:
-        return "HU12"
-    if T_eq < 0.80:
-        return "FR76"
-    return "EC40"
+# Table 2: sequence of applied acceleration records (run, input, scale).
+PROTOCOL_TABLE2 = [
+    ( 1, "HU12", 0.50), ( 2, "HU12", 0.75), ( 3, "EC40", 0.20), ( 4, "HU12", 1.00),
+    ( 5, "HU12", 1.25), ( 6, "EC40", 0.30), ( 7, "HU12", 1.50), ( 8, "EC40", 0.40),
+    ( 9, "HU12", 1.75), (10, "HU12", 2.00), (11, "EC40", 0.50), (12, "HU12", 2.25),
+    (13, "HU12", 2.50), (14, "HU12", 2.75), (15, "HU12", 3.00), (16, "HU12", 3.50),
+    (17, "HU12", 4.00), (18, "HU12", 4.50), (19, "HU12", 5.00), (20, "HU12", 5.50),
+    (21, "HU12", 6.00), (22, "FR76", 1.00), (23, "FR76", 1.50), (24, "FR76", 1.75),
+    (25, "FR76", 2.00),
+]
 
 
-def _teq_from_pgd_pgv(pgd_mm, pgv_mps):
-    if pgv_mps <= 0:
-        return 0.0
-    return math.pi * (pgd_mm / 1000.0) / pgv_mps
+def read_table_duration(path):
+    """(duration_s, n_samples) of a 3DEC velocity table file (line 1 = name,
+    line 2 = 'N <tab> 0', then 'time <tab> velocity'). Duration = last time."""
+    last_t, n = 0.0, 0
+    with open(path) as f:
+        f.readline(); f.readline()                 # name line, count line
+        for line in f:
+            q = line.split()
+            if len(q) >= 2:
+                try:
+                    last_t = float(q[0]); n += 1
+                except ValueError:
+                    pass
+    return last_t, n
 
 
-def load_record_protocol(manifest_path):
-    """Read record_tables_full_manifest_US{n}.csv from make_record_tables_full.py.
-
-    Each entry names the pre-built velocity table to import, its solve
-    duration, and the record's measured PGD, so nothing about the model's
-    state enters. Runs outside [RUN_FROM, RUN_TO] and tables that are not on
-    disk are dropped with a note."""
+def build_protocol():
+    """Table 2 restricted to [RUN_FROM, RUN_TO]; each run carries its record's
+    base-table name/file and solve duration (read from the table on disk)."""
+    dur = {}
+    for rec, (name, fname) in BASE_TABLES.items():
+        pth = os.path.join(TABLE_DIR, fname)
+        if os.path.isfile(pth):
+            dur[rec] = read_table_duration(pth)
     rows = []
-    with open(manifest_path) as f:
-        for r in csv.DictReader(f):
-            try:
-                rn = int(float(r["run"]))
-                dur = float(r["dur_s"])
-                pgd = float(r["pgd_amp_mm"])
-                pgv = float(r["pgv_mps"])
-            except (KeyError, TypeError, ValueError):
-                continue
-            if rn < RUN_FROM or rn > RUN_TO:
-                continue
-            tpath = os.path.join(TABLE_DIR, r["table_file"])
-            if not os.path.exists(tpath):
-                print("  ! table missing, run skipped: {}".format(tpath))
-                continue
-            rows.append({"run": rn, "table_file": r["table_file"],
-                         "dur_s": dur, "pgd_mm": pgd, "pgv_mps": pgv,
-                         "label": record_class(_teq_from_pgd_pgv(pgd, pgv))})
-    rows.sort(key=lambda x: x["run"])
+    for rn, rec, scale in PROTOCOL_TABLE2:
+        if rn < RUN_FROM or rn > RUN_TO:
+            continue
+        name, fname = BASE_TABLES[rec]
+        d, n = dur.get(rec, (0.0, 0))
+        rows.append({"run": rn, "record": rec, "scale": scale,
+                     "table_name": name, "table_file": fname,
+                     "dur_s": d, "n_samples": n})
     if not rows:
-        raise RuntimeError("no usable rows in {} for runs {}-{}".format(
-            manifest_path, RUN_FROM, RUN_TO))
+        raise RuntimeError("no runs in [{}, {}]".format(RUN_FROM, RUN_TO))
     return rows
 
 
-PROTOCOL = load_record_protocol(os.path.join(TABLE_DIR, MANIFEST_FILE))
+def import_base_tables():
+    """Import the three 100% base velocity tables into the model (once)."""
+    for rec, (name, fname) in BASE_TABLES.items():
+        pth = os.path.join(TABLE_DIR, fname)
+        if os.path.isfile(pth):
+            it.command("table '{}' import '{}'".format(name, cmd_path(pth)))
+            print("  imported base table '{}' <- {}".format(name, fname))
+        else:
+            print("  ! base table missing: {}".format(pth))
+
+
+PROTOCOL = build_protocol()
 
 # Reference only (the driver reads CSVs by filename, never by index).
 # Indices match instrument_history_new.dat + instrument_tilt_v2.dat, and are
@@ -763,30 +779,27 @@ def setup_model_for_dynamic(save_file):
 # 10.  EXECUTE ONE RUN
 # =====================================================================
 def execute_run(entry):
-    """Replay one full measured record. The velocity table was built offline
-    by make_record_tables.py from the shake-table channel-5 displacement, so
-    the base of the model traces the motion the specimen actually saw. Nothing
-    is synthesised and nothing adapts."""
+    """Apply one Table-2 run: the record's 100% base velocity table, scaled by
+    the run's factor through the velocity-z multiplier (e.g. velocity-z 0.50
+    table 'vel_HU'). The base tables are imported once up front and reused;
+    nothing is synthesised, nothing adapts. T_end is logged as a damage measure
+    only."""
     run_no = entry["run"]
-    record = entry["label"]
-    scale  = entry["pgd_mm"]                 # folder name carries PGD in mm
+    record = entry["record"]
+    scale  = entry["scale"]
+    name   = entry["table_name"]
     dur    = entry["dur_s"]
-    tpath  = os.path.join(TABLE_DIR, entry["table_file"])
-
-    tbl_name = "run{:02d}".format(run_no)
-    it.command("table '{}' import '{}'".format(tbl_name, cmd_path(tpath)))
 
     print("\n" + "=" * 70)
-    print("  Run {:02d}: {}  full record   PGD = {:.2f} mm   "
-          "duration = {:.2f} s".format(run_no, record, entry["pgd_mm"], dur))
-    print("  table: {}   (+{:.1f} s ring-down)".format(
-        entry["table_file"], TAIL_SEC_RECORD))
+    print("  Run {:02d}: {} x {:.2f}   table '{}'   duration = {:.2f} s "
+          "(+{:.1f} s ring-down)".format(
+              run_no, record, scale, name, dur, TAIL_SEC_RECORD))
     print("=" * 70)
 
     it.command("model dynamic time-total 0")
     for grp in ["S", "T_B"]:
-        it.command("block apply velocity-z 1.0 table '{}' range group '{}'"
-                   .format(tbl_name, grp))
+        it.command("block apply velocity-z {:g} table '{}' range group '{}'"
+                   .format(scale, name, grp))
     it.command("model solve dynamic time {:.6f}".format(dur))
     for grp in ["S", "T_B"]:
         it.command("block gridpoint apply-remove velocity-z range group '{}'"
@@ -803,16 +816,14 @@ def execute_run(entry):
     print("  T_end = {:.4f} s ({:.2f}x T1_init)   [damage measure]".format(
         T_end, T_end / T1_init))
 
-    it.command("table '{}' delete".format(tbl_name))
+    # NB: do NOT delete the base table -- it is reused every run.
     it.command("history delete")
     it.command("call 'instrument_history_new.dat'")
 
     return {
         "run": run_no, "record": record, "scale": round(scale, 4),
-        "PGD_mm": round(entry["pgd_mm"], 4),
-        "PGV_mps": round(entry["pgv_mps"], 5),
-        "record_dur_s": round(dur, 4),
         "table_file": entry["table_file"],
+        "record_dur_s": round(dur, 4),
         "T_end": round(T_end, 6),
         "T_end_over_Tinit": round(T_end / T1_init, 4),
     }
@@ -820,7 +831,7 @@ def execute_run(entry):
 # =====================================================================
 # 11.  MAIN DRIVER
 # =====================================================================
-SPECTRA_FILES = [MANIFEST_FILE]   # Strategy F reads the record manifest
+SPECTRA_FILES = [os.path.join(TABLE_DIR, f) for (_n, f) in BASE_TABLES.values()]
 DAT_FILES     = ["instrument_history_new.dat", 
                  "instrument_history_export_v2.dat"]
 BASE_SAVE     = START_SAVE
@@ -887,11 +898,13 @@ def run_strategy_C():
         print("  T_current = {:.4f} s ({:.2f}x T_init)".format(T_current, T_current / T1_init))
         setup_model_for_dynamic(save_file_path(last_done))
 
+    import_base_tables()
+
     log_path = os.path.join(OUT_DIR, "strategy_C_log.csv")
     log_is_new = (resume_from == 1) or not os.path.exists(log_path)
     log_f = open(log_path, "w" if log_is_new else "a", newline="\n")
-    LOG_COLS = ["run", "record", "scale", "PGD_mm", "PGV_mps",
-                "record_dur_s", "table_file", "T_end", "T_end_over_Tinit"]
+    LOG_COLS = ["run", "record", "scale", "table_file",
+                "record_dur_s", "T_end", "T_end_over_Tinit"]
     if log_is_new:
         log_f.write(",".join(LOG_COLS) + "\n")
 
@@ -910,12 +923,12 @@ def run_strategy_C():
     print("\n" + "=" * 70)
     print("Strategy F (full records) complete: {} runs".format(len(PROTOCOL)))
     print("=" * 70)
-    print("\nRecords applied (full measured motion, nothing synthesised):")
-    print("  {:>4} {:>6} {:>9} {:>9} {:>9}".format(
-        "run", "rec", "PGD_mm", "dur_s", "T_end_s"))
+    print("\nRecords applied (100% base tables, scaled per Table 2):")
+    print("  {:>4} {:>6} {:>7} {:>9} {:>9}".format(
+        "run", "rec", "scale", "dur_s", "T_end_s"))
     for s in summary:
-        print("  {:>4} {:>6} {:>9.2f} {:>9.2f} {:>9.4f}".format(
-            s["run"], s["record"], s["PGD_mm"], s["record_dur_s"], s["T_end"]))
+        print("  {:>4} {:>6} {:>7.2f} {:>9.2f} {:>9.4f}".format(
+            s["run"], s["record"], s["scale"], s["record_dur_s"], s["T_end"]))
 
     csv_path = os.path.join(OUT_DIR, "strategy_C_summary.csv")
     if summary:
