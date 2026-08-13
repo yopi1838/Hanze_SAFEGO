@@ -1,4 +1,0 @@
-run,record,scale,PGD_mm,PGV_mps,record_dur_s,table_file,T_end,T_end_over_Tinit
-22,FR76,34.593,34.593,0.21764,5.7753,vel_exp_T9_run22.txt,0.429466,4.6681
-23,FR76,51.8504,51.8504,0.33104,5.7553,vel_exp_T9_run23.txt,0.092,1.0
-24,FR76,60.45,60.45,0.36546,5.7453,vel_exp_T9_run24.txt,0.092,1.0
