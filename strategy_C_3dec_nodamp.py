@@ -2,7 +2,8 @@
 """
 Strategy C (SYMMETRIC PULSE, NO DAMPING) : Adaptive Sequential IDA
 =======================================================================
-Production driver for the mason_v7 model. Writes to stratC_results_NODAMP_v7.
+Production driver for the mason_v7 model. Writes to stratC_results_NODAMP_v8.
+(v7 is retained untouched as the pre-guard baseline for comparison.)
 
 USE_RATCHETING is now FALSE, so this runs the original symmetric pulse and
 ASYM_K is inert. The reason is in MODELLING_DISCREPANCIES.md section 0: the
@@ -23,7 +24,7 @@ the same channels, and both have the working damping branch. The pair is now a
 CONTROLLED test of the fracture-energy hypothesis, differing only in:
     G_I / G_II   13.2 J/m2 here (as computed in ANALYSIS_PART_I_MASON.dat)
                  vs 20 J/m2 in GI
-    OUT_DIR      stratC_results_NODAMP_v7 vs stratC_results_GI_NORATCH
+    OUT_DIR      stratC_results_NODAMP_v8 vs stratC_results_GI_NORATCH
 GI additionally exposes COH_RESIDUAL, but it is 0.0 there, which matches the
 base model, so it changes nothing.
 
@@ -82,7 +83,77 @@ FFT_F_MAX  = 50.0
 T_MIN_PHYS = 0.02
 T_MAX_PHYS = 1.0
 
-OUT_DIR = "stratC_results_NODAMP_v7"
+# ---------------------------------------------------------------------
+# PERIOD-ID RELIABILITY GUARDS
+# ---------------------------------------------------------------------
+# The autocorrelation and FFT estimators are independent. On every archived
+# NODAMP_v7 ring-down they agree to better than 0.1% (e.g. run 12:
+# T_acorr = 0.10428 s, T_fft = 0.10432 s). A large disagreement therefore
+# means the pick has failed, not that the wall has softened. When that
+# happens the previous T_current is held and the run is flagged, rather than
+# an unreproducible value being propagated into the next excitation.
+#
+# This is a detection-quality test, not a physics clamp: it does not push
+# T_current toward any target, it only refuses to act on an estimate the two
+# estimators cannot agree on. TID_MAX_JUMP is the weaker, second-line check
+# and is deliberately generous.
+TID_AGREE_TOL = 0.25   # max |T_acorr - T_fft| / min(T_acorr, T_fft)
+TID_MAX_JUMP  = 1.50   # max T_end / T_prev accepted within one run
+
+# ---------------------------------------------------------------------
+# RECORD-DERIVED EQUIVALENT CYCLES
+# ---------------------------------------------------------------------
+# A fixed n_cycles matches Sd(T1) but leaves the pulse energy unconstrained,
+# so a 3-cycle resonant sinusoid over-delivers for broadband records whose
+# energy sits away from the wall frequency. Measured against US-1 the fixed
+# 3.0 over-predicts EDP by 2.2-4.9x on EC40 and 2.1-5.5x on FR76, while HU12
+# (narrowband, T_eq ~ 0.17 s) is well represented.
+#
+# N_eq is the classical equivalent-cycle count of the achieved table motion,
+# evaluated in a narrow band around the excitation frequency:
+#
+#     N_eq = integral(a_band^2 dt) / ( max|a_band|^2 * T / 2 )
+#
+# For a pure N-cycle sinusoid this returns exactly N (verified: 3.010), and it
+# is independent of the pulse amplitude, so no iteration with the Sd
+# calibration is needed. Everything is derived from the record.
+#
+# ---------------------------------------------------------------------
+# DEFAULT OFF -- the hypothesis this was written to test is REFUTED.
+# ---------------------------------------------------------------------
+# The idea was that the fixed 3.0 cycles over-delivers energy for broadband
+# records, explaining the 2.2-5.5x EDP over-prediction on EC40 and FR76.
+# Evaluated on the achieved tables at T = 0.092 s, N_eq is:
+#
+#     HU12  3.10      EC40  10.0 (capped)      FR76  10.0 (capped)
+#
+# i.e. the opposite of what the hypothesis needs: enabling this would give
+# EC40/FR76 MORE cycles and make the over-prediction worse. Direct energy
+# accounting confirms it. Arias intensity of the calibrated pulse against the
+# record's band-limited Arias in the same +-30% band around 1/T:
+#
+#     HU12 run 21   pulse 0.1513  record-band 0.1066   ratio 1.42
+#     EC40 run 11   pulse 0.0084  record-band 0.0185   ratio 0.45
+#     FR76 run 24   pulse 0.0778  record-band 0.1114   ratio 0.70
+#
+# The pulse carries LESS band energy than EC40 and FR76 yet produces 2-5x
+# more displacement, and MORE band energy than HU12 yet matches it best. The
+# over-prediction is therefore not an energy or duration effect: it is
+# coherence. Three consecutive in-phase cycles exactly at the wall frequency,
+# in a model with DAMP_RATIO = 0, pump the rocking mode monotonically, while
+# the record's band energy is spread over 17-40 s at random phase and the
+# mechanism re-seats between excursions. Adding cycles increases coherent
+# pumping; it cannot fix this.
+#
+# Left in place as instrumentation: N_eq is logged per run as n_cycles_used
+# and is a useful record descriptor. Set True only to reproduce the test.
+USE_RECORD_NCYCLES = False
+NCYC_MIN, NCYC_MAX = 1.0, 10.0
+NCYC_BAND_RATIO    = 1.30    # band = [f1/ratio, f1*ratio]
+RECORD_TABLE = {"HU12": "vel_HU.txt", "EC40": "vel_EC.txt", "FR76": "vel_FR.txt"}
+_NCYC_CACHE = {}
+
+OUT_DIR = "stratC_results_NODAMP_v8"
 STATE_FILE_NAME = "stratC_checkpoint.json"
 
 # >>> RATCHETING : controls
@@ -258,10 +329,82 @@ def newmark_sd(a_g, dt, T, xi):
             u_max = abs(u)
     return u_max
 
-def calibrate_amplitude(T, Sd_target):
+def _read_vel_table(path):
+    """(t, v) from a 3DEC table file: name line, 'N<TAB>0' line, then rows."""
+    t_list, v_list = [], []
+    with open(path) as f:
+        lines = f.readlines()
+    for line in lines[2:]:
+        parts = line.replace(",", " ").split()
+        if len(parts) < 2:
+            continue
+        try:
+            t_list.append(float(parts[0])); v_list.append(float(parts[1]))
+        except ValueError:
+            continue
+    return np.array(t_list), np.array(v_list)
+
+
+def equivalent_cycles(record, T_pulse):
+    """Record-derived equivalent number of cycles at the excitation period.
+
+    Reads the achieved base-velocity table for `record` (written by
+    integrate_table_accel.py from channel 12), differentiates to
+    acceleration, isolates a narrow band around f1 = 1/T_pulse by zeroing
+    the rFFT outside it, and returns the energy-equivalent cycle count.
+
+    Falls back to the global n_cycles, with a printed note, if the table is
+    missing or unreadable -- the driver must never fail on this."""
+    if not USE_RECORD_NCYCLES:
+        return n_cycles
+    key = (record, round(T_pulse, 5))
+    if key in _NCYC_CACHE:
+        return _NCYC_CACHE[key]
+    fname = RECORD_TABLE.get(record)
+    path = None
+    for cand in (fname, os.path.join(TABLE_DIR, fname) if "TABLE_DIR" in globals() else None):
+        if cand and os.path.exists(cand):
+            path = cand
+            break
+    if path is None:
+        print("    ! base table for {} not found -- n_cycles stays {:.2f}"
+              .format(record, n_cycles))
+        _NCYC_CACHE[key] = n_cycles
+        return n_cycles
+    try:
+        t, v = _read_vel_table(path)
+        if len(t) < 32:
+            raise ValueError("table too short")
+        dt = float(np.median(np.diff(t)))
+        a = np.gradient(v, dt)                      # velocity -> acceleration
+        a = a - np.mean(a)
+        f1 = 1.0 / T_pulse
+        freqs = np.fft.rfftfreq(len(a), d=dt)
+        spec = np.fft.rfft(a)
+        band = (freqs >= f1 / NCYC_BAND_RATIO) & (freqs <= f1 * NCYC_BAND_RATIO)
+        if not np.any(band):
+            raise ValueError("empty band at f1={:.2f} Hz".format(f1))
+        spec[~band] = 0.0
+        a_b = np.fft.irfft(spec, n=len(a))
+        peak = float(np.max(np.abs(a_b)))
+        if peak <= 0.0:
+            raise ValueError("no energy in band")
+        energy = float(np.sum(a_b ** 2) * dt)
+        n_eq = energy / (peak ** 2 * T_pulse / 2.0)
+        n_eq = float(min(max(n_eq, NCYC_MIN), NCYC_MAX))
+    except Exception as e:
+        print("    ! equivalent_cycles({}) failed: {} -- n_cycles stays {:.2f}"
+              .format(record, e, n_cycles))
+        n_eq = n_cycles
+    _NCYC_CACHE[key] = n_eq
+    return n_eq
+
+
+def calibrate_amplitude(T, Sd_target, ncyc=None):
+    ncyc = n_cycles if ncyc is None else ncyc
     A_trial = 1.0
     w = 2.0 * math.pi / T
-    n = int(round(n_cycles * T / delta_t)) + 1
+    n = int(round(ncyc * T / delta_t)) + 1
     t_arr = np.arange(n) * delta_t
     a0 = A_trial * np.cos(w * t_arr)
     sd0 = newmark_sd(a0, delta_t, T, xi)
@@ -269,9 +412,10 @@ def calibrate_amplitude(T, Sd_target):
         raise RuntimeError("Trial Sd=0 at T={:.4f}".format(T))
     return (Sd_target / sd0) * A_trial
 
-def build_velocity_file(A, T, run_no, out_dir):
+def build_velocity_file(A, T, run_no, out_dir, ncyc=None):
+    ncyc = n_cycles if ncyc is None else ncyc
     w = 2.0 * math.pi / T
-    n = int(round(n_cycles * T / delta_t)) + 1
+    n = int(round(ncyc * T / delta_t)) + 1
     t = np.arange(n) * delta_t
     V0 = A / w
     v = V0 * np.sin(w * t)
@@ -303,26 +447,28 @@ def build_velocity_file(A, T, run_no, out_dir):
     return fpath, duration, v_peak
 
 # >>> RATCHETING : asymmetric pulse generation (record-derived)
-def generate_pulse(record, T, Sd_target, run_no, out_dir):
+def generate_pulse(record, T, Sd_target, run_no, out_dir, ncyc=None):
     """
     Returns (vel_path, pulse_dur, v_peak, info_dict).
     Symmetric when USE_RATCHETING is False; otherwise asymmetric with the
     two-regime activation and the record's measured directional bias.
+    `ncyc` is the record-derived equivalent cycle count for this run.
     """
+    ncyc = n_cycles if ncyc is None else ncyc
     if not USE_RATCHETING:
-        A = calibrate_amplitude(T, Sd_target)
-        vp, dur, vpk = build_velocity_file(A, T, run_no, out_dir)
-        return vp, dur, vpk, {"A": A, "beta": 1.0, "s": 0}
+        A = calibrate_amplitude(T, Sd_target, ncyc)
+        vp, dur, vpk = build_velocity_file(A, T, run_no, out_dir, ncyc)
+        return vp, dur, vpk, {"A": A, "beta": 1.0, "s": 0, "ncyc": ncyc}
 
     rec = RECORD_ASYM[record]
     s = rec["s"]
     beta_target = rec["beta"] ** ASYM_K          # sharpen once
     beta_now = beta_eff(T, T1_init, beta_target) # 1.0 until rocking onset
     A, _ = calibrate_amplitude_asym(T, Sd_target, beta_now, s,
-                                    n_cycles, delta_t, xi, k=1.0)
+                                    ncyc, delta_t, xi, k=1.0)
     vp, dur, vpk = build_velocity_asym(A, T, beta_now, s, run_no, out_dir,
-                                       n_cycles, delta_t, tail_sec)
-    return vp, dur, vpk, {"A": A, "beta": beta_now, "s": s}
+                                       ncyc, delta_t, tail_sec)
+    return vp, dur, vpk, {"A": A, "beta": beta_now, "s": s, "ncyc": ncyc}
 # <<< RATCHETING
 
 # =====================================================================
@@ -371,7 +517,7 @@ def find_live_window(t, u, sine_end_time):
     window_dur = float(t_live[-1] - t_live[0]) if len(t_live) > 1 else 0
     return t_live, u_live, window_dur
 
-def identify_Tend_from_csv(ch19_csv, sine_end_time):
+def identify_Tend_from_csv(ch19_csv, sine_end_time, T_prev=None):
     try:
         try:
             data = np.genfromtxt(ch19_csv, delimiter=',', skip_header=1)
@@ -440,8 +586,33 @@ def identify_Tend_from_csv(ch19_csv, sine_end_time):
     else:
         T_end = T_fft; method = "FFT"
     T_end = max(T_MIN_PHYS, min(T_MAX_PHYS, T_end))
-    print("  Period ID: T_acorr={:.5f}s, T_fft={:.5f}s -> T_end={:.5f}s ({})".format(
-        T_acorr, T_fft, T_end, method))
+
+    # --- reliability guards -------------------------------------------
+    # 1. The two independent estimators must agree. On sound ring-downs they
+    #    agree to <0.1%; a large split means the pick failed.
+    # 2. Second line: reject an implausible single-run jump.
+    # Neither guard moves T_end toward a target -- they only decide whether
+    # this run's estimate is trustworthy enough to propagate.
+    disagree = abs(T_acorr - T_fft) / max(min(T_acorr, T_fft), 1e-12)
+    if disagree > TID_AGREE_TOL:
+        held = T_prev if T_prev else T1_init
+        print("  ** PERIOD ID REJECTED: T_acorr={:.5f}s vs T_fft={:.5f}s "
+              "disagree by {:.0f}% (> {:.0f}%).".format(
+                  T_acorr, T_fft, disagree * 100, TID_AGREE_TOL * 100))
+        print("     Holding T_current = {:.5f}s and flagging this run."
+              .format(held))
+        return held
+    if T_prev and T_prev > 0 and T_end / T_prev > TID_MAX_JUMP:
+        print("  ** PERIOD ID REJECTED: T_end={:.5f}s is {:.2f}x T_prev="
+              "{:.5f}s (> {:.2f}x) in a single run.".format(
+                  T_end, T_end / T_prev, T_prev, TID_MAX_JUMP))
+        print("     Holding T_current = {:.5f}s and flagging this run."
+              .format(T_prev))
+        return T_prev
+
+    print("  Period ID: T_acorr={:.5f}s, T_fft={:.5f}s -> T_end={:.5f}s ({}, "
+          "estimators agree to {:.2f}%)".format(
+              T_acorr, T_fft, T_end, method, disagree * 100))
     print("    (live window={:.3f}s, N_live={}, segments={})".format(win_dur, len(u_live), n_segments))
     return T_end
 
@@ -500,11 +671,14 @@ def execute_run(run_no, record, scale, T_current):
     Sd_fixed_T1   = scale * Sd_unit_T1
     amp_factor    = Sd_target / Sd_fixed_T1 if Sd_fixed_T1 > 0 else 0
 
+    # Record-derived equivalent cycle count for this run's excitation period.
+    ncyc = equivalent_cycles(record, T_current)
+
     # >>> RATCHETING : pulse generation (symmetric or asymmetric per toggle)
     vel_path, pulse_dur, v_peak, pinfo = generate_pulse(
-        record, T_current, Sd_target, run_no, OUT_DIR)
+        record, T_current, Sd_target, run_no, OUT_DIR, ncyc)
     A_cal = pinfo["A"]
-    sine_dur = n_cycles * T_current
+    sine_dur = ncyc * T_current
     # <<< RATCHETING
 
     tbl_name = "run{:02d}".format(run_no)
@@ -536,7 +710,8 @@ def execute_run(run_no, record, scale, T_current):
     export_all_histories(run_no, record, scale, OUT_DIR)
 
     ringdown_start = sine_dur
-    T_end = identify_Tend_from_csv(ch19_csv_path(run_no, record, scale), ringdown_start)
+    T_end = identify_Tend_from_csv(ch19_csv_path(run_no, record, scale),
+                                   ringdown_start, T_prev=T_current)
     print("  T_end = {:.4f} s  ({:.2f}x T_init)".format(T_end, T_end/T1_init))
 
     it.command("table '{}' delete".format(tbl_name))
@@ -556,6 +731,8 @@ def execute_run(run_no, record, scale, T_current):
         "V_peak_mps": round(v_peak, 6),
         "T_end": round(T_end, 6),
         "T_end_over_Tinit": round(T_end / T1_init, 4),
+        "n_cycles_used": round(ncyc, 3),
+        "T_id_held": 1 if abs(T_end - T_current) < 1e-12 else 0,
         # >>> RATCHETING : record the asymmetry applied
         "beta_applied": round(pinfo["beta"], 4),
         "s_applied": pinfo["s"],
@@ -632,17 +809,18 @@ def run_strategy_C():
         log_f.write("run,record,scale,T_excite,T_over_Tinit,"
                     "Sd_record_mm,Sd_target_mm,Sd_fixedT1_mm,amplification,"
                     "A_mps2,PGA_g,V_peak_mps,T_end,T_end_over_Tinit,"
-                    "beta_applied,s_applied\n")
+                    "n_cycles_used,T_id_held,beta_applied,s_applied\n")
 
     for idx in range(resume_from - 1, len(PROTOCOL)):
         run_no, record, scale = PROTOCOL[idx]
         T_end, run_summary = execute_run(run_no, record, scale, T_current)
         summary.append(run_summary)
         s = run_summary
-        log_f.write("{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}\n".format(
+        log_f.write("{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}\n".format(
             s["run"], s["record"], s["scale"], s["T_excitation"], s["T_over_Tinit"],
             s["Sd_record_mm"], s["Sd_target_mm"], s["Sd_fixedT1_mm"], s["amplification"],
             s["A_mps2"], s["PGA_g"], s["V_peak_mps"], s["T_end"], s["T_end_over_Tinit"],
+            s["n_cycles_used"], s["T_id_held"],
             s["beta_applied"], s["s_applied"]))
         log_f.flush()
         T_current = T_end
