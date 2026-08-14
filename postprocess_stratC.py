@@ -72,7 +72,13 @@ except ImportError:          # allow running from a copy outside the repo
 RUN_RE = re.compile(r"^Run(\d+)_([A-Za-z0-9]+)_s(\d+)p(\d+)$")
 REC_COLOR = {"HU12": "tab:blue", "EC40": "tab:orange", "FR76": "tab:red"}
 KEY_TILT = "tilt_full_wall"
+# Wall centreline at Z=2.06 referenced to the table (instrument_history_new.dat).
 KEY_DISP = "rel_disp_top_mm"
+# Experiment-matched EDP: mean(Ch3,Ch4) at Z=2.06 minus table, already in mm
+# (FISH history 22, instrument_tilt_v2.dat). Preferred over KEY_DISP wherever
+# it exists, because it is the definition used by Moshfeghi et al. Eq. (1).
+KEY_DISP_EXP = "rel_disp_top_exp_mm"
+CH3_NAME = "Channel_3_DispTopQLeft"        # x = 0.106 m  (quarter left)
 CH4_NAME = "Channel_4_DispTopQRight"       # genuinely at x = 1.186 (quarter)
 CH19_NAME = "Channel_19_DispTopQRight"     # NB: on the wall centreline
 CH_TABLE = "Channel_5_DispTable"
@@ -225,6 +231,69 @@ def extract_rel_to_table(sim_dir, channel):
             continue
         n = min(len(cch), len(c05))
         rel = cch[:n] - c05[:n]
+        out[run_no] = float(np.max(np.abs(rel - rel[0]))) * 1000.0
+    return out
+
+
+def extract_topq_avg_to_table(sim_dir):
+    """Primary EDP: the experiment's own definition, per run, in mm.
+
+    Moshfeghi et al. (2024), Structures 66:106815, section 3.1, Eq. (1):
+
+        U(t) = average( Disp-Top quarter left , Disp-Top quarter right )
+
+    both at Z = 2.06 m (the 2nd-floor level, where the largest deformations
+    were recorded), i.e. channels 3 and 4 of Table 3. The experimental
+    potentiometers are carried on frame E, which is mounted on the shake
+    table, so the recorded series are ALREADY table-referenced -- verified
+    against the raw Test 9 data, where the bottom-quarter channel reads
+    0.19 mm on run 11 while the table strokes 69.15 mm.
+
+    3DEC block histories are absolute (they contain the prescribed base
+    motion), so the simulation must be referenced to Channel 5 before it can
+    be compared. The table stroke reaches 35-69 mm on the EC40 and FR76
+    runs, so this is not a small correction.
+
+        rel(t) = 0.5 * (Ch3(t) + Ch4(t)) - Ch5(t)
+        peak   = max |rel(t) - rel(t0)| * 1000
+
+    Reference values for US-1 (Test 9), from the raw data: peak of +29.48 /
+    -25.52 mm at run 24, against Table 4's reported 25.0 / -30.0 mm (the
+    paper's positive direction is the opposite sign convention).
+
+    Two sources, in order of preference:
+
+      1. The FISH channel `rel_disp_top_exp_mm` (history 22, defined in
+         instrument_tilt_v2.dat), which already evaluates
+         0.5*(Ch3 + Ch4) - Ch5 in mm at the gridpoint level. Preferred
+         because it is computed inside 3DEC at every timestep rather than
+         reconstructed from three separately-exported CSVs.
+      2. Arithmetic on the Ch3 / Ch4 / Ch5 CSVs, for result folders written
+         before instrument_tilt_v2.dat was in use.
+
+    Returns {} if neither is available -- older folders (e.g. the NODAMP_v7
+    set) export Channel_4 and Channel_5 but not Channel_3, so this EDP
+    cannot be reconstructed for them and fig6 falls back to Ch4 alone."""
+    out = {}
+    for run_no, record, scale, folder in discover_runs(sim_dir):
+        fexp = sorted(folder.glob("*" + KEY_DISP_EXP + "*.csv"))
+        if fexp:
+            texp, cexp = read_hist_csv(fexp[0])
+            if cexp is not None and len(cexp):
+                out[run_no] = float(np.max(np.abs(cexp - cexp[0])))
+                continue
+        f03 = sorted(folder.glob("*" + CH3_NAME + "*.csv"))
+        f04 = sorted(folder.glob("*" + CH4_NAME + "*.csv"))
+        f05 = sorted(folder.glob("*" + CH_TABLE + "*.csv"))
+        if not (f03 and f04 and f05):
+            continue
+        t03, c03 = read_hist_csv(f03[0])
+        t04, c04 = read_hist_csv(f04[0])
+        t05, c05 = read_hist_csv(f05[0])
+        if c03 is None or c04 is None or c05 is None:
+            continue
+        n = min(len(c03), len(c04), len(c05))
+        rel = 0.5 * (c03[:n] + c04[:n]) - c05[:n]
         out[run_no] = float(np.max(np.abs(rel - rel[0]))) * 1000.0
     return out
 
@@ -388,9 +457,24 @@ def fig_tilt(main, main_lbl, exps, out_dir):
     plt.close(fig); print("  -> fig1_tilt_compare.png")
 
 
+def resolve_disp_key(main):
+    """Prefer the experiment-matched EDP where the run exported it.
+
+    KEY_DISP_EXP is mean(Ch3,Ch4) - Ch5 (Moshfeghi et al. Eq. 1);
+    KEY_DISP is the wall-centreline equivalent, kept as the fallback for
+    result folders written before instrument_tilt_v2.dat was in use."""
+    for rn in main:
+        if KEY_DISP_EXP in main[rn].get("channels", {}):
+            return KEY_DISP_EXP
+    return KEY_DISP
+
+
 def fig_disp(main, main_lbl, exps, out_dir):
     fig, ax = plt.subplots(figsize=(9, 5))
-    x, y = chan_series(main, KEY_DISP, "peak")
+    key = resolve_disp_key(main)
+    if key != KEY_DISP:
+        print("     (fig2 EDP = {}, experiment-matched)".format(key))
+    x, y = chan_series(main, key, "peak")
     ax.plot(x, y, "-", color="gray", lw=0.8, zorder=1)
     seen = set()
     for rn, v in zip(x, y):
@@ -602,23 +686,29 @@ def fig_channel_grid(main, out_dir):
     plt.close(fig); print("  -> fig5_channel_grid.png")
 
 
-def fig_top_quarter(ch4, ch19, main_lbl, exps, out_dir, ycap=None):
-    """Peak table-referenced OOP displacement at the top-quarter-right
-    position vs run.
+def fig_top_quarter(topq, ch4, ch19, main_lbl, exps, out_dir, ycap=None):
+    """Peak table-referenced OOP displacement at Z = 2.06 m vs run.
 
-    The simulated series is Channel_4 (x = 1.186 m), which is the same
-    location as the experimental sensor. Channel_19 (wall centreline) is
-    drawn thin and grey as a reference, because ch19_xval.py / figP6 use it
-    and it is useful to see how much the position mismatch costs.
+    PRIMARY series is `topq` = 0.5*(Ch3 + Ch4) - Ch5, which is the
+    experiment's own EDP definition (Moshfeghi et al. 2024, Eq. 1). This is
+    the curve to compare against the measured data.
+
+    Channel_4 alone (x = 1.186 m) and Channel_19 (wall centreline) are drawn
+    thin for reference only: the former is a single-sensor version of the
+    same quantity, the latter is what ch19_xval.py / figP6 historically used
+    and is retained so the position mismatch stays visible.
 
     Off-scale simulated points are clipped to the cap and annotated, the same
     treatment ch19_xval.py uses on figP6, so one runaway run cannot flatten
     the experimental curves."""
-    if not ch4:
-        print("  ! no Channel-4/Channel-5 pairs found, fig6 skipped")
+    primary = topq if topq else ch4
+    plabel = ("mean(Ch3,Ch4) at Z=2.06 m" if topq
+              else "Ch 4 only at Z=2.06 m (Ch3 not exported)")
+    if not primary:
+        print("  ! no top-quarter/Channel-5 pairs found, fig6 skipped")
         return
-    rs = np.array(sorted(ch4))
-    ys = np.array([ch4[r] for r in rs])
+    rs = np.array(sorted(primary))
+    ys = np.array([primary[r] for r in rs])
 
     exp_vals = []
     for e in exps:
@@ -643,8 +733,14 @@ def fig_top_quarter(ch4, ch19, main_lbl, exps, out_dir, ycap=None):
         ax.plot(r19, np.minimum(y19, ycap) if ycap else y19, "-",
                 color="0.6", lw=1.1, zorder=3,
                 label="NUM Ch 19 (centreline, for reference)")
+    if topq and ch4:
+        r4 = np.array(sorted(ch4))
+        y4 = np.array([ch4[r] for r in r4])
+        ax.plot(r4, np.minimum(y4, ycap) if ycap else y4, "-",
+                color="salmon", lw=1.1, zorder=3,
+                label="NUM Ch 4 alone (for reference)")
     ax.plot(rs, clipped, "s-", color="red", ms=6, lw=1.6,
-            label=main_lbl + " -- Ch 4 (quarter right)", zorder=4)
+            label=main_lbl + " -- " + plabel, zorder=4)
     if ycap:
         off = [(r, v) for r, v in zip(rs, ys) if v > ycap]
         for k, (rr, v) in enumerate(off):
@@ -659,7 +755,7 @@ def fig_top_quarter(ch4, ch19, main_lbl, exps, out_dir, ycap=None):
               .format(ycap, len(off)))
     ax.set_xlabel("Run")
     ax.set_ylabel("Peak OOP displacement, table-referenced (mm)")
-    ax.set_title("Top quarter right: peak out-of-plane displacement, "
+    ax.set_title("Top quarter (Z = 2.06 m): peak out-of-plane displacement, "
                  "simulation vs experiment")
     ax.grid(True, alpha=0.15)
     ax.legend(fontsize=9, loc="upper left")
@@ -690,6 +786,7 @@ def write_long_csv(main_data, out_dir):
 
 def write_wide_csv(main_data, driver_cols, out_dir):
     base_cols = ["run", "record", "peak_tilt_deg", "residual_tilt_deg",
+                 "peak_topq_avg_rel_mm",
                  "peak_rel_disp_mm", "peak_ch4_rel_mm", "peak_ch19_rel_mm",
                  "T_end_over_Tinit",
                  "beta_applied", "Sd_target_mm"]
@@ -735,7 +832,7 @@ def console_table(main_data):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("sim_dir", nargs="?",
-    default="stratC_results_NODAMP_v7")
+    default="stratC_results_RATCHETING")
     ap.add_argument("--ycap", type=float, default=None,
                     help="fig6 y-axis cap in mm (default: automatic, only "
                          "applied when the simulation dwarfs the experiment)")
@@ -767,6 +864,17 @@ def main():
         if rn in main_data:
             main_data[rn]["peak_ch19_rel_mm"] = round(v, 4)
 
+    print("Extracting primary EDP: mean(Ch3,Ch4) at Z=2.06 m, "
+          "referenced to Channel 5")
+    topq = extract_topq_avg_to_table(sim_dir)
+    print("  runs with a Ch3/Ch4/Ch5 triple: {}".format(len(topq)))
+    if not topq:
+        print("  ! none found -- fig6 falls back to Ch4 alone. Check that "
+              "Channel_3_DispTopQLeft is being exported.")
+    for rn, v in topq.items():
+        if rn in main_data:
+            main_data[rn]["peak_topq_avg_rel_mm"] = round(v, 4)
+
     print("Loading experimental data")
     exps = load_exp(out_dir)
 
@@ -779,7 +887,7 @@ def main():
     fig_activation(main_data, exps, out_dir)
     fig_period_compare(main_data, label, exps, out_dir)
     fig_tilt_segments(main_data, exps, out_dir)
-    fig_top_quarter(ch4, ch19, label, exps, out_dir, ycap=args.ycap)
+    fig_top_quarter(topq, ch4, ch19, label, exps, out_dir, ycap=args.ycap)
     fig_channel_grid(main_data, out_dir)
     print("\nDone. Output: {}".format(out_dir))
 

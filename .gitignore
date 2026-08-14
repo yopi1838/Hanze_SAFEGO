@@ -27,6 +27,7 @@ stratC_results_*/Run[0-9][0-9]_*/
 !stratD_results/Run[0-9][0-9]_*/
 !stratE_results_protocol_m1p00/Run[0-9][0-9]_*/
 !stratC_results_MAXWELL/Run[0-9][0-9]_*/
+!stratC_results_NODAMP_v8/Run[0-9][0-9]_*/
 # 3DEC bitmap dumps -- regenerate with export_plots.py
 stratC_results_*/plots/
 
