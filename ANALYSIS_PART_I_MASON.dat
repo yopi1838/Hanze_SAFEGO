@@ -25,25 +25,17 @@ block property density 1885 range group "Masonry"
 block property density 7850 range group "S" or "T_B" or "Joist_S1" or "Joist_S2"
 block property density [5510*1.034] range group "Joist"
 
-fish define properties
-    kn= 2.5e9
-    ks = 2.5e9
-    tension=0.2e6                              ; f_t = 0.8*f_x1, f_x1=0.43 MPa (Moshfeghi et al. 2024, wallette OOP flexural)
-    cohesion=0.4e6                             ; c = 2.18*f_t (Jafari, Rots & Esposito 2022, Fig.10b; CoV 0.66)
-    friction=36.9
-    fc_comp=20e6
-    Gt = (0.16*(tension*1e-6))*10^3             ; G_I = 0.16*f_t (Jafari 2022, Table 13); replaces Van der Pluijm
-    Gs = 10*Gt
-    Gc = (15 + 0.43*(fc_comp*1e-6) - 0.036*(fc_comp*1e-6)^2)*10^3
-    n = 2.0
-    Css = 9.0
-    Cnn=1.0
-    Cn = 0.0
-end
-@properties
+; ---------------------------------------------------------------------
+; Joint properties live in mat_case.dat so a sensitivity case can be run
+; by regenerating that one file. Baseline values and their provenance are
+; documented there. If it is absent the run must stop -- silently falling
+; back to hard-coded numbers is how the earlier Gc transcription error
+; survived unnoticed across several result sets.
+; ---------------------------------------------------------------------
+call 'mat_case.dat'
 ;CONTACT PROPERTIES
 block contact generate-subcontacts
-block contact jmodel assign mason_v8
+block contact jmodel assign mason_v7
 block contact prop stiffness-normal @kn stiffness-initial @kn  stiffness-shear @ks ...
     tension @tension cohesion @cohesion friction @friction ...
     friction-residual @friction cohesion-residual 0 ...
@@ -150,5 +142,7 @@ block face apply stress-yy [-10.35e3/(0.21*1.292)] range group "Comp_apply"
 
 model solve ratio 5e-8
 
+; Fixed save name. sweep_run.py copies this to a case-specific .sav after
+; each Part-I rebuild, so no FISH string handling is needed here.
 model save 'Part_I_MASON_v7'
 ;;call "sinus_wave_analysis.dat"

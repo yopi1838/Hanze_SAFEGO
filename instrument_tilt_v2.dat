@@ -126,6 +126,11 @@ fish define tilt_exp_match
     ; tilt definition is no longer adequate for either model or test.
     local gp_tc  = block.gp.near(x_centre, 2.06, z_face)
     bulge_top_mm = (block.gp.disp.z(gp_tc) - dz_top) * 1000.0
+
+    ; Return a value so this function can itself be registered as a history.
+    ; See the note by the registration block below -- without that, none of
+    ; the variables assigned above ever update during stepping.
+    tilt_exp_match = rel_disp_top_exp_mm
 end
 
 @tilt_exp_match
@@ -145,3 +150,19 @@ fish history tiltx_full_wall        ;21
 fish history rel_disp_top_exp_mm    ;22
 fish history tilt_local_incl        ;23
 fish history bulge_top_mm           ;24
+; ---------------------------------------------------------------------
+; Index 25 is what makes 17-24 live.
+; A `fish history` on a VARIABLE only samples that variable; it does not
+; re-run the function that assigns it. Because tilt_exp_match was invoked
+; once via @tilt_exp_match above and never registered, histories 17-24 were
+; frozen at their registration values for the whole run -- verified on
+; NODAMP_v8 run 24, where rel_disp_top_exp_mm held the single value
+; 1.090493 across all 8461 samples.
+; instrument_history_new.dat gets this right by registering the FUNCTION
+; tilt_angles as index 10, ahead of the variables it feeds, which is why
+; tilt_full_wall and rel_disp_top_mm do update.
+; Appended rather than inserted so no existing export index shifts. The
+; cost is that 17-24 report the previous evaluation, i.e. a lag of one
+; sampling interval (~0.4 ms), which is negligible here.
+; ---------------------------------------------------------------------
+fish history tilt_exp_match         ;25

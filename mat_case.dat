@@ -1,0 +1,48 @@
+; =====================================================================
+; mat_case.dat  --  masonry joint property set (SWEEP-OVERRIDABLE)
+; =====================================================================
+; BASELINE case. sweep_run.py overwrites this file per case; nothing else
+; in ANALYSIS_PART_I_MASON.dat changes between cases.
+;
+; Provenance of every value. f_x1 = 0.43 MPa is the vertical out-of-plane
+; flexural strength of the wallettes, Moshfeghi et al. (2024) Structures 66
+; 106815 section 2.1. Correlations are Jafari, Rots & Esposito (2022)
+; J. Build. Eng. 45 103450.
+;
+;   tension   f_t  = 0.8 * f_x1        Table 13; Fig.10a gives 0.78, R2=0.95
+;                                      -> 0.344 MPa   (strongest correlation
+;                                         in that paper)
+;   cohesion  c    = 2.18 * f_t        section 3.9 mean ratio, CoV 0.66
+;                                      -> 0.750 MPa   (most uncertain value
+;                                         here; Fig.10b fitted trend gives
+;                                         1.58 at this f_t, i.e. 0.544 MPa,
+;                                         and the reported spread is
+;                                         0.44-3.85. SWEPT.)
+;   G_I            = 0.16 * f_t        Table 13  -> 55.0 J/m2
+;   G_II           = 10 * G_I          Table 13  -> 550 J/m2
+;   G_c            = 0.15 + 0.43*f'm - 0.0036*f'm^2      Jafari Eq.(3)
+;                                      -> 7.31 N/mm at f'm = 20 MPa
+;        NOTE this corrects a transcription error carried in earlier runs,
+;        which used  15 + 0.43*f'm - 0.036*f'm^2  = 9.20 N/mm. The two
+;        errors partly cancelled, so the magnitude was not obviously wrong.
+;        Jafari's own masonry regression (Fig.6a, G_fc = 0.57*f'm + 14.7)
+;        gives 26.1 N/mm but at R2 = 0.11. SWEPT over 7.31 / 26.1.
+;   friction       direct test only, no correlation offered (Table 13).
+;                  Left at the measured 36.9 deg.
+; =====================================================================
+fish define properties
+    kn       = 2.5e9
+    ks       = 2.5e9
+    tension  = 0.344e6
+    cohesion = 0.750e6
+    friction = 36.9
+    fc_comp  = 20e6
+    Gt = 55.0
+    Gs = 10.0 * Gt
+    Gc = (0.15 + 0.43*(fc_comp*1e-6) - 0.0036*(fc_comp*1e-6)^2) * 10^3
+    n   = 2.0
+    Css = 9.0
+    Cnn = 1.0
+    Cn  = 0.0
+end
+@properties

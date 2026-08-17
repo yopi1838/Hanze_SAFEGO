@@ -2,8 +2,8 @@
 """
 Strategy C (SYMMETRIC PULSE, NO DAMPING) : Adaptive Sequential IDA
 =======================================================================
-Production driver for the mason_v7 model. Writes to stratC_results_NODAMP_v8.
-(v7 is retained untouched as the pre-guard baseline for comparison.)
+Production driver for the mason_v7 model. Writes to stratC_results_NODAMP_v9.
+(v7 = pre-guard baseline, v8 = period-guard only, both retained untouched.)
 
 USE_RATCHETING is now FALSE, so this runs the original symmetric pulse and
 ASYM_K is inert. The reason is in MODELLING_DISCREPANCIES.md section 0: the
@@ -24,7 +24,7 @@ the same channels, and both have the working damping branch. The pair is now a
 CONTROLLED test of the fracture-energy hypothesis, differing only in:
     G_I / G_II   13.2 J/m2 here (as computed in ANALYSIS_PART_I_MASON.dat)
                  vs 20 J/m2 in GI
-    OUT_DIR      stratC_results_NODAMP_v8 vs stratC_results_GI_NORATCH
+    OUT_DIR      stratC_results_NODAMP_v9 vs stratC_results_GI_NORATCH
 GI additionally exposes COH_RESIDUAL, but it is 0.0 there, which matches the
 base model, so it changes nothing.
 
@@ -148,12 +148,83 @@ TID_MAX_JUMP  = 1.50   # max T_end / T_prev accepted within one run
 # Left in place as instrumentation: N_eq is logged per run as n_cycles_used
 # and is a useful record descriptor. Set True only to reproduce the test.
 USE_RECORD_NCYCLES = False
-NCYC_MIN, NCYC_MAX = 1.0, 10.0
+# ---------------------------------------------------------------------
+# TWO-IM CYCLE COUNT  (Sd(T) AND the record's peak acceleration)
+# ---------------------------------------------------------------------
+# v8 matched Sd(T) alone and under-predicted the late runs by up to 5.5x
+# (run 24: 5.2 mm modelled vs 29.5 mm measured), while the modelled EDP
+# tracked the commanded Sd_target ~1:1 -- i.e. the wall responded
+# essentially elastically and never entered the rocking regime.
+#
+# Cause: for a resonant sinusoid at damping xi,
+#
+#     Sd = (A / w^2) * (1 - exp(-2 pi xi N)) / (2 xi)
+#
+# and that build-up factor is 6.103 at N = 3.0, xi = 0.05. Matching Sd(T)
+# therefore needs only ~1/6 of the acceleration the record itself carried:
+# measured pulse PGA ran 2.2-3.6x BELOW the achieved table PGA on every run.
+# Rocking initiation is an acceleration-threshold phenomenon, so the pulse
+# reached its displacement target while staying under the threshold that
+# actually triggers rocking.
+#
+# Fixing A = A_record leaves N as the single unknown. Solved per run this
+# gives 0.54-0.94 cycles over runs 17-24 (mean 0.80) -- a single lobe, not
+# three cycles. Note the earlier n_cycles 1.5 -> 3.0 change, made to "give
+# the pulse enough cycles to accumulate rocking", was backwards: more cycles
+# LOWER the amplitude needed for a given Sd and starve the acceleration.
+#
+# Both matched quantities are record-derived (Sd from the response spectrum,
+# A_record from the achieved channel-12 table motion x protocol scale). No
+# target displacement is assumed and no structure-dependent feedback is added
+# beyond the excitation period itself.
+USE_TWO_IM_CYCLES = True
+NCYC_MIN, NCYC_MAX = 0.25, 10.0
 NCYC_BAND_RATIO    = 1.30    # band = [f1/ratio, f1*ratio]
 RECORD_TABLE = {"HU12": "vel_HU.txt", "EC40": "vel_EC.txt", "FR76": "vel_FR.txt"}
 _NCYC_CACHE = {}
 
-OUT_DIR = "stratC_results_NODAMP_v8"
+OUT_DIR = "stratC_results_NODAMP_v9"
+
+# ---------------------------------------------------------------------
+# SENSITIVITY-SWEEP OVERRIDES
+# ---------------------------------------------------------------------
+# sweep_run.py writes stratC_overrides.json next to this script before each
+# case, so a case needs no edit to this file. Only the keys listed in
+# _OVERRIDABLE may be set; anything else is reported and ignored, so a typo
+# cannot silently run the baseline under a case label.
+#
+# The file is deleted (or absent) for a normal manual run, in which case the
+# values above stand unchanged.
+_OVERRIDABLE = ("OUT_DIR", "n_cycles", "xi", "delta_t", "tail_sec",
+                "inter_run_gap", "DAMP_RATIO", "DAMP_TYPE", "MAXWELL_CMD",
+                "USE_TWO_IM_CYCLES", "USE_RECORD_NCYCLES", "PERIOD_SCHEME",
+                "TID_AGREE_TOL", "TID_MAX_JUMP", "NCYC_MIN", "NCYC_MAX",
+                "T1_init", "BASE_SAVE", "CASE_ID")
+
+PERIOD_SCHEME = "adaptive"   # "adaptive" = excite at the identified T_current
+                             # "fixed"    = excite at T1_init every run (T_eq
+                             #              control case; T_end still logged
+                             #              as a damage measure)
+MAXWELL_CMD   = ""           # non-empty -> issued verbatim after local/global
+                             # damping are zeroed
+CASE_ID       = ""           # free-text label echoed into the log
+
+_OVR_FILE = "stratC_overrides.json"
+if os.path.exists(_OVR_FILE):
+    try:
+        with open(_OVR_FILE) as _f:
+            _ovr = json.load(_f)
+        print("\n--- sweep overrides from {} ---".format(_OVR_FILE))
+        for _k in sorted(_ovr):
+            if _k in _OVERRIDABLE:
+                globals()[_k] = _ovr[_k]
+                print("    {:<20} = {}".format(_k, _ovr[_k]))
+            else:
+                print("    ! IGNORED (not overridable): {}".format(_k))
+    except Exception as _e:
+        raise RuntimeError("Cannot parse {}: {}".format(_OVR_FILE, _e))
+else:
+    print("\n(no {} found -- running baseline constants)".format(_OVR_FILE))
 STATE_FILE_NAME = "stratC_checkpoint.json"
 
 # >>> RATCHETING : controls
@@ -400,7 +471,91 @@ def equivalent_cycles(record, T_pulse):
     return n_eq
 
 
+def record_pga(record, scale):
+    """Peak acceleration of the achieved table motion for this run [m/s2].
+
+    Differentiates the base velocity table (written by integrate_table_accel.py
+    from channel 12, i.e. the ACHIEVED table motion, not the nominal input) and
+    applies the protocol scale factor. Returns None if unavailable, in which
+    case the caller falls back to the fixed n_cycles."""
+    fname = RECORD_TABLE.get(record)
+    if not fname or not os.path.exists(fname):
+        print("    ! base table for {} not found -- cannot set N from PGA"
+              .format(record))
+        return None
+    try:
+        t, v = _read_vel_table(fname)
+        if len(t) < 8:
+            raise ValueError("table too short")
+        dt = float(np.median(np.diff(t)))
+        a = np.gradient(v, dt)
+        a = a - np.mean(a)
+        return float(np.max(np.abs(a))) * scale
+    except Exception as e:
+        print("    ! record_pga({}) failed: {}".format(record, e))
+        return None
+
+
+def cycles_for_two_im(T, Sd_target, A_record):
+    """n_cycles so the pulse matches Sd_target at T AND peaks at A_record.
+
+    Inverts  Sd = (A/w^2) * (1 - exp(-2 pi xi N)) / (2 xi)  for N with
+    A = A_record. Returns None if A_record is unusable. Saturates at
+    NCYC_MAX when the target is unreachable at that amplitude."""
+    if not A_record or A_record <= 0.0 or T <= 0.0:
+        return None
+    w = 2.0 * math.pi / T
+    f_need = Sd_target * w * w / A_record
+    arg = 1.0 - 2.0 * xi * f_need
+    if arg <= 1e-6:
+        return NCYC_MAX
+    N = -math.log(arg) / (2.0 * math.pi * xi)
+    return float(min(max(N, NCYC_MIN), NCYC_MAX))
+
+
+def _pulse_tv(A, T, ncyc):
+    """(t, v) for the pulse: cosine acceleration over `ncyc` cycles,
+    integrated to velocity, raised-cosine taper to zero over half a period,
+    then a zero tail. Single source of truth for the pulse shape, so the
+    amplitude calibration sees exactly the motion that gets applied."""
+    w = 2.0 * math.pi / T
+    n = int(round(ncyc * T / delta_t)) + 1
+    t = np.arange(n) * delta_t
+    v = (A / w) * np.sin(w * t)
+    ramp_sec = max(0.5 * T, delta_t)
+    n_tail = int(round(tail_sec / delta_t))
+    n_ramp = min(int(round(ramp_sec / delta_t)), n_tail)
+    t_tail = t[-1] + delta_t + np.arange(n_tail) * delta_t
+    t = np.r_[t, t_tail]
+    v_end = float(v[-1])
+    if n_ramp > 1:
+        ss = np.linspace(0.0, 1.0, n_ramp)
+        v_ramp = v_end * 0.5 * (1.0 + np.cos(math.pi * ss))
+    else:
+        v_ramp = np.array([0.0])
+    v_tail = np.zeros(n_tail)
+    v_tail[:len(v_ramp)] = v_ramp
+    return t, np.r_[v, v_tail]
+
+
 def calibrate_amplitude(T, Sd_target, ncyc=None):
+    """Amplitude so the ACTUAL applied pulse reaches Sd_target at T.
+
+    Calibrates on the differentiated velocity history, so the raised-cosine
+    taper is included. That matters once ncyc < 1: the velocity no longer
+    returns to zero at the end of the cosine, so the taper contributes a
+    secondary acceleration lobe that the old untapered cosine calibration
+    ignored. Linear in A, so one trial suffices."""
+    ncyc = n_cycles if ncyc is None else ncyc
+    t_u, v_u = _pulse_tv(1.0, T, ncyc)
+    a_u = np.gradient(v_u, delta_t)
+    sd0 = newmark_sd(a_u, delta_t, T, xi)
+    if sd0 <= 0.0:
+        raise RuntimeError("Trial Sd=0 at T={:.4f}, N={:.3f}".format(T, ncyc))
+    return Sd_target / sd0
+
+
+def _calibrate_amplitude_untapered(T, Sd_target, ncyc=None):
     ncyc = n_cycles if ncyc is None else ncyc
     A_trial = 1.0
     w = 2.0 * math.pi / T
@@ -413,32 +568,15 @@ def calibrate_amplitude(T, Sd_target, ncyc=None):
     return (Sd_target / sd0) * A_trial
 
 def build_velocity_file(A, T, run_no, out_dir, ncyc=None):
+    """Write the 3DEC velocity table. Shape comes from _pulse_tv, so this is
+    byte-for-byte the motion the amplitude was calibrated against."""
     ncyc = n_cycles if ncyc is None else ncyc
-    w = 2.0 * math.pi / T
-    n = int(round(ncyc * T / delta_t)) + 1
-    t = np.arange(n) * delta_t
-    V0 = A / w
-    v = V0 * np.sin(w * t)
-    ramp_sec = max(0.5 * T, delta_t)
-    n_tail = int(round(tail_sec / delta_t))
-    n_ramp = min(int(round(ramp_sec / delta_t)), n_tail)
-    t_tail = t[-1] + delta_t + np.arange(n_tail) * delta_t
-    t = np.r_[t, t_tail]
-    v_end = float(v[-1])
-    if n_ramp > 1:
-        s = np.linspace(0.0, 1.0, n_ramp)
-        wcos = 0.5 * (1.0 + np.cos(math.pi * s))
-        v_ramp = v_end * wcos
-    else:
-        v_ramp = np.array([0.0])
-    v_tail = np.zeros(n_tail)
-    v_tail[:len(v_ramp)] = v_ramp
-    v = np.r_[v, v_tail]
+    t, v = _pulse_tv(A, T, ncyc)
     fname = "vel_run_{:02d}.txt".format(run_no)
     fpath = os.path.join(out_dir, fname)
     N = len(t)
     with open(fpath, "w", newline="\n") as f:
-        f.write("StratC_run{:02d}_T{:.4f}\n".format(run_no, T))
+        f.write("StratC_run{:02d}_T{:.4f}_N{:.3f}\n".format(run_no, T, ncyc))
         f.write("{}\t0\n".format(N))
         for ti, vi in zip(t, v):
             f.write("{:.6f}\t{:.9e}\n".format(ti, vi))
@@ -652,6 +790,9 @@ def setup_model_for_dynamic(save_file):
     # The command used to be commented out here with `pass` as the body, so
     # setting DAMP_RATIO non-zero silently produced an undamped run while
     # preflight_checks() reported damping as active.
+    if MAXWELL_CMD:
+        it.command(MAXWELL_CMD)
+        print("  Maxwell damping applied: {}".format(MAXWELL_CMD))
     if DAMP_RATIO > 0:
         cmd = "block mechanical damping rayleigh {ratio} {freq} {dtype}".format(
             ratio=DAMP_RATIO, freq=1.0 / T1_init, dtype=DAMP_TYPE).strip()
@@ -665,14 +806,26 @@ def setup_model_for_dynamic(save_file):
 # 10.  EXECUTE ONE RUN
 # =====================================================================
 def execute_run(run_no, record, scale, T_current):
+    # PERIOD_SCHEME == "fixed" is the T_eq control case: the pulse is tuned to
+    # T1_init on every run and the identified T_end is logged but not fed back.
+    if PERIOD_SCHEME == "fixed":
+        T_current = T1_init
     Sd_unit_Tcurr = interpolate_sd(record, T_current)
     Sd_target     = scale * Sd_unit_Tcurr
     Sd_unit_T1    = interpolate_sd(record, T1_init)
     Sd_fixed_T1   = scale * Sd_unit_T1
     amp_factor    = Sd_target / Sd_fixed_T1 if Sd_fixed_T1 > 0 else 0
 
-    # Record-derived equivalent cycle count for this run's excitation period.
-    ncyc = equivalent_cycles(record, T_current)
+    # Cycle count. Preferred route matches BOTH Sd(T) and the record's own
+    # peak acceleration; falls back to the energy-equivalent count, then to
+    # the fixed n_cycles, and says which it used.
+    A_record = record_pga(record, scale) if USE_TWO_IM_CYCLES else None
+    ncyc = cycles_for_two_im(T_current, Sd_target, A_record) if A_record else None
+    if ncyc is None:
+        ncyc = equivalent_cycles(record, T_current)
+        ncyc_src = "record-energy" if USE_RECORD_NCYCLES else "fixed"
+    else:
+        ncyc_src = "two-IM(Sd+PGA)"
 
     # >>> RATCHETING : pulse generation (symmetric or asymmetric per toggle)
     vel_path, pulse_dur, v_peak, pinfo = generate_pulse(
@@ -732,6 +885,8 @@ def execute_run(run_no, record, scale, T_current):
         "T_end": round(T_end, 6),
         "T_end_over_Tinit": round(T_end / T1_init, 4),
         "n_cycles_used": round(ncyc, 3),
+        "ncyc_source": ncyc_src,
+        "A_record_g": round(A_record / 9.80665, 4) if A_record else "",
         "T_id_held": 1 if abs(T_end - T_current) < 1e-12 else 0,
         # >>> RATCHETING : record the asymmetry applied
         "beta_applied": round(pinfo["beta"], 4),
@@ -746,7 +901,7 @@ def execute_run(run_no, record, scale, T_current):
 SPECTRA_FILES = ["spectrum_HU12.csv", "spectrum_EC40.csv", "spectrum_FR76.csv"]
 DAT_FILES     = ["instrument_history_new.dat",
                  "instrument_history_export_v2.dat"]
-BASE_SAVE     = "Part_I_MASON_v7.sav"
+BASE_SAVE     = globals().get("BASE_SAVE", "Part_I_MASON_v7.sav")
 
 def preflight_checks():
     """Fail loudly, before any solving, if inputs or config are not in order."""
@@ -794,7 +949,7 @@ def run_strategy_C():
     if resume_from == 1:
         print("\n--- Starting fresh from run 1 ---")
         print("    USE_RATCHETING = {}   ASYM_K = {}".format(USE_RATCHETING, ASYM_K))
-        setup_model_for_dynamic("Part_I_MASON_v7.sav")
+        setup_model_for_dynamic(BASE_SAVE)
     else:
         last_done = resume_from - 1
         print("\n--- Resuming: restoring run {:02d}, will execute run {:02d} next ---".format(
@@ -809,18 +964,18 @@ def run_strategy_C():
         log_f.write("run,record,scale,T_excite,T_over_Tinit,"
                     "Sd_record_mm,Sd_target_mm,Sd_fixedT1_mm,amplification,"
                     "A_mps2,PGA_g,V_peak_mps,T_end,T_end_over_Tinit,"
-                    "n_cycles_used,T_id_held,beta_applied,s_applied\n")
+                    "n_cycles_used,ncyc_source,A_record_g,T_id_held,beta_applied,s_applied\n")
 
     for idx in range(resume_from - 1, len(PROTOCOL)):
         run_no, record, scale = PROTOCOL[idx]
         T_end, run_summary = execute_run(run_no, record, scale, T_current)
         summary.append(run_summary)
         s = run_summary
-        log_f.write("{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}\n".format(
+        log_f.write("{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}\n".format(
             s["run"], s["record"], s["scale"], s["T_excitation"], s["T_over_Tinit"],
             s["Sd_record_mm"], s["Sd_target_mm"], s["Sd_fixedT1_mm"], s["amplification"],
             s["A_mps2"], s["PGA_g"], s["V_peak_mps"], s["T_end"], s["T_end_over_Tinit"],
-            s["n_cycles_used"], s["T_id_held"],
+            s["n_cycles_used"], s["ncyc_source"], s["A_record_g"], s["T_id_held"],
             s["beta_applied"], s["s_applied"]))
         log_f.flush()
         T_current = T_end
