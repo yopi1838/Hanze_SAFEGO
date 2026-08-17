@@ -1,0 +1,4 @@
+run,record,scale,table_file,record_dur_s,T_end,T_end_over_Tinit
+1,HU12,0.5,vel_HU.txt,35.9467,0.098526,1.0709
+2,HU12,0.75,vel_HU.txt,35.9467,0.098676,1.0726
+3,EC40,0.2,vel_EC.txt,39.5922,0.097576,1.0606
