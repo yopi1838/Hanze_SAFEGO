@@ -1,6 +1,6 @@
 {
-  "last_completed_run": 3,
-  "T_current": 0.097576,
+  "last_completed_run": 5,
+  "T_current": 0.098813,
   "summary": [
     {
       "run": 1,
@@ -28,6 +28,24 @@
       "record_dur_s": 39.5922,
       "T_end": 0.097576,
       "T_end_over_Tinit": 1.0606
+    },
+    {
+      "run": 4,
+      "record": "HU12",
+      "scale": 1.0,
+      "table_file": "vel_HU.txt",
+      "record_dur_s": 35.9467,
+      "T_end": 0.098826,
+      "T_end_over_Tinit": 1.0742
+    },
+    {
+      "run": 5,
+      "record": "HU12",
+      "scale": 1.25,
+      "table_file": "vel_HU.txt",
+      "record_dur_s": 35.9467,
+      "T_end": 0.098813,
+      "T_end_over_Tinit": 1.0741
     }
   ]
 }

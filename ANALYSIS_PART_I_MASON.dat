@@ -38,9 +38,9 @@ block contact generate-subcontacts
 block contact jmodel assign mason_v7
 block contact prop stiffness-normal @kn stiffness-initial @kn  stiffness-shear @ks ...
     tension @tension cohesion @cohesion friction @friction ...
-    friction-residual @friction cohesion-residual 0 ...
+    friction-residual @friction cohesion-residual [0.1*cohesion] ...
     G_I @Gt G_II @Gs G_c @Gc compression @fc_comp ...
-    comp-residual [fc_comp*0.2] Cn [Cn] Cnn [Cnn] Css [Css] peak_ratio [n] 
+    comp-residual [fc_comp*0.2] Cn [Cn] Cnn [Cnn] Css [Css] peak_ratio [n]
 
 ;Timber Support Properties
 block contact jmodel assign mohr range group-intersection 'Joist' 'Joist_S1'
@@ -145,7 +145,5 @@ block face apply stress-yy [-10.35e3/(0.21*1.292)] range group "Comp_apply"
 
 model solve ratio 5e-8
 
-; Fixed save name. sweep_run.py copies this to a case-specific .sav after
-; each Part-I rebuild, so no FISH string handling is needed here.
-model save 'Part_I_MASON_v7'
+model save 'Part_I_MASON_v8'
 ;;call "sinus_wave_analysis.dat"
