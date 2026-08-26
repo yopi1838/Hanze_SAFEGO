@@ -1,0 +1,14 @@
+{
+  "CASE_ID": "F_LS_NODAMP",
+  "OUT_DIR": "stratF_full_LS_NODAMP",
+  "START_SAVE": "Part_I_MASON_v7.sav",
+  "RUN_FROM": 1,
+  "RUN_TO": 25,
+  "LARGE_STRAIN": "on",
+  "MAXWELL_CMD": "",
+  "DAMP_RATIO": 0.0,
+  "DAMP_TYPE": "",
+  "PERIOD_ID_METHOD": "experiment",
+  "T1_init": 0.0948,
+  "TAIL_SEC_RECORD": 2.5
+}
