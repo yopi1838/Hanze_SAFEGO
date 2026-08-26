@@ -153,7 +153,7 @@ NCYC_BAND_RATIO    = 1.30    # band = [f1/ratio, f1*ratio]
 RECORD_TABLE = {"HU12": "vel_HU.txt", "EC40": "vel_EC.txt", "FR76": "vel_FR.txt"}
 _NCYC_CACHE = {}
 
-OUT_DIR = "stratC_results_NODAMP_v8"
+OUT_DIR = "stratC_results_NODAMP_v7_NEW"
 STATE_FILE_NAME = "stratC_checkpoint.json"
 
 # >>> RATCHETING : controls
@@ -746,7 +746,7 @@ def execute_run(run_no, record, scale, T_current):
 SPECTRA_FILES = ["spectrum_HU12.csv", "spectrum_EC40.csv", "spectrum_FR76.csv"]
 DAT_FILES     = ["instrument_history_new.dat",
                  "instrument_history_export_v2.dat"]
-BASE_SAVE     = "Part_I_MASON_v7.sav"
+BASE_SAVE     = "Part_I_MASON_v8.sav"
 
 def preflight_checks():
     """Fail loudly, before any solving, if inputs or config are not in order."""
