@@ -79,7 +79,7 @@ OUTPUT
 """
 
 # =====================================================================
-# STANDALONE CASE: F_LS_NODAMP
+# STANDALONE CASE: F_LS_MAXWELL_1p5
 # =====================================================================
 # This file is a COMPLETE copy of the driver with the case constants baked in.
 # It reads no overrides file -- the loader below is disabled -- so a stale
@@ -90,9 +90,9 @@ OUTPUT
 #     call '<this file>'
 #
 #   geometry   : large-strain on
-#   damping    : NONE (contact dissipation only)
+#   damping    : block mech damp maxwell 0.0120 1.0006 0.0093 9.0193 0.0104 40.0000
 #   period ID  : experiment   (T1_init = 0.0948 s)
-#   output     : stratF_full_LS_NODAMP
+#   output     : stratF_full_LS_MAXWELL_1p5
 #
 # The cost of a standalone copy is that it does NOT track edits to the driver
 # it was generated from. If you change the physics in the base driver,
@@ -191,7 +191,7 @@ DAMP_TYPE  = ""          # "" = full Rayleigh (mass+stiffness); "mass"; "stiffne
 # c*ks*v_rel across the gap. A full record is far longer than a 3-cycle pulse,
 # so a cracked band spends much more time open. Log energy-shear and check it
 # before trusting a damped record run.
-MAXWELL_CMD = ''
+MAXWELL_CMD = 'block mech damp maxwell 0.0120 1.0006 0.0093 9.0193 0.0104 40.0000'
 
 # Geometry mode. The module docstring notes this driver has always run in
 # small strain, "so a large-displacement or collapse result needs large-strain
@@ -236,7 +236,7 @@ START_SAVE    = "Part_I_MASON_v7.sav"   # undamaged base state (full sequence)
 TAIL_SEC_RECORD = 2.5      # ring-down appended after each record (period ID)
 # <<< STRATEGY F (FULL)
 
-OUT_DIR = 'stratF_full_LS_NODAMP'
+OUT_DIR = 'stratF_full_LS_MAXWELL_1p5'
 
 # ---------------------------------------------------------------------
 # Optional per-case overrides, same mechanism and same filename as the pulse
@@ -254,7 +254,7 @@ _OVERRIDABLE_F = ("OUT_DIR", "START_SAVE", "RUN_FROM", "RUN_TO", "CASE_ID",
                   "DAMP_RATIO", "DAMP_TYPE", "MAXWELL_CMD", "LARGE_STRAIN",
                   "PERIOD_ID_METHOD", "T1_init", "TAIL_SEC_RECORD",
                   "RECORD_TEST")
-CASE_ID = 'F_LS_NODAMP'
+CASE_ID = 'F_LS_MAXWELL_1p5'
 _OVR_FILE_F = "stratF_overrides.json"
 if False:   # DISABLED: this is a standalone case file
     try:
