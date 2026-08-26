@@ -25,7 +25,7 @@ V8_MATERIAL = dict(tension=0.200e6, cohesion=0.400e6, Gt=32.0,
 BASELINE = dict(
     # --- material (Part-I rebuild required) ---
     tension=0.344e6, cohesion=0.750e6, Gt=55.0, Gc_expr="jafari_eq3",
-    friction=36.9, fc_comp=20e6,
+    friction=36.9, fc_comp=20e6, large_strain="off",
     # --- driver ---
     USE_TWO_IM_CYCLES=True, n_cycles=3.0, PERIOD_SCHEME="adaptive",
     xi=0.05, DAMP_RATIO=0.0, DAMP_TYPE="", MAXWELL_CMD="",
@@ -47,6 +47,8 @@ MAXWELL = ("block mech damp maxwell 0.0120 1.0006 0.0093 9.0193 "
 # (near-elastic). Above ~2 means the rocking mechanism has engaged.
 CONTROL = [
     ("L00", "control", "two-IM cycles, v8 material", dict(V8_MATERIAL)),
+    ("G00", "geometry", "large-strain ON, v8 material",
+     dict(list(V8_MATERIAL.items()) + [("large_strain", "on")])),
     ("L01", "control", "v8 route + v8 material (v8 replica)",
      dict(list(V8_MATERIAL.items()) + [("USE_TWO_IM_CYCLES", False),
                                        ("n_cycles", 3.0)])),
@@ -100,7 +102,8 @@ def all_cases():
     return cases
 
 
-MATERIAL_KEYS = ("tension", "cohesion", "Gt", "Gc_expr", "friction", "fc_comp")
+MATERIAL_KEYS = ("tension", "cohesion", "Gt", "Gc_expr", "friction",
+                 "fc_comp", "large_strain")
 
 if __name__ == "__main__":
     cs = all_cases()

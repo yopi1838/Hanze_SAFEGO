@@ -79,6 +79,8 @@ fish define properties
     Cn  = 0.0
 end
 @properties
+
+model large-strain {large_strain}
 """
 
 
@@ -99,7 +101,8 @@ def prepare():
         mat = MAT_TEMPLATE.format(
             case_id=cid, desc=desc, changed=changed,
             tension=v["tension"], cohesion=v["cohesion"], friction=v["friction"],
-            fc_comp=v["fc_comp"], Gt=v["Gt"], gc=GC_EXPR[v["Gc_expr"]])
+            fc_comp=v["fc_comp"], Gt=v["Gt"], gc=GC_EXPR[v["Gc_expr"]],
+            large_strain=v["large_strain"])
         with open(os.path.join(CASE_DIR, "mat_case_{}.dat".format(cid)),
                   "w", newline="\n") as f:
             f.write(mat)

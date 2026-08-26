@@ -1,0 +1,12 @@
+{
+  "CASE_ID": "G00_largestrain",
+  "OUT_DIR": "stratC_results_G00_LS",
+  "BASE_SAVE": "Part_I_G00_LS.sav",
+  "USE_TWO_IM_CYCLES": false,
+  "n_cycles": 3.0,
+  "PERIOD_SCHEME": "adaptive",
+  "xi": 0.05,
+  "DAMP_RATIO": 0.0,
+  "DAMP_TYPE": "",
+  "MAXWELL_CMD": ""
+}
