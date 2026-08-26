@@ -46,6 +46,19 @@ import itasca as it
 import numpy as np
 import os, csv, math, json, sys
 
+# Experiment-matched period identification (Moshfeghi et al. 2024 sec. 3.2).
+# Guarded so a missing module degrades to the legacy estimator with a loud
+# warning rather than killing a 25-run sequence at run 1.
+try:
+    import period_id_exp
+    _HAVE_PERIOD_ID_EXP = True
+except Exception as _e:                                  # pragma: no cover
+    period_id_exp = None
+    _HAVE_PERIOD_ID_EXP = False
+    print("WARNING: period_id_exp not importable ({}). "
+          "Falling back to the legacy single-channel displacement "
+          "estimator.".format(_e))
+
 # >>> RATCHETING : make ratcheting_pulse.py importable and import it
 _here = os.getcwd()
 for _p in (_here, os.path.dirname(os.path.abspath(__file__)) if "__file__" in globals() else _here):
@@ -209,7 +222,7 @@ NCYC_BAND_RATIO    = 1.30    # band = [f1/ratio, f1*ratio]
 RECORD_TABLE = {"HU12": "vel_HU.txt", "EC40": "vel_EC.txt", "FR76": "vel_FR.txt"}
 _NCYC_CACHE = {}
 
-OUT_DIR = "stratC_results_NODAMP_v10_LS"
+OUT_DIR = "stratC_results_NODAMP_v10"
 
 # ---------------------------------------------------------------------
 # SENSITIVITY-SWEEP OVERRIDES
@@ -225,7 +238,25 @@ _OVERRIDABLE = ("OUT_DIR", "n_cycles", "xi", "delta_t", "tail_sec",
                 "inter_run_gap", "DAMP_RATIO", "DAMP_TYPE", "MAXWELL_CMD",
                 "USE_TWO_IM_CYCLES", "USE_RECORD_NCYCLES", "PERIOD_SCHEME",
                 "TID_AGREE_TOL", "TID_MAX_JUMP", "NCYC_MIN", "NCYC_MAX",
+                "LARGE_STRAIN", "PERIOD_ID_METHOD",
                 "T1_init", "BASE_SAVE", "CASE_ID")
+
+# ---------------------------------------------------------------------
+# PERIOD IDENTIFICATION METHOD
+# ---------------------------------------------------------------------
+#   "experiment" -- Moshfeghi et al. (2024) Structures 66:106815 section 3.2:
+#                   three accelerometers (bottom quarter 0.66 m, mid-height
+#                   1.26 m, top quarter 2.06 m), record cropped at the instant
+#                   the table stops, periodogram -> PSD matrix -> singular
+#                   values -> peak-picking, cross-checked against per-channel
+#                   FFT. Implemented in period_id_exp.py.
+#   "legacy"     -- the original single-channel DISPLACEMENT estimator
+#                   (Channel_19, autocorrelation + FFT).
+#
+# Both are computed and logged on every run regardless of this setting; this
+# only selects which value is fed back into the adaptive loop, so a completed
+# run set can be re-read either way without re-running anything.
+PERIOD_ID_METHOD = "experiment"
 
 PERIOD_SCHEME = "adaptive"   # "adaptive" = excite at the identified T_current
                              # "fixed"    = excite at T1_init every run (T_eq
@@ -233,9 +264,16 @@ PERIOD_SCHEME = "adaptive"   # "adaptive" = excite at the identified T_current
                              #              as a damage measure)
 MAXWELL_CMD   = ""           # non-empty -> issued verbatim after local/global
                              # damping are zeroed
+LARGE_STRAIN  = "off"        # "on" updates block positions and re-detects
+                             # contacts, so toe contact area can reduce and the
+                             # restoring action becomes geometric. Required for
+                             # large-amplitude rocking; costs solve time.
+                             # Applied AFTER the Part-I restore, so no rebuild
+                             # is needed and the static build stays in
+                             # small-strain where it belongs.
 CASE_ID       = ""           # free-text label echoed into the log
 
-_OVR_FILE = "stratC_overrides_g00.json"
+_OVR_FILE = "stratC_overrides.json"
 if os.path.exists(_OVR_FILE):
     try:
         with open(_OVR_FILE) as _f:
@@ -337,6 +375,26 @@ def ch19_csv_path(run_no, record=None, scale=None):
     # Last resort: flat path (the caller already handles a missing file).
     return os.path.join(OUT_DIR,
         "Channel_19_DispTopQRight_run{:02d}.csv".format(run_no))
+
+def run_label(run_no, record, scale):
+    """The label the FISH export prefixes every channel file with."""
+    return "Run{:02d}_{}_s{}".format(
+        run_no, record, "{:.2f}".format(scale).replace(".", "p"))
+
+def run_dir(run_no, record=None, scale=None):
+    """Per-run output folder. Same fallback discipline as ch19_csv_path: try
+    the expected name, then any folder starting with Run{nn}_, so a renamed or
+    differently-scaled folder does not silently break period identification."""
+    if record is not None and scale is not None:
+        d = os.path.join(OUT_DIR, run_label(run_no, record, scale))
+        if os.path.isdir(d):
+            return d
+    prefix = "Run{:02d}_".format(run_no)
+    if os.path.isdir(OUT_DIR):
+        for d in sorted(os.listdir(OUT_DIR)):
+            if d.startswith(prefix) and os.path.isdir(os.path.join(OUT_DIR, d)):
+                return os.path.join(OUT_DIR, d)
+    return OUT_DIR
 
 def state_file_path():
     return os.path.join(OUT_DIR, STATE_FILE_NAME)
@@ -819,6 +877,13 @@ def export_all_histories(run_no, record, scale, out_dir):
 # =====================================================================
 def setup_model_for_dynamic(save_file):
     it.command("model restore '{}'".format(cmd_path(save_file)))
+    if str(LARGE_STRAIN).lower() in ("on", "true", "1"):
+        it.command("model large-strain on")
+        print("  GEOMETRY: large-strain ON (positions updated, contacts "
+              "re-detected)")
+    else:
+        it.command("model large-strain off")
+        print("  GEOMETRY: small-strain (default)")
     it.command("model dynamic active on")
     it.command("""
     block contact group 'Joist_S1_contact' range pos-y 0.25 0.3 pos-z 0.9 1.5
@@ -911,9 +976,69 @@ def execute_run(run_no, record, scale, T_current):
     export_all_histories(run_no, record, scale, OUT_DIR)
 
     ringdown_start = sine_dur
-    T_end = identify_Tend_from_csv(ch19_csv_path(run_no, record, scale),
-                                   ringdown_start, T_prev=T_current)
-    print("  T_end = {:.4f} s  ({:.2f}x T_init)".format(T_end, T_end/T1_init))
+
+    # --- Period identification -----------------------------------------
+    # Both estimators run on every run. The legacy one reads a single
+    # DISPLACEMENT channel; the experiment one reads the three accelerometers
+    # the way Moshfeghi et al. (2024) section 3.2 describes. They are not
+    # measuring the same thing: a post-rocking ring-down carries a large,
+    # heavily damped rigid-body transient on top of the small elastic
+    # vibration, and in displacement that transient dominates a short window.
+    # See period_id_exp._selftest(), which reproduces run 12's T_end = 0.218 s
+    # from a synthetic signal whose true elastic period is 0.104 s.
+    T_legacy = identify_Tend_from_csv(ch19_csv_path(run_no, record, scale),
+                                      ringdown_start, T_prev=T_current)
+    _exp = {"T": float("nan"), "ok": False, "spread": float("nan"),
+            "window_s": 0.0, "T_welch": float("nan"), "note": "module missing"}
+    if _HAVE_PERIOD_ID_EXP:
+        _exp = period_id_exp.identify_period_experiment(
+            run_dir(run_no, record, scale), run_label(run_no, record, scale))
+
+    # --- selection rule: seed on run 1, then TRACK the same mode ---------
+    # pick_fundamental returns the tallest phase-coherent peak. On the
+    # EXPERIMENT's own records that rule returns 0.0533 s for run 1, where
+    # Table 5 says 0.091 -- it locks onto the timber-floor mode at 18.76 Hz,
+    # which is taller than the wall's 10.97 Hz and sits at a non-integer ratio
+    # so no harmonic guard can reject it. Seeding once and following the same
+    # mode forward reproduces Table 5 to +0.2% / +1.3% at the two endpoints.
+    #
+    # T_current is the driver's own running period, so the anchor is already
+    # maintained. Nothing extra has to be tracked.
+    _cl = _exp.get("candidates") or []
+    if _HAVE_PERIOD_ID_EXP and _cl:
+        if run_no <= 1 or not (T_current and np.isfinite(T_current)):
+            _T_sel = period_id_exp.seed_period(_cl)
+            _sel_rule = "seed"
+        else:
+            _T_sel, _rec = period_id_exp.track_step(_cl, T_current)
+            _sel_rule = "track"
+        if np.isfinite(_T_sel):
+            _exp["T"] = _T_sel
+            _exp["ok"] = True
+            _exp["note"] = (_exp["note"] + " | " + _sel_rule).strip(" |")
+
+    if PERIOD_ID_METHOD == "experiment" and _exp["ok"]:
+        T_end = _exp["T"]
+        _tid_src = "exp_psd_svd"
+    elif PERIOD_ID_METHOD == "experiment":
+        # The experiment's own acceptance test (PSD vs per-channel FFT) failed.
+        # Fall back rather than propagate a number the paper's method would
+        # itself have rejected, and say so in the log.
+        T_end = T_legacy
+        _tid_src = "legacy_fallback:" + str(_exp["note"])
+        print("  ** experiment-method identification rejected ({}). "
+              "Using legacy value {:.5f} s.".format(_exp["note"], T_legacy))
+    else:
+        T_end = T_legacy
+        _tid_src = "legacy"
+
+    print("  T_end = {:.4f} s  ({:.2f}x T_init)   [{}]".format(
+        T_end, T_end / T1_init, _tid_src))
+    if _HAVE_PERIOD_ID_EXP and np.isfinite(_exp["T"]):
+        print("     legacy(disp,1ch) = {:.5f} s   experiment(acc,3ch) = {:.5f} s"
+              "   ratio = {:.2f}".format(
+                  T_legacy, _exp["T"],
+                  _exp["T"] / T_legacy if T_legacy else float("nan")))
 
     it.command("table '{}' delete".format(tbl_name))
     it.command("history delete")
@@ -940,6 +1065,13 @@ def execute_run(run_no, record, scale, T_current):
         "T_acorr": round(_LAST_T_ACORR, 6),
         "T_fft": round(_LAST_T_FFT, 6),
         "tid_note": _LAST_TID_NOTE,
+        # --- both estimators logged on every run, always ------------------
+        "T_legacy_disp": round(T_legacy, 6),
+        "T_exp_psd": round(_exp["T"], 6) if np.isfinite(_exp["T"]) else "",
+        "T_exp_welch": round(_exp["T_welch"], 6) if np.isfinite(_exp["T_welch"]) else "",
+        "T_exp_ch_spread": round(_exp["spread"], 4) if np.isfinite(_exp["spread"]) else "",
+        "T_exp_window_s": round(_exp["window_s"], 4),
+        "tid_source": _tid_src,
         # >>> RATCHETING : record the asymmetry applied
         "beta_applied": round(pinfo["beta"], 4),
         "s_applied": pinfo["s"],
