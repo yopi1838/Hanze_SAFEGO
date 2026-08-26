@@ -1,0 +1,2 @@
+run,record,scale,T_excite,T_over_Tinit,Sd_record_mm,Sd_target_mm,Sd_fixedT1_mm,amplification,A_mps2,PGA_g,V_peak_mps,T_end,T_end_over_Tinit,n_cycles_used,ncyc_source,A_record_g,T_id_held,T_jump_flag,T_acorr,T_fft,tid_note,beta_applied,s_applied
+1,HU12,0.5,0.092,1.0,0.5282,0.2641,0.2641,1.0,0.2223,0.0227,0.003255,0.065658,0.7137,3.0,fixed,,0,0,0.065658,0.064668,ok_autocorr,1.0,0

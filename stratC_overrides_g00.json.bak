@@ -1,0 +1,26 @@
+{
+  "CASE_ID": "LS_NODAMP",
+  "OUT_DIR": "stratC_results_LS_NODAMP",
+  "BASE_SAVE": "Part_I_MASON_v7.sav",
+
+  "LARGE_STRAIN": "on",
+
+  "DAMP_RATIO": 0.0,
+  "DAMP_TYPE": "",
+  "MAXWELL_CMD": "",
+
+  "PERIOD_ID_METHOD": "experiment",
+  "PERIOD_SCHEME": "adaptive",
+  "T1_init": 0.0948,
+
+  "xi": 0.05,
+  "n_cycles": 3.0,
+  "USE_TWO_IM_CYCLES": false,
+  "USE_RECORD_NCYCLES": false,
+  "tail_sec": 2.5,
+  "inter_run_gap": 0.5,
+  "delta_t": 0.005,
+
+  "TID_AGREE_TOL": 0.25,
+  "TID_MAX_JUMP": 1.50
+}
