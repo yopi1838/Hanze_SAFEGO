@@ -953,7 +953,7 @@ def execute_run(run_no, record, scale, T_current):
 SPECTRA_FILES = ["spectrum_HU12.csv", "spectrum_EC40.csv", "spectrum_FR76.csv"]
 DAT_FILES     = ["instrument_history_new.dat",
                  "instrument_history_export_v2.dat"]
-BASE_SAVE     = globals().get("BASE_SAVE", "Part_I_MASON_v7.sav")
+BASE_SAVE     = globals().get("BASE_SAVE", "Part_I_MASON_v8.sav")
 
 def preflight_checks():
     """Fail loudly, before any solving, if inputs or config are not in order."""
