@@ -1,0 +1,26 @@
+run,folder,T_exp_psd_s,T_exp_welch_s,T_ch_bot_s,T_ch_mid_s,T_ch_top_s,channel_spread,window_s,cycles_in_window,accepted,stop_rule,note,pulse_end_s,T_driver_logged_s
+1,Run01_HU12_s0p50,0.09832,0.09832,0.09832,0.09832,0.09832,0.0,2.9648,30.2,1,sustained-quiet RMS,seed,,0.098066
+2,Run02_HU12_s0p75,0.098332,0.098332,0.098332,0.098332,0.098332,0.0,3.0014,30.5,1,sustained-quiet RMS,tracked p=100%,,0.098092
+3,Run03_EC40_s0p20,0.098308,0.098308,0.098308,0.098308,0.098308,0.0,3.001,30.5,1,sustained-quiet RMS,tracked p=100%,,0.098002
+4,Run04_HU12_s1p00,0.098491,0.098491,0.098491,0.098491,0.098492,0.0,2.9684,30.1,1,sustained-quiet RMS,tracked p=100%,,0.098233
+5,Run05_HU12_s1p25,0.098358,0.098358,0.098358,0.098358,0.098358,0.0,3.001,30.5,1,sustained-quiet RMS,tracked p=100%,,0.098049
+6,Run06_EC40_s0p30,0.098327,0.098327,0.046523,0.098327,0.098327,1.1135,2.9688,30.2,1,sustained-quiet RMS,channels disagree by 111% | tracked p=100%,,0.097909
+7,Run07_HU12_s1p50,0.099663,0.099652,0.099662,0.099662,0.099664,0.0,3.213,32.2,1,"FALLBACK: table never went quiet (max chunk RMS 1.051e-02 m/s, final chunk 9.880e-04 m/s)",channels disagree by 0% | tracked p=100%,,0.099549
+8,Run08_EC40_s0p40,0.103102,0.103425,0.026084,0.103103,0.103097,2.9527,3.0714,29.8,1,"FALLBACK: table never went quiet (max chunk RMS 7.636e-03 m/s, final chunk 2.701e-03 m/s)",channels disagree by 295% | tracked p=100%,,0.103846
+9,Run09_HU12_s1p75,0.104926,0.105578,0.025955,0.104926,0.104924,3.0426,3.277,31.2,1,"FALLBACK: table never went quiet (max chunk RMS 1.486e-02 m/s, final chunk 3.517e-03 m/s)",channels disagree by 304% | tracked p=100%,,0.106879
+10,Run10_HU12_s2p00,0.105193,0.025612,0.025685,0.025684,0.105192,3.0956,3.287,31.2,1,"FALLBACK: table never went quiet (max chunk RMS 1.740e-02 m/s, final chunk 3.540e-03 m/s)",channels disagree by 310% | tracked p=35%,,0.106098
+11,Run11_EC40_s0p50,0.106989,0.025997,0.049289,0.106986,0.106991,1.1707,3.287,30.7,1,"FALLBACK: table never went quiet (max chunk RMS 1.083e-02 m/s, final chunk 4.712e-03 m/s)",channels disagree by 117% | tracked p=100%,,0.104762
+12,Run12_HU12_s2p25,0.227622,0.028044,0.028078,0.060313,0.22766,7.1082,3.0213,13.3,1,"FALLBACK: table never went quiet (max chunk RMS 1.919e-02 m/s, final chunk 1.989e-03 m/s)",channels disagree by 711% | tracked p=51%,,0.104762
+13,Run13_HU12_s2p50,0.231664,0.057084,0.029223,0.056697,0.231669,6.9275,3.0213,13.0,1,"FALLBACK: table never went quiet (max chunk RMS 2.045e-02 m/s, final chunk 1.038e-03 m/s)",channels disagree by 693% | tracked p=100%,,0.104762
+14,Run14_HU12_s2p75,0.230698,0.027817,0.027579,0.056118,0.230706,7.3654,1.0805,4.7,1,sustained-quiet RMS,channels disagree by 737% | tracked p=73%,,0.104762
+15,Run15_HU12_s3p00,0.23144,0.028929,0.028887,0.056814,0.231434,7.0116,2.6626,11.5,1,sustained-quiet RMS,channels disagree by 701% | tracked p=91%,,0.104762
+16,Run16_HU12_s3p50,0.23123,0.056684,0.028504,0.056605,0.231221,7.112,1.8632,8.1,1,sustained-quiet RMS,channels disagree by 711% | tracked p=60%,,0.104762
+17,Run17_HU12_s4p00,0.230786,0.056399,0.056369,0.05637,0.230786,3.0942,2.9887,13.0,1,sustained-quiet RMS,channels disagree by 309% | tracked p=39%,,0.104762
+18,Run18_HU12_s4p50,0.23177,0.056941,0.02885,0.057013,0.231773,7.0338,2.9887,12.9,1,sustained-quiet RMS,channels disagree by 703% | tracked p=71%,,0.104762
+19,Run19_HU12_s5p00,0.230568,0.056245,0.056308,0.056308,0.056308,0.0,2.9883,13.0,1,sustained-quiet RMS,tracked p=5%,,0.104762
+20,Run20_HU12_s5p50,0.232062,0.057031,0.057013,0.057014,0.232065,3.0704,2.9887,12.9,1,sustained-quiet RMS,channels disagree by 307% | tracked p=16%,,0.104762
+21,Run21_HU12_s6p00,0.23302,0.057072,0.029006,0.05707,0.233021,7.0335,2.9883,12.8,1,sustained-quiet RMS,channels disagree by 703% | tracked p=50%,,0.104762
+22,Run22_FR76_s1p00,0.064223,0.032569,0.033246,0.091837,0.097456,1.9314,0.07,1.1,0,sustained-quiet RMS,channels disagree by 193%,,0.104762
+23,Run23_FR76_s1p50,0.231192,0.027897,0.027783,0.057318,0.057144,1.063,0.8037,3.5,1,sustained-quiet RMS,channels disagree by 106% | tracked p=15%,,0.104762
+24,Run24_FR76_s1p75,0.231297,0.231378,0.028828,0.060111,0.231298,7.0234,2.972,12.8,1,sustained-quiet RMS,channels disagree by 702% | tracked p=100%,,0.104762
+25,Run25_FR76_s2p00,0.231584,0.056479,0.028866,0.056647,0.231587,7.0229,2.9887,12.9,1,sustained-quiet RMS,channels disagree by 702% | tracked p=83%,,0.104762
