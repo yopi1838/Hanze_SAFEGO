@@ -1,0 +1,36 @@
+{
+  "last_completed_run": 2,
+  "T_current": 0.090657,
+  "summary": [
+    {
+      "run": 1,
+      "record": "HU12",
+      "scale": 0.5,
+      "table_file": "vel_HU.txt",
+      "record_dur_s": 35.9467,
+      "T_end": 0.089422,
+      "T_end_over_Tinit": 0.9433,
+      "T_legacy_disp": 0.089422,
+      "T_exp_psd": "",
+      "T_exp_welch": "",
+      "T_exp_ch_spread": "",
+      "T_exp_window_s": 0.0,
+      "tid_source": "legacy_fallback:module missing"
+    },
+    {
+      "run": 2,
+      "record": "HU12",
+      "scale": 0.75,
+      "table_file": "vel_HU.txt",
+      "record_dur_s": 35.9467,
+      "T_end": 0.090657,
+      "T_end_over_Tinit": 0.9563,
+      "T_legacy_disp": 0.090657,
+      "T_exp_psd": "",
+      "T_exp_welch": "",
+      "T_exp_ch_spread": "",
+      "T_exp_window_s": 0.0,
+      "tid_source": "legacy_fallback:module missing"
+    }
+  ]
+}

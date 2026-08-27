@@ -232,7 +232,7 @@ BASE_TABLES = {
 }
 RUN_FROM      = 1          # first run to apply (inclusive)
 RUN_TO        = 25         # last run to apply (inclusive)
-START_SAVE    = "Part_I_MASON_v7.sav"   # undamaged base state (full sequence)
+START_SAVE    = "Part_I_G00_LS.sav"   # undamaged base state (full sequence)
 TAIL_SEC_RECORD = 2.5      # ring-down appended after each record (period ID)
 # <<< STRATEGY F (FULL)
 
