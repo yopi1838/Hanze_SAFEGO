@@ -166,3 +166,80 @@ fish history bulge_top_mm           ;24
 ; sampling interval (~0.4 ms), which is negligible here.
 ; ---------------------------------------------------------------------
 fish history tilt_exp_match         ;25
+
+; =====================================================================
+; JOIST POCKET SLIP  (indices 26-31)
+; =====================================================================
+; WHY. Moshfeghi et al. (2024) section 3.3 reports, for the UNSTRENGTHENED
+; specimens:
+;
+;   "the joists slipped towards the positive direction (i.e. far from the wall
+;    surface) 8 to 12 mm cumulatively at the end of all the tests, which means
+;    that the joists are not able to pull the wall totally in the positive
+;    direction when the inertia of the slabs acting as horizontal force."
+;
+; and describes the bow ties of ST-2-HB as connecting "otherwise sliding timber
+; joists to the wall", changing the mechanism "completely by fully coupling
+; joists to the wall".
+;
+; That 8-12 mm is a MEASURED quantity the model can be scored against, and it
+; is independent of both the displacement and the period comparisons. It turns
+; the pocket friction angle from an assumption into something calibrated: near
+; zero cumulative slip means the pocket is still too tight, tens of mm means it
+; is too loose.
+;
+; DEFINITION
+;   slip(t) = dz(joist block, well outside the wall) - dz(wall at the same
+;             elevation, on the centreline)
+;
+; The joist reference point sits at z = 0.70 m, which is beyond the wall's
+; 0.21 m thickness, so block.near() cannot resolve onto masonry. The wall
+; reference is the centreline at the joist's own elevation, so the quantity is
+; joist-relative-to-wall rather than joist-relative-to-table.
+;
+; SIGN: +z points away from the wall face, on the floor side, so a POSITIVE
+; value is the joist withdrawing from its pocket -- the same sense as the
+; paper's "positive direction (i.e. far from the wall surface)".
+;
+; CUMULATIVE, not per-run: 3DEC block displacements are not reset between runs,
+; so the value at the end of run N is the slip accumulated since Part I. In
+; postprocess_stratC.py the `residual` column of these channels is therefore
+; the cumulative slip, directly comparable to the paper's 8-12 mm. The `peak`
+; column is the within-run excursion and is a different quantity.
+
+[jx_left      = 0.364]     ; joist centre, x 0.3230-0.4038
+[jx_right     = 0.929]     ; joist centre, x 0.8883-0.9690
+[jy_lower     = 0.381]     ; lower joists, y 0.29318-0.46909
+[jy_upper     = 2.140]     ; upper joists, y 2.05227-2.22818
+[jz_probe     = 0.70]      ; inside the joist, clear of the wall (t = 0.21 m)
+
+fish define joist_slip_probe
+    local wall_lo = block.gp.disp.z(block.gp.near(x_centre, jy_lower, z_face))
+    local wall_up = block.gp.disp.z(block.gp.near(x_centre, jy_upper, z_face))
+
+    joist_slip_L1 = (block.disp.z(block.near(jx_left,  jy_lower, jz_probe)) - wall_lo) * 1000.0
+    joist_slip_L2 = (block.disp.z(block.near(jx_right, jy_lower, jz_probe)) - wall_lo) * 1000.0
+    joist_slip_U1 = (block.disp.z(block.near(jx_left,  jy_upper, jz_probe)) - wall_up) * 1000.0
+    joist_slip_U2 = (block.disp.z(block.near(jx_right, jy_upper, jz_probe)) - wall_up) * 1000.0
+
+    local a = math.abs(joist_slip_L1)
+    local b = math.abs(joist_slip_L2)
+    local c = math.abs(joist_slip_U1)
+    local d = math.abs(joist_slip_U2)
+    joist_slip_max = math.max(math.max(a, b), math.max(c, d))
+
+    joist_slip_probe = joist_slip_max
+end
+
+@joist_slip_probe
+
+; The FUNCTION is registered FIRST so the variables below actually update.
+; A `fish history` on a VARIABLE only samples it; it does not re-run the
+; function that assigns it. Indices 17-24 above were frozen for a whole run set
+; for exactly this reason -- see the note at index 25.
+fish history joist_slip_probe        ;26
+fish history joist_slip_L1           ;27
+fish history joist_slip_L2           ;28
+fish history joist_slip_U1           ;29
+fish history joist_slip_U2           ;30
+fish history joist_slip_max          ;31

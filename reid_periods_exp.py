@@ -24,8 +24,8 @@ import numpy as np
 import period_id_exp as P
 
 # ---------------------------------------------------------------------
-SIM_DIR = "stratC_results_MAXWELL"   # <-- edit
-LABEL = "Maxwell"                    # <-- edit
+SIM_DIR = "stratC_results_LS_MAXWELL_1p5"   # <-- edit
+LABEL = "Maxwell_LargeStrain"                    # <-- edit
 DRIVER_LOG = "strategy_C_log.csv"          # written by the driver, optional
 
 # MEASURED experimental period, per run. This file already exists in the repo
@@ -153,11 +153,13 @@ def main():
             else:
                 T_new, rec = P.track_step(cl, T_track)
                 if np.isfinite(T_new):
-                    T_track = T_new
                     res["T"] = T_new
-                    res["ok"] = True
                     res["note"] = (res["note"] + " | tracked p={:.0%}".format(
                         rec["rel_power"])).strip(" |")
+                    # res["ok"] keeps the channel-agreement verdict; the anchor
+                    # only advances on an accepted run.
+                    if res["ok"]:
+                        T_track = T_new
         rows.append({
             "run": n,
             "folder": label,

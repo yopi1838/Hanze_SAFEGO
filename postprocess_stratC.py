@@ -30,7 +30,9 @@ ONE SIMULATION vs THE EXPERIMENTS
       exp_Test9_tilt.csv  / exp_Test12_tilt.csv        fig1, fig4
       exp_Test9_metrics.csv                            fig2   (US-1 only --
                                                        there is no US-2 set)
-      exp_Test9_period_psd.csv / exp_Test12_..._psd    fig3
+      US1_fig14_digitised.csv / US2_fig14_digitised.csv   fig3, fig7
+        -- Fig 14 of Moshfeghi et al. (2024), digitised. PREFERRED.
+           Falls back to exp_Test9/12_period_psd.csv with a printed warning.
       xval_ch19_peaks.csv (US1_peak_mm/US2_peak_mm)    fig6
         -- despite the file name those two columns are the EXPERIMENTAL
            top-quarter-right sensor, so they pair with simulated Channel_4
@@ -49,9 +51,15 @@ Metric definitions (unchanged from the previous postproc):
   Run 1), so residuals are compared like for like. Peaks are per-run in both.
 
   fig3 normalisation differs by necessity: the simulation reports
-  T_end/T_init against the fixed T1_init = 0.092 s, while each specimen is
-  normalised by its own Run-1 identified period (US-1 0.09153 s,
-  US-2 0.08818 s). Read fig3 as relative period growth, not absolute period.
+  T_end/T_init against its own T1_init, while each specimen is normalised by
+  its own Run-1 period -- US-1 0.09110 s and US-2 0.08747 s from the digitised
+  Fig 14 (or 0.09153 / 0.08818 from the re-derived PSD series if that is what
+  resolved). Read fig3 as relative period growth, not absolute period.
+
+  A note on T1_init: it was 0.092 s historically, which is stale. Measured by
+  the experiment's own method the as-built model reads 0.0948 s, so a results
+  folder written with the old value carries a T_end/T_init inflated by ~3%.
+  The ratio is only comparable between folders that used the same T1_init.
 
 Usage:
     python postprocess_stratC.py [SIM_DIR] [--label LBL]
@@ -87,15 +95,34 @@ TAIL_FRAC = 0.05  # last 5% of samples -> residual
 
 # Experimental specimens. Colours follow the project figure convention:
 # red squares = simulation, blue circles = US-1, orange circles = US-2.
+# PERIOD SOURCE, in order of preference.
+#
+#   1. US{1,2}_fig14_digitised.csv, column T_exp_s -- Fig 14 of Moshfeghi et
+#      al. (2024) digitised from the figure's own gridlines. This is the
+#      PUBLISHED experimental curve. Its calibration validates against Table 5
+#      at both ends: US-1 run 1 = 0.09110 vs 0.091 and run 24 = 0.10749 vs
+#      0.107 (+18.0% against the stated +17.5%); US-2 gives +13.7% against the
+#      stated +13.9%.
+#
+#   2. exp_Test{9,12}_period_psd.csv, column T1_best_s -- re-derived from the
+#      raw records. Kept as a fallback, but it is NOT equivalent: on US-1 it
+#      holds runs 12-15 at a single frozen value of 0.10059, and its run-24
+#      value of 0.11210 exceeds anything in the paper by 4.8% (nothing in
+#      Fig 14 reaches 0.11). Mean |error| against Fig 14 is 1.51%.
+#
+# If the digitised file is missing the fallback is used and a note is printed,
+# so a figure is never silently drawn against the weaker series.
 EXP_SPECS = [
     {"label": "US-1 (Test 9)", "color": "royalblue", "marker": "o",
      "tilt": "exp_Test9_tilt.csv", "metrics": "exp_Test9_metrics.csv",
-     "period": "exp_Test9_period_psd.csv", "ls": "--",
-     "ch19_col": "US1_peak_mm"},
+     "period_sources": [("US1_fig14_digitised.csv", "T_exp_s", "Fig 14 (published)"),
+                        ("exp_Test9_period_psd.csv", "T1_best_s", "PSD re-derived")],
+     "ls": "--", "ch19_col": "US1_peak_mm"},
     {"label": "US-2 (Test 12)", "color": "darkorange", "marker": "^",
      "tilt": "exp_Test12_tilt.csv", "metrics": None,
-     "period": "exp_Test12_period_psd.csv", "ls": ":",
-     "ch19_col": "US2_peak_mm"},
+     "period_sources": [("US2_fig14_digitised.csv", "T_exp_s", "Fig 14 (published)"),
+                        ("exp_Test12_period_psd.csv", "T1_best_s", "PSD re-derived")],
+     "ls": ":", "ch19_col": "US2_peak_mm"},
 ]
 
 # sim tilt channel -> (experimental peak column, experimental residual column)
@@ -327,6 +354,11 @@ def exp_csv(name, out_dir):
     local = Path(out_dir) / name
     if local.is_file():
         return local
+    # The digitised Fig 14 CSVs live with the analysis scripts, not inside a
+    # results folder, so search there too before giving up.
+    for cand in (Path.cwd() / name, Path(__file__).resolve().parent / name):
+        if cand.is_file():
+            return cand
     if sp is not None:
         try:
             p = Path(sp.exp_derived(name))
@@ -371,7 +403,34 @@ def load_exp(out_dir):
         e = {"label": spec["label"], "color": spec["color"],
              "marker": spec["marker"], "ls": spec["ls"]}
         found = []
-        for group in ("tilt", "metrics", "period"):
+        # period: try each source in order, keep the first that resolves
+        e["period"] = None
+        e["period_col"] = None
+        e["period_src"] = None
+        for fname, col, desc in spec["period_sources"]:
+            pth = exp_csv(fname, out_dir)
+            if pth is None:
+                continue
+            tab = read_exp_csv(pth)
+            if col not in tab:
+                print("  ! {} has no column '{}' -- skipped".format(fname, col))
+                continue
+            e["period"] = tab
+            e["period_col"] = col
+            e["period_src"] = desc
+            found.append("{} [{}]".format(fname, desc))
+            break
+        if e["period"] is None:
+            print("  ! no period source found for {} -- period figures will "
+                  "show simulation only".format(spec["label"]))
+        elif e["period_src"] != "Fig 14 (published)":
+            print("  ! {} falling back to the RE-DERIVED period series ({}). "
+                  "It holds runs 12-15 at one value and overshoots the tail; "
+                  "generate US{}_fig14_digitised.csv with digitize_fig14.py "
+                  "for the published curve."
+                  .format(spec["label"], e["period_src"],
+                          1 if "Test 9" in spec["label"] else 2))
+        for group in ("tilt", "metrics"):
             name = spec[group]
             e[group] = None
             if not name:
@@ -404,10 +463,18 @@ def exp_series(e, group, col):
     return np.array(rn), np.array([d[r] for r in rn])
 
 
+def exp_period(e):
+    """(runs, T) from whichever period source resolved for this specimen."""
+    col = e.get("period_col")
+    if not col:
+        return np.array([]), np.array([])
+    return exp_series(e, "period", col)
+
+
 def exp_period_ratio(e):
-    """Measured T1 normalised by that specimen's own Run-1 period, so it is
+    """Measured T normalised by that specimen's own Run-1 period, so it is
     comparable to the simulation's T_end/T_init."""
-    rn, T = exp_series(e, "period", "T1_best_s")
+    rn, T = exp_period(e)
     if not len(rn) or T[0] <= 0:
         return np.array([]), np.array([])
     return rn, T / T[0]
@@ -561,11 +628,12 @@ def fig_period_compare(main, main_lbl, exps, out_dir):
     ax1.plot(xs, ys_abs, "-o", color="tab:purple", lw=2, ms=6,
              label=r"Sim  ring-down $T_{end}$", zorder=3)
     for e in exps:
-        xe, ye = exp_series(e, "period", "T1_best_s")
+        xe, ye = exp_period(e)
         if len(xe):
             ax1.plot(xe, ye, marker=e["marker"], ls=e["ls"], color=e["color"],
                      ms=5, lw=1.2, mfc="none", alpha=0.9,
-                     label="{}  PSD $T_1$".format(e["label"]), zorder=2)
+                     label="{}  $T_1$ [{}]".format(e["label"], e["period_src"]),
+                     zorder=2)
     ax1.set_xlabel("Run"); ax1.set_ylabel("Identified period  T  (s)")
     ax1.set_title("Absolute period vs run")
     ax1.grid(True, alpha=0.2); ax1.legend(fontsize=9, loc="upper left")
@@ -832,7 +900,7 @@ def console_table(main_data):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("sim_dir", nargs="?",
-    default="stratC_results_NODAMP_v7_NEW")
+    default="stratC_results_NODAMP_v10")
     ap.add_argument("--ycap", type=float, default=None,
                     help="fig6 y-axis cap in mm (default: automatic, only "
                          "applied when the simulation dwarfs the experiment)")

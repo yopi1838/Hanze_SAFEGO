@@ -1,0 +1,209 @@
+model new 
+model restore 'GEO_WALL'
+
+block create brick 0.3230 0.4038 0.29318 0.46909 0.105 1.355 group 'Joist'
+block create brick 0.3230 0.4038 2.05227 2.22818 0.105 1.355 group 'Joist'
+
+block create brick 0.8883 0.9690 0.29318 0.46909 0.105 1.355 group 'Joist'
+block create brick 0.8883 0.9690 2.05227 2.22818 0.105 1.355 group 'Joist'
+
+; 3 meters long
+block create brick 0 1.292 0.20000 0.29318 1 1.5 group 'Joist_S1'
+block create brick 0 1.292 1.95909 2.05227 1 1.5 group 'Joist_S2'
+
+block face triangulate radial-8 range group "Masonry"
+block face triangulate edge-max [0.05] range group "Masonry" not
+
+;block gr group 'T_PL' range id 4573
+;block gr group 'J_PL' range id 3745
+;block gr group 'J_PL' range id 3781
+;block gr group 'J_PL' range id 3763
+;block gr group 'J_PL' range id 3799
+
+;MATERIAL PROPERTIES
+block property density 1885 range group "Masonry"
+block property density 7850 range group "S" or "T_B" or "Joist_S1" or "Joist_S2"
+block property density [5510*1.034] range group "Joist"
+
+; ---------------------------------------------------------------------
+; Joint properties live in mat_case.dat so a sensitivity case can be run
+; by regenerating that one file. Baseline values and their provenance are
+; documented there. If it is absent the run must stop -- silently falling
+; back to hard-coded numbers is how the earlier Gc transcription error
+; survived unnoticed across several result sets.
+; ---------------------------------------------------------------------
+call 'mat_case.dat'
+;CONTACT PROPERTIES
+block contact generate-subcontacts
+;; ---------------------------------------------------------------------
+;; PLUGIN VERSION. Check this line before every run. NODAMP_v7_NEW was run
+;; with mason_v8; this file ships set to mason_v7, so a fresh copy of the
+;; repo will silently revert the plugin and invalidate the comparison.
+;; ---------------------------------------------------------------------
+block contact jmodel assign mason_v7
+block contact prop stiffness-normal @kn stiffness-initial @kn  stiffness-shear @ks ...
+    tension @tension cohesion @cohesion friction @friction ...
+    friction-residual @friction cohesion-residual 0 ...
+    G_I @Gt G_II @Gs G_c @Gc compression @fc_comp ...
+    comp-residual [fc_comp*0.2] Cn [Cn] Cnn [Cnn] Css [Css] peak_ratio [n] 
+
+;Timber Support Properties
+block contact jmodel assign mohr range group-intersection 'Joist' 'Joist_S1'
+block contact property stiffness-normal [kn*0.1] stiffness-shear 1 ...
+    tension 1 cohesion 1 friction 1 ...
+    range group-intersection 'Joist' 'Joist_S1'
+
+block contact jmodel assign mohr range group-intersection 'Joist' 'Joist_S2'
+block contact property stiffness-normal [kn*0.1] stiffness-shear 1 ...
+    tension 1 cohesion 1 friction 1 ...
+    range group-intersection 'Joist' 'Joist_S2'
+
+; =====================================================================
+; JOIST POCKET -- the embedded end of the joist bearing in the wall
+; =====================================================================
+; WITHOUT THIS BLOCK the pocket inherits `block contact jmodel assign mason_v7`
+; and the masonry property set applied to every contact above, i.e. a timber
+; joist end BONDED into the wall with tension 0.344 MPa and cohesion 0.750 MPa.
+; Only the FAR ends (Joist-Joist_S1/S2, the roller pads) were ever given their
+; own treatment.
+;
+; Scale of what that bond does. Embedment is 0.105 m (joist z 0.105 -> 1.355
+; against a wall 0 -> 0.21, a blind half-depth pocket), so the shear-resisting
+; area per pocket is
+;     2*(0.0808 x 0.105) + 2*(0.17591 x 0.105) = 0.054 m2
+; At 0.75 MPa that is 40 kN per pocket and 162 kN over four, against a total
+; wall weight of 12.9 kN.
+;
+; The rotational restraint matters more than the strength. Each joist is bonded
+; into the wall and bears on a FIXED pad at z = 1.0-1.355 m. Pad normal
+; stiffness kn*0.1 = 2.5e8 Pa/m over 0.0287 m2 gives 7.2e6 N/m at a ~1.15 m
+; lever, so ~9.5e6 N.m/rad per joist and ~1.9e7 N.m/rad per level. A bed joint's
+; own out-of-plane rotational stiffness is kn*I = 2.5e9 * 9.97e-4 =
+; 2.5e6 N.m/rad. The joists therefore clamp the wall against OOP rotation about
+; 8x harder than the masonry resists bending -- at y = 0.38 m and y = 2.14 m,
+; the latter 80 mm from the Ch3/Ch4 sensors at y = 2.06 m.
+;
+; Physically the pocket is a DRY BEARING. There is no mortar bond in tension
+; and nothing to resist the joist withdrawing or the wall rotating away from
+; it. mohr rather than mason because a dry bearing has no cohesive softening to
+; model, and mohr needs no G_c.
+;
+; friction 30 deg (mu = 0.58) is a mid-range timber-on-masonry value and is the
+; parameter to sweep first: 20 deg (mu = 0.36) and 40 deg (mu = 0.84) bracket
+; the reported range.
+block contact jmodel assign mohr range group-intersection 'Joist' 'Masonry'
+block contact property stiffness-normal [kn*0.1] stiffness-shear [kn*0.04] ...
+    tension 0 cohesion 0 friction 30 ...
+    range group-intersection 'Joist' 'Masonry'
+
+; VERIFY BEFORE SPENDING SOLVE TIME. If the joists are not actually in contact
+; with the masonry, the two lines above retag nothing and the whole hypothesis
+; is void. Run this immediately after and check the count is non-zero:
+;
+;     block contact list range group-intersection 'Joist' 'Masonry'
+;
+; Expect contacts on the top, bottom and two side faces of each of the four
+; pockets. Zero means the GEO_WALL pockets do not meet the joist blocks.
+
+
+; NOTE: geometry mode is NOT set in this file and NOT in mat_case.dat.
+; The static build (gravity, then precompression) runs in the 3DEC default
+; small-strain mode, where displacements are negligible and large-strain buys
+; nothing. The driver switches it on after restoring this save, at the start
+; of the dynamic phase, which is the only place it matters.
+; Previously `model large-strain` was set at the end of mat_case.dat so the
+; sweep can vary it. Small-strain freezes block positions and contact
+; detection, which removes the toe-area reduction and the geometric (P-Delta)
+; restoring action that rocking amplification depends on -- see case G00.
+;block contact	material-table	default	jmodel v6
+;block contact material-table default prop stiffness-normal @kn stiffness-initial @kn ...
+;    stiffness-shear @ks tension 0 cohesion 0 friction @friction ...
+;    friction-residual @friction cohesion-residual 0 G_I @Gt G_II @Gs ...
+;    G_c @Gc compression @fc_comp comp-residual [0] Cn [0] Cnn [1] Css [9] ...
+;    peak_ratio [3.0]
+
+;BOUNDARY CONDITIONS
+block fix range group 'S'
+block fix range group 'Joist_S1'
+block fix range group 'Joist_S2'
+
+;HISTORIES
+fish def Record_Disp
+   monitoring_point = block.gp.near(0.648, 2.68, 0.21)
+   monitoring_point_1 = block.gp.near(0.648, 0.6, 0.21)
+   monitoring_point_2 = block.gp.near(0.648, 1.26, 0.21)
+   monitoring_point_3a = block.gp.near(0.108, 2.06, 0.21)
+   monitoring_point_3b = block.gp.near(1.188, 2.06, 0.21)
+   Record_Disp = block.gp.disp.z(monitoring_point)
+   Bot_Quarter_Disp = block.gp.disp.z(monitoring_point_1)
+   Mid_Disp = block.gp.disp.z(monitoring_point_2)
+   Top_Quarter_A_Disp = block.gp.disp.z(monitoring_point_3a)
+   Top_Quarter_B_Disp = block.gp.disp.z(monitoring_point_3b)
+end
+fish history Record_Disp
+fish history Bot_Quarter_Disp
+fish history Mid_Disp
+fish history Top_Quarter_A_Disp
+fish history Top_Quarter_B_Disp
+[Record_Disp]
+
+block apply velocity-x 0 range group 'T_B' 
+block apply velocity-z 0 range group 'T_B' 
+
+block initialize rvelocity-y 0 range group 'T_B' 
+block initialize rvelocity-z 0 range group 'T_B' 
+block fix rotation-y range group 'T_B' 
+block fix rotation-z range group 'T_B' 
+block face group "Comp_apply" range pos-y 2.68
+block hide off
+block contact group "Reaction" range pos-y -0.01 0.01 
+block hide range group "Masonry" or "S" or "T_B"
+block contact group "Reaction" range pos-x -1 1
+block hide off
+fish define contactList
+    local allpts = list(block.contact.list) ; A list of pointers to scalars
+    local check = block.contact.isgroup(::block.contact.list,'Reaction')     
+    ; List of booleans
+    contactList = allpts(check) ; List of scalars in 'surface'    
+end
+@contactList
+fish define cstav
+    contactList
+    local scstav_vec = 0.0
+    ncstav = 0.0
+    ncjdisp = 0.0
+    local scjdisp_vec = 0.0
+    local jarea = 0.0
+    negFlag = 0.0
+    loop foreach cx contactList
+        scx = block.contact.subcontactlist(cx)
+        loop foreach sc scx
+             ; weight by area
+             local area_ = block.subcontact.area(sc)
+             scstav_vec = scstav_vec + block.subcontact.force.shear.z(sc)
+             ncstav = ncstav + block.subcontact.force.norm(sc)
+             ncjdisp = ncjdisp + block.subcontact.disp.norm(sc)*area_
+             scjdisp_vec = scjdisp_vec + block.subcontact.disp.shear.z(sc)*area_
+             jarea = jarea + area_
+        endloop
+    endloop
+    if jarea > 0 then
+        ncstav = ncstav/jarea
+        sstop = 0.0
+        cstav = scstav_vec/1000
+    endif        
+end
+@cstav
+fish history cstav
+fish history ncstav
+model gravity 0 -9.81 0
+model solve ratio 1e-6
+
+block face apply stress-yy [-10.35e3/(0.21*1.292)] range group "Comp_apply"
+
+model solve ratio 5e-8
+
+; Fixed save name. sweep_run.py copies this to a case-specific .sav after
+; each Part-I rebuild, so no FISH string handling is needed here.
+model save 'Part_I_MASON_v7'
+;;call "sinus_wave_analysis.dat"
