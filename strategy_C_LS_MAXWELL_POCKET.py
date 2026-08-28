@@ -75,10 +75,31 @@ except Exception as _e:
 it.command("python-reset-state false")
 it.command("program automatic-model-save active off")
 
+
+# =====================================================================
+# STANDALONE CASE: LS_MAXWELL_1p5_POCKET
+# =====================================================================
+# This file is a COMPLETE copy of the driver with the case constants baked in.
+# There is no overrides file anywhere in the toolchain any more, so nothing
+# external can change what this script does. Run it directly:
+#
+#     python-reset-state false
+#     call '<this file>'
+#
+#   geometry   : large-strain on
+#   damping    : block mech damp maxwell 0.0120 1.0006 0.0093 9.0193 0.0104 40.0000
+#   period ID  : experiment   (T1_init = 0.0948 s)
+#   base save  : Part_I_MASON_v8.sav
+#   output     : stratC_results_LS_MAXWELL_POCKET
+#
+# The cost of a standalone copy is that it does NOT track edits to the driver
+# it was generated from. If you change the physics in the base driver,
+# regenerate these copies or the two will silently disagree.
+# =====================================================================
 # =====================================================================
 # 1.  PARAMETERS
 # =====================================================================
-T1_init     = 0.092
+T1_init     = 0.0948
 xi          = 0.05
 delta_t     = 0.005
 n_cycles    = 3.0     # was 1.5. A cracked wall is a rocking mechanism; 1.5
@@ -222,7 +243,7 @@ NCYC_BAND_RATIO    = 1.30    # band = [f1/ratio, f1*ratio]
 RECORD_TABLE = {"HU12": "vel_HU.txt", "EC40": "vel_EC.txt", "FR76": "vel_FR.txt"}
 _NCYC_CACHE = {}
 
-OUT_DIR = "stratC_results_NODAMP_v10"
+OUT_DIR = 'stratC_results_LS_MAXWELL_POCKET'
 
 # ---------------------------------------------------------------------
 # SENSITIVITY-SWEEP OVERRIDES
@@ -248,16 +269,16 @@ PERIOD_SCHEME = "adaptive"   # "adaptive" = excite at the identified T_current
                              # "fixed"    = excite at T1_init every run (T_eq
                              #              control case; T_end still logged
                              #              as a damage measure)
-MAXWELL_CMD   = ""           # non-empty -> issued verbatim after local/global
+MAXWELL_CMD   = 'block mech damp maxwell 0.0120 1.0006 0.0093 9.0193 0.0104 40.0000'           # non-empty -> issued verbatim after local/global
                              # damping are zeroed
-LARGE_STRAIN  = "off"        # "on" updates block positions and re-detects
+LARGE_STRAIN  = "on"        # "on" updates block positions and re-detects
                              # contacts, so toe contact area can reduce and the
                              # restoring action becomes geometric. Required for
                              # large-amplitude rocking; costs solve time.
                              # Applied AFTER the Part-I restore, so no rebuild
                              # is needed and the static build stays in
                              # small-strain where it belongs.
-CASE_ID       = ""           # free-text label echoed into the log
+CASE_ID       = 'LS_MAXWELL_1p5_POCKET'           # free-text label echoed into the log
 
 # ---------------------------------------------------------------------
 # NO OVERRIDES FILE.

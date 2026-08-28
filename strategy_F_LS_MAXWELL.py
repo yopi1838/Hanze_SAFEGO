@@ -78,6 +78,27 @@ OUTPUT
     stratF_full_results_US{n}/
 """
 
+# =====================================================================
+# STANDALONE CASE: F_LS_MAXWELL_1p5
+# =====================================================================
+# This file is a COMPLETE copy of the driver with the case constants baked in.
+# There is no overrides file anywhere in the toolchain any more, so nothing
+# external can change what this script does. Run it directly:
+#
+#     python-reset-state false
+#     call '<this file>'
+#
+#   geometry   : large-strain on
+#   damping    : block mech damp maxwell 0.0120 1.0006 0.0093 9.0193 0.0104 40.0000
+#   period ID  : experiment   (T1_init = 0.0948 s)
+#   base save  : Part_I_MASON_v8.sav
+#   output     : stratF_full_LS_MAXWELL_1p5
+#
+# The cost of a standalone copy is that it does NOT track edits to the driver
+# it was generated from. If you change the physics in the base driver,
+# regenerate these copies or the two will silently disagree.
+# =====================================================================
+
 import itasca as it
 import numpy as np
 import os, csv, math, json, sys
@@ -126,7 +147,7 @@ it.command("program automatic-model-save active off")
 # =====================================================================
 # 1.  PARAMETERS
 # =====================================================================
-T1_init     = 0.092
+T1_init     = 0.0948
 xi          = 0.05
 delta_t     = 0.005
 n_cycles    = 1.5
@@ -170,13 +191,13 @@ DAMP_TYPE  = ""          # "" = full Rayleigh (mass+stiffness); "mass"; "stiffne
 # c*ks*v_rel across the gap. A full record is far longer than a 3-cycle pulse,
 # so a cracked band spends much more time open. Log energy-shear and check it
 # before trusting a damped record run.
-MAXWELL_CMD = ""
+MAXWELL_CMD = 'block mech damp maxwell 0.0120 1.0006 0.0093 9.0193 0.0104 40.0000'
 
 # Geometry mode. The module docstring notes this driver has always run in
 # small strain, "so a large-displacement or collapse result needs large-strain
 # on to be trusted". Exposed here rather than left implicit. Applied after the
 # restore, so the static build stays in small strain where it belongs.
-LARGE_STRAIN = "off"
+LARGE_STRAIN = "on"
 
 
 # >>> STRATEGY D : the protocol is a table, not a feedback loop.
@@ -215,13 +236,13 @@ START_SAVE    = "Part_I_MASON_v8.sav"   # undamaged base state (full sequence)
 TAIL_SEC_RECORD = 2.5      # ring-down appended after each record (period ID)
 # <<< STRATEGY F (FULL)
 
-OUT_DIR = "stratF_full_results_US{}".format(1 if RECORD_TEST == 9 else 2)
+OUT_DIR = 'stratF_full_LS_MAXWELL_1p5'
 
 # ---------------------------------------------------------------------
 # NO OVERRIDES FILE. See the matching note in strategy_C_3dec_nodamp.py.
 # A run is defined only by the constants above in this file.
 # ---------------------------------------------------------------------
-CASE_ID = ""
+CASE_ID = 'F_LS_MAXWELL_1p5'
 # <<< STRATEGY D
 
 # >>> RETIRED : the Strategy C feedback controls. None is read in Strategy D;
