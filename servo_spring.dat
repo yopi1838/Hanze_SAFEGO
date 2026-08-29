@@ -51,9 +51,7 @@
 fish define srv_update
     ; The beam gridpoint is resolved once and cached: block.gp.near() is a
     ; search, and running it every step would dominate the cost of the servo.
-    if srv_gp = null then
-        srv_gp = block.gp.near(srv_x, srv_y, srv_z)
-    endif
+    srv_gp = block.gp.near(srv_x, srv_y, srv_z)
 
     srv_count = srv_count + 1
     if srv_count < srv_nstep then
@@ -111,5 +109,4 @@ end
 ; ---------------------------------------------------------------------
 fish callback add srv_update -100.0
 
-[io.out(' SPRING SERVO ARMED: F0 = ' + string(srv_F0/1e3) + ' kN, k = ' ...
-        + string(srv_k/1e3) + ' kN/m, update every ' + string(srv_nstep) + ' steps')]
+[io.out(' SPRING SERVO ARMED: F0 = ' + string(srv_F0/1e3) + ' kN, k = ' + string(srv_k/1e3) + ' kN/m, update every ' + string(srv_nstep) + ' steps')]
