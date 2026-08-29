@@ -1,0 +1,115 @@
+; =====================================================================
+; servo_spring.dat -- TOP-BEAM SPRING, applied by a FISH callback
+; =====================================================================
+; Moshfeghi et al. (2024) sec. 2.2: "A support beam at the top of the wall,
+; connected to two vertical springs and load-cells, applies an axial load of
+; approximately 10.40 kN to the wall. Springs have an average stiffness of
+; 49.5 N/mm."  Sec. 3.1: rocking moved those springs enough to give "max
+; instantaneous alterations of 26% in US-1".
+;
+; A face load is a DEAD WEIGHT and sheds 0%. This replaces it with the spring
+; law
+;         F = F0 + k*dy          dy < 0 when the beam descends, so F FALLS
+;
+; It is NOT a constant-stress servo. Holding sigma at a target would be an
+; ideal load-follower -- effectively infinite stiffness in the wrong direction,
+; and further from the experiment than the dead load it replaces.
+;
+; ---------------------------------------------------------------------
+; TWO LINES TO CHECK ON THE FIRST RUN
+; ---------------------------------------------------------------------
+;  (1) the `fish callback add` event value at the bottom of this file;
+;  (2) that `command ... endcommand` inside a callback is permitted while
+;      cycling in your 3DEC build.
+; If either is rejected, set SERVO_MODE = "python" in the driver, which chunks
+; the solve and updates from Python instead. Same law, coarser sampling.
+;
+; COST CONTROL: the callback fires every step, but only re-issues the apply
+; command every srv_nstep steps. At the model's timestep that is still far
+; finer than the 5 Hz spring (k/m = 9.9e4/100), while keeping the command rate
+; sane. Set srv_nstep = 1 to update every step and measure the difference.
+; =====================================================================
+
+[srv_F0    = 10.35e3]                ; N, matches the Part I face load
+[srv_k     = 2.0 * 49.5e3]           ; N/m -- TWO springs at 49.5 N/mm
+[srv_area  = 0.21 * 1.292]           ; m2, Comp_apply (verified: 256 faces,
+                                     ;     normal +y, total 0.271320 m2)
+[srv_x     = 0.646]                  ; probe on the beam top face; y = 2.68 is
+[srv_y     = 2.68]                   ;   unambiguously the beam -- nothing else
+[srv_z     = 0.105]                  ;   in the model sits at that elevation
+[srv_nstep = 20]                     ; steps between force updates
+
+[srv_count = 0]
+[srv_dy    = 0.0]
+[srv_F     = srv_F0]
+[srv_Fmin  = srv_F0]
+[srv_Fmax  = srv_F0]
+[srv_dymin = 0.0]
+[srv_dymax = 0.0]
+[srv_calls = 0]
+
+fish define srv_update
+    ; The beam gridpoint is resolved once and cached: block.gp.near() is a
+    ; search, and running it every step would dominate the cost of the servo.
+    if srv_gp = null then
+        srv_gp = block.gp.near(srv_x, srv_y, srv_z)
+    endif
+
+    srv_count = srv_count + 1
+    if srv_count < srv_nstep then
+        exit
+    endif
+    srv_count = 0
+
+    ; Displacements accumulate from the Part I build and are NOT reset between
+    ; runs, so dy is already referenced to the as-built position -- which is
+    ; the correct spring datum. No per-run re-zeroing.
+    srv_dy = block.gp.disp.y(srv_gp)
+    srv_F  = srv_F0 + srv_k * srv_dy
+    if srv_F < 0.0 then
+        srv_F = 0.0                  ; the springs cannot pull the beam down
+    endif
+
+    if srv_F < srv_Fmin then
+        srv_Fmin = srv_F
+    endif
+    if srv_F > srv_Fmax then
+        srv_Fmax = srv_F
+    endif
+    if srv_dy < srv_dymin then
+        srv_dymin = srv_dy
+    endif
+    if srv_dy > srv_dymax then
+        srv_dymax = srv_dy
+    endif
+    srv_calls = srv_calls + 1
+
+    srv_sig = -srv_F / srv_area
+    command
+        block face apply stress-yy [srv_sig] range group 'Comp_apply'
+    endcommand
+end
+
+fish define srv_reset
+    ; called by the driver at the start of each run so the reported min/max
+    ; are per-run, while dy itself stays referenced to the as-built state
+    srv_Fmin  = srv_F
+    srv_Fmax  = srv_F
+    srv_dymin = srv_dy
+    srv_dymax = srv_dy
+    srv_calls = 0
+    srv_count = 0
+    srv_reset = 0
+end
+
+fish define srv_shed_pct
+    srv_shed_pct = 100.0 * (1.0 - srv_Fmin / srv_F0)
+end
+
+; ---------------------------------------------------------------------
+; REGISTRATION -- this is line (1) to check.
+; ---------------------------------------------------------------------
+fish callback add srv_update -100.0
+
+[io.out(' SPRING SERVO ARMED: F0 = ' + string(srv_F0/1e3) + ' kN, k = ' ...
+        + string(srv_k/1e3) + ' kN/m, update every ' + string(srv_nstep) + ' steps')]
