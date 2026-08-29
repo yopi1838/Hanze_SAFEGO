@@ -39,6 +39,38 @@
 [srv_z     = 0.105]                  ;   in the model sits at that elevation
 [srv_nstep = 20]                     ; steps between force updates
 
+; ---------------------------------------------------------------------
+; WHICH LAW
+; ---------------------------------------------------------------------
+;   srv_law = 0   SPRING (default).  F = F0 + k*dy.  Force FALLS as the beam
+;                 descends. This is the rig described in sec. 2.2 -- a beam on
+;                 two 49.5 N/mm springs -- and it is what produces the "max
+;                 instantaneous alterations of 26% in US-1" reported in
+;                 sec. 3.1.
+;
+;   srv_law = 1   CONSTANT BASE STRESS.  F is nudged so ncstav tracks
+;                 srv_target. NOTE WHAT THIS DOES: it SUPPRESSES the 26%
+;                 variation the paper reports, because it is an ideal
+;                 load-follower -- effectively infinite spring stiffness. It
+;                 makes the wall MORE stable than the dead-weight face load it
+;                 replaces, not less. 0.1 MPa is sec. 2.2's STATIC total base
+;                 stress (self-weight + springs + beam + slabs), an initial
+;                 condition, not a value the rig held during shaking.
+;                 Provided as a control case: run it against srv_law = 0 and
+;                 the difference brackets how much the top boundary matters.
+;
+; WARNING ON ncstav. The 'Reaction' contact group is built in two steps in
+; ANALYSIS_PART_I: the wall base (pos-y -0.01 0.01), and then a SECOND grouping
+; (pos-x -1 1) issued after Masonry/S/T_B are hidden, which also picks up the
+; joist/support roller contacts. ncstav is therefore the area-weighted mean of
+; the base AND those rollers, not base stress alone. Servoing on it means
+; controlling a polluted quantity. Verify the subcontact count before trusting
+; srv_law = 1.
+[srv_law    = 0]
+[srv_target = 0.1e6]                 ; Pa, only used when srv_law = 1
+[srv_relax  = 0.20]                  ; proportional gain for srv_law = 1
+[srv_sigma  = 0.0]                   ; last ncstav read, Pa
+
 [srv_count = 0]
 [srv_dy    = 0.0]
 [srv_F     = srv_F0]
@@ -47,12 +79,16 @@
 [srv_dymin = 0.0]
 [srv_dymax = 0.0]
 [srv_calls = 0]
+[srv_gpset = 0]                      ; 0 until the beam gridpoint is resolved
 
 fish define srv_update
     ; The beam gridpoint is resolved once and cached: block.gp.near() is a
     ; search, and running it every step would dominate the cost of the servo.
-    if srv_gp = null then
+    ; An integer flag is used rather than testing the pointer against `null`,
+    ; which is not a FISH literal in 3DEC and raises at compile time.
+    if srv_gpset = 0 then
         srv_gp = block.gp.near(srv_x, srv_y, srv_z)
+        srv_gpset = 1
     endif
 
     srv_count = srv_count + 1
@@ -65,7 +101,19 @@ fish define srv_update
     ; runs, so dy is already referenced to the as-built position -- which is
     ; the correct spring datum. No per-run re-zeroing.
     srv_dy = block.gp.disp.y(srv_gp)
-    srv_F  = srv_F0 + srv_k * srv_dy
+
+    if srv_law = 0 then
+        ; --- SPRING: force falls as the beam descends ---
+        srv_F = srv_F0 + srv_k * srv_dy
+    else
+        ; --- CONSTANT BASE STRESS: proportional correction on ncstav ---
+        ; cstav must be invoked to refresh ncstav; a FISH history on the
+        ; VARIABLE only samples it, it does not recompute it.
+        cstav
+        srv_sigma = ncstav
+        srv_F = srv_F + srv_relax * (srv_target - srv_sigma) * srv_area
+    endif
+
     if srv_F < 0.0 then
         srv_F = 0.0                  ; the springs cannot pull the beam down
     endif
@@ -85,7 +133,12 @@ fish define srv_update
     srv_calls = srv_calls + 1
 
     srv_sig = -srv_F / srv_area
+    ; APPLY-REMOVE FIRST. Re-issuing `block face apply` on the same face group
+    ; without removing the previous one STACKS the boundary conditions: every
+    ; update adds another ~10 kN instead of replacing it, so the force only
+    ; ever grows. That is the failure seen on the first test of this file.
     command
+        block face apply-remove stress-yy range group 'Comp_apply'
         block face apply stress-yy [srv_sig] range group 'Comp_apply'
     endcommand
 end
@@ -100,6 +153,32 @@ fish define srv_reset
     srv_calls = 0
     srv_count = 0
     srv_reset = 0
+end
+
+; ---------------------------------------------------------------------
+; STANDALONE CHECK. Run this by hand once, after a model restore and BEFORE
+; committing to a 25-run sequence. It exercises every intrinsic the callback
+; uses, so a syntax or lookup problem shows up in seconds rather than at run 1.
+;
+;     model restore 'Part_I_MASON_v8.sav'
+;     call 'servo_spring.dat'
+;     [srv_selftest]
+;
+; Expect a finite dy (0.0 on a freshly restored model is correct) and F equal
+; to srv_F0. If ncstav prints as 0 the cstav call is not refreshing, which
+; matters only for srv_law = 1.
+; ---------------------------------------------------------------------
+fish define srv_selftest
+    if srv_gpset = 0 then
+        srv_gp = block.gp.near(srv_x, srv_y, srv_z)
+        srv_gpset = 1
+    endif
+    local dy = block.gp.disp.y(srv_gp)
+    cstav
+    io.out(' srv_selftest: beam dy = ' + string(dy*1000.0) + ' mm')
+    io.out('               F(spring) = ' + string((srv_F0 + srv_k*dy)/1e3) + ' kN')
+    io.out('               ncstav    = ' + string(ncstav/1e6) + ' MPa')
+    srv_selftest = 0
 end
 
 fish define srv_shed_pct
