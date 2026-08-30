@@ -243,7 +243,7 @@ NCYC_BAND_RATIO    = 1.30    # band = [f1/ratio, f1*ratio]
 RECORD_TABLE = {"HU12": "vel_HU.txt", "EC40": "vel_EC.txt", "FR76": "vel_FR.txt"}
 _NCYC_CACHE = {}
 
-OUT_DIR = 'stratC_results_LS_MAXWELL_POCKET'
+OUT_DIR = 'stratC_results_SmallStrain_NODAMP_POCKET'
 
 # ---------------------------------------------------------------------
 # SENSITIVITY-SWEEP OVERRIDES
@@ -294,7 +294,7 @@ LARGE_STRAIN  = "on"        # "on" updates block positions and re-detects
                              # small-strain where it belongs.
 CASE_ID       = 'LS_MAXWELL_1p5_POCKET'           # free-text label echoed into the log
 
-_OVR_FILE = "stratC_overrides.json"
+
 if False:   # DISABLED: this is a standalone case file
     try:
         with open(_OVR_FILE) as _f:
@@ -308,8 +308,7 @@ if False:   # DISABLED: this is a standalone case file
                 print("    ! IGNORED (not overridable): {}".format(_k))
     except Exception as _e:
         raise RuntimeError("Cannot parse {}: {}".format(_OVR_FILE, _e))
-else:
-    print("\n(no {} found -- running baseline constants)".format(_OVR_FILE))
+
 STATE_FILE_NAME = "stratC_checkpoint.json"
 
 # >>> RATCHETING : controls
@@ -899,8 +898,8 @@ def export_all_histories(run_no, record, scale, out_dir):
 def setup_model_for_dynamic(save_file):
     it.command("model restore '{}'".format(cmd_path(save_file)))
     if str(LARGE_STRAIN).lower() in ("on", "true", "1"):
-        it.command("model large-strain on")
-        print("  GEOMETRY: large-strain ON (positions updated, contacts "
+        it.command("model large-strain off")
+        print("  GEOMETRY: large-strain OFF (positions updated, contacts "
               "re-detected)")
     else:
         it.command("model large-strain off")
@@ -924,9 +923,9 @@ def setup_model_for_dynamic(save_file):
     # The command used to be commented out here with `pass` as the body, so
     # setting DAMP_RATIO non-zero silently produced an undamped run while
     # preflight_checks() reported damping as active.
-    if MAXWELL_CMD:
-        it.command(MAXWELL_CMD)
-        print("  Maxwell damping applied: {}".format(MAXWELL_CMD))
+    # if MAXWELL_CMD:
+    #     it.command(MAXWELL_CMD)
+    #     print("  Maxwell damping applied: {}".format(MAXWELL_CMD))
     if DAMP_RATIO > 0:
         cmd = "block mechanical damping rayleigh {ratio} {freq} {dtype}".format(
             ratio=DAMP_RATIO, freq=1.0 / T1_init, dtype=DAMP_TYPE).strip()
@@ -1115,7 +1114,7 @@ def execute_run(run_no, record, scale, T_current):
 SPECTRA_FILES = ["spectrum_HU12.csv", "spectrum_EC40.csv", "spectrum_FR76.csv"]
 DAT_FILES     = ["instrument_history_new.dat",
                  "instrument_history_export_v2.dat"]
-BASE_SAVE     = globals().get("BASE_SAVE", "Part_I_MASON_v7_pocket.sav")
+BASE_SAVE     = "Part_I_MASON_v8_SmallStrain.sav"
 
 def preflight_checks():
     """Fail loudly, before any solving, if inputs or config are not in order."""

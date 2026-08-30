@@ -139,7 +139,7 @@ fish define srv_update
     ; update adds another ~10 kN instead of replacing it, so the force only
     ; ever grows. That is the failure seen on the first test of this file.
     command
-        block face apply-remove stress-yy range group 'Comp_apply'
+        block face apply-remove stress range group 'Comp_apply'
         block face apply stress-yy [srv_sig] range group 'Comp_apply'
     endcommand
 end

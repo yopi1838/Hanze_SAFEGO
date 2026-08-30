@@ -1032,6 +1032,7 @@ def setup_model_for_dynamic(save_file):
     block free rotation-z range group 'T_B'
     block mech damp local 0.0
     block mech damp global 0.0
+    fish history ncstav
     """)
     # The command used to be commented out here with `pass` as the body, so
     # setting DAMP_RATIO non-zero silently produced an undamped run while
@@ -1099,7 +1100,7 @@ def execute_run(run_no, record, scale, T_current):
     servo_reset_run()
     it.command("model dynamic time-total 0")
     for grp in ["S", "T_B"]:
-        it.command("block apply velocity-z 1.0 table '{}' range group '{}'".format(tbl_name, grp))
+        it.command("block apply velocity-z 1.0 table '{}' range group '{}'".format(tbl_name, grp))        
     solve_dynamic(pulse_dur)
     for grp in ["S", "T_B"]:
         it.command("block gridpoint apply-remove velocity-z range group '{}'".format(grp))
@@ -1242,7 +1243,7 @@ def execute_run(run_no, record, scale, T_current):
 SPECTRA_FILES = ["spectrum_HU12.csv", "spectrum_EC40.csv", "spectrum_FR76.csv"]
 DAT_FILES     = ["instrument_history_new.dat",
                  "instrument_history_export_v2.dat"]
-BASE_SAVE     = "Part_I_MASON_v8.sav"
+BASE_SAVE     = "Part_I_MASON_v8_SmallStrain.sav"
 
 def preflight_checks():
     """Fail loudly, before any solving, if inputs or config are not in order."""

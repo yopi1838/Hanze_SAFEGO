@@ -243,7 +243,7 @@ NCYC_BAND_RATIO    = 1.30    # band = [f1/ratio, f1*ratio]
 RECORD_TABLE = {"HU12": "vel_HU.txt", "EC40": "vel_EC.txt", "FR76": "vel_FR.txt"}
 _NCYC_CACHE = {}
 
-OUT_DIR = 'stratC_results_ROCKPERIOD'
+OUT_DIR = 'stratC_results_ROCKPERIOD_v2'
 
 # ---------------------------------------------------------------------
 # SENSITIVITY-SWEEP OVERRIDES
@@ -470,14 +470,14 @@ def effective_period(T_current, prev_run, record, scale):
         T_eff = ROCK_T_MAX
     return T_eff, "rock_on:peak {:.2f}mm T_rock {:.4f}s".format(peak, T_rock)
 
-LARGE_STRAIN  = "on"        # "on" updates block positions and re-detects
+LARGE_STRAIN  = "off"        # "on" updates block positions and re-detects
                              # contacts, so toe contact area can reduce and the
                              # restoring action becomes geometric. Required for
                              # large-amplitude rocking; costs solve time.
                              # Applied AFTER the Part-I restore, so no rebuild
                              # is needed and the static build stays in
                              # small-strain where it belongs.
-CASE_ID       = 'LS_MAXWELL_ROCKPERIOD'           # free-text label echoed into the log
+CASE_ID       = 'SS_MAXWELL_ROCKPERIOD_V2'           # free-text label echoed into the log
 
 # ---------------------------------------------------------------------
 # NO OVERRIDES FILE.
@@ -1433,7 +1433,7 @@ def execute_run(run_no, record, scale, T_current):
 SPECTRA_FILES = ["spectrum_HU12.csv", "spectrum_EC40.csv", "spectrum_FR76.csv"]
 DAT_FILES     = ["instrument_history_new.dat",
                  "instrument_history_export_v2.dat"]
-BASE_SAVE     = "Part_I_MASON_v8.sav"
+BASE_SAVE     = "Part_I_MASON_v8_SmallStrain.sav"
 
 def preflight_checks():
     """Fail loudly, before any solving, if inputs or config are not in order."""

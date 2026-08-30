@@ -96,19 +96,3 @@ history export 22 vs "time" file [string.build("%1/%2_rel_disp_top_exp_mm.csv",e
 history export 23 vs "time" file [string.build("%1/%2_tilt_local_incl.csv",exportdir,runlabel)] truncate
 history export 24 vs "time" file [string.build("%1/%2_bulge_top_mm.csv",exportdir,runlabel)] truncate
 
-; =====================================================================
-; JOIST POCKET SLIP  (instrument_tilt_v2.dat, indices 26-31)
-;  26 joist_slip_probe (function; makes 27-31 live)
-;  27 joist_slip_L1     lower left      29 joist_slip_U1     upper left
-;  28 joist_slip_L2     lower right     30 joist_slip_U2     upper right
-;  31 joist_slip_max    max |slip| of the four
-;
-; Compare the RESIDUAL (cumulative) value at the last run against the 8-12 mm
-; reported by Moshfeghi et al. (2024) section 3.3 for US-1 / US-2. Positive =
-; joist withdrawing from its pocket.
-; =====================================================================
-history export 27 vs "time" file [string.build("%1/%2_joist_slip_L1.csv",exportdir,runlabel)] truncate
-history export 28 vs "time" file [string.build("%1/%2_joist_slip_L2.csv",exportdir,runlabel)] truncate
-history export 29 vs "time" file [string.build("%1/%2_joist_slip_U1.csv",exportdir,runlabel)] truncate
-history export 30 vs "time" file [string.build("%1/%2_joist_slip_U2.csv",exportdir,runlabel)] truncate
-history export 31 vs "time" file [string.build("%1/%2_joist_slip_max.csv",exportdir,runlabel)] truncate

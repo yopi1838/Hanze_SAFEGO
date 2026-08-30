@@ -35,7 +35,7 @@ block property density [5510*1.034] range group "Joist"
 call 'mat_case.dat'
 ;CONTACT PROPERTIES
 block contact generate-subcontacts
-block contact jmodel assign mason_v7
+block contact jmodel assign mason_v8
 block contact prop stiffness-normal @kn stiffness-initial @kn  stiffness-shear @ks ...
     tension @tension cohesion @cohesion friction @friction ...
     friction-residual @friction cohesion-residual [0.1*cohesion] ...
@@ -138,12 +138,13 @@ end
 @cstav
 fish history cstav
 fish history ncstav
+model large-strain off
 model gravity 0 -9.81 0
 model solve ratio 1e-6
 
-block face apply stress-yy [-10.35e3/(0.21*1.292)] range group "Comp_apply"
+block face apply stress-yy [-10.35e3*2/(0.21*1.292)] range group "Comp_apply"
 
 model solve ratio 5e-8
 
-model save 'Part_I_MASON_v8'
+model save 'Part_I_MASON_v8_SmallStrain'
 ;;call "sinus_wave_analysis.dat"

@@ -1,6 +1,6 @@
 {
-  "last_completed_run": 2,
-  "T_current": 0.090657,
+  "last_completed_run": 6,
+  "T_current": 0.067441,
   "summary": [
     {
       "run": 1,
@@ -31,6 +31,66 @@
       "T_exp_ch_spread": "",
       "T_exp_window_s": 0.0,
       "tid_source": "legacy_fallback:module missing"
+    },
+    {
+      "run": 3,
+      "record": "EC40",
+      "scale": 0.2,
+      "table_file": "vel_EC.txt",
+      "record_dur_s": 39.5922,
+      "T_end": 0.071658,
+      "T_end_over_Tinit": 0.7559,
+      "T_legacy_disp": 0.072117,
+      "T_exp_psd": 0.071658,
+      "T_exp_welch": 0.07169,
+      "T_exp_ch_spread": 0.0,
+      "T_exp_window_s": 2.4996,
+      "tid_source": "exp_psd_svd"
+    },
+    {
+      "run": 4,
+      "record": "HU12",
+      "scale": 1.0,
+      "table_file": "vel_HU.txt",
+      "record_dur_s": 35.9467,
+      "T_end": 0.071619,
+      "T_end_over_Tinit": 0.7555,
+      "T_legacy_disp": 0.077981,
+      "T_exp_psd": 0.071619,
+      "T_exp_welch": 0.040721,
+      "T_exp_ch_spread": 0.7588,
+      "T_exp_window_s": 2.4999,
+      "tid_source": "exp_psd_svd"
+    },
+    {
+      "run": 5,
+      "record": "HU12",
+      "scale": 1.25,
+      "table_file": "vel_HU.txt",
+      "record_dur_s": 35.9467,
+      "T_end": 0.072058,
+      "T_end_over_Tinit": 0.7601,
+      "T_legacy_disp": 0.076027,
+      "T_exp_psd": 0.072058,
+      "T_exp_welch": 0.071953,
+      "T_exp_ch_spread": 0.7618,
+      "T_exp_window_s": 2.4999,
+      "tid_source": "exp_psd_svd"
+    },
+    {
+      "run": 6,
+      "record": "EC40",
+      "scale": 0.3,
+      "table_file": "vel_EC.txt",
+      "record_dur_s": 39.5922,
+      "T_end": 0.067441,
+      "T_end_over_Tinit": 0.7114,
+      "T_legacy_disp": 0.06684,
+      "T_exp_psd": 0.067441,
+      "T_exp_welch": 0.067478,
+      "T_exp_ch_spread": 0.0001,
+      "T_exp_window_s": 2.4996,
+      "tid_source": "exp_psd_svd"
     }
   ]
 }

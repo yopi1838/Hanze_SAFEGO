@@ -3,7 +3,7 @@
   "OUT_DIR": "stratC_results_LS_NODAMP",
   "BASE_SAVE": "Part_I_MASON_v7.sav",
 
-  "LARGE_STRAIN": "on",
+  "LARGE_STRAIN": "off",
 
   "DAMP_RATIO": 0.0,
   "DAMP_TYPE": "",
