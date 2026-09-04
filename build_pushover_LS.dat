@@ -1,0 +1,35 @@
+; ======================================================================
+; BUILD_PART_I_LS.dat -- produce part_I_mason_LS.sav from the
+; equivalent-density build.
+;
+; Sequence:
+;   1. run ANALYSIS_PART_I_MASON_EQDENS.dat in full: fresh build, gravity
+;      settle (small strain), spring precompression as extra T_B density,
+;      settle to 5e-8, save Part_I_MASON_v8_SmallStrain (kept -- the
+;      dynamic drivers still restore that name).
+;   2. switch to LARGE STRAIN and re-solve. This is the step that used to
+;      limit-cycle with the follower face load; with the dead load it
+;      must converge. If it does not, STOP and report -- do not loosen
+;      the ratio to make it pass.
+;   3. save part_I_mason_LS -- the restore point for
+;      pushover_oop_3dec_v2.py.
+;
+; CHECK AFTER RUNNING: ncstav ~ 0.10 MPa (x2 was compensating) or
+; ~ 0.20 MPa (precompression genuinely doubled -- halve spring_total in
+; the EQDENS file and rebuild before using anything downstream).
+; ======================================================================
+
+program call 'ANALYSIS_PART_I_MASON_EQDENS.dat'
+
+model large-strain on
+
+; contacts re-detected and positions now update; settle again to the same
+; tolerance the small-strain build used
+model solve ratio 5e-8
+
+; print the numbers that decide whether this state is usable
+@cstav
+[io.out('LS settle done. ncstav = ' + string(ncstav/1e6) + ' MPa (expect ~0.10)')]
+[io.out('cstav (base shear) = ' + string(cstav) + ' kN (expect ~0)')]
+
+model save 'part_I_mason_LS'
