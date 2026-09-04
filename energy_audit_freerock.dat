@@ -1,0 +1,150 @@
+; =====================================================================
+; energy_audit_freerock.dat
+; Attribution histories for the free-rocking decay of the Mason joint.
+;
+; PURPOSE
+;   The undamped free-rocking test still decays ~10%/cycle after the
+;   first cycle. This script tracks WHERE that energy goes, using only
+;   quantities the jmodel already exposes:
+;     W_I   : mode-I fracture energy dissipated so far, closed form from
+;             each subcontact's dt (exponential softening law)
+;     W_II  : mode-II proxy, G_II * ds * area (cohesion softening only,
+;             friction NOT included -- see interpretation below)
+;     dt/ds/d_ts area-weighted means, mean stiffness-normal,
+;     total joint normal force, max opening, accumulated |shear disp|
+;
+; USAGE
+;   1. call your free-vibration model build (blocks, mason_v9 joint,
+;      gravity, static settle) as usual
+;   2. program call 'energy_audit_freerock.dat'   <-- BEFORE the release
+;   3. run the free vibration as usual
+;   4. export the histories and overlay W_I, W_II against the
+;      displacement peak envelope
+;
+; INTERPRETATION
+;   - W_I grows at each half-cycle in step with the amplitude loss
+;       -> continued crack extension around the alternating pivots:
+;          the decay is (mostly) physical fracture dissipation
+;   - W_I flat after cycle 1 but decay continues
+;       -> cracking is NOT the sink; check us_acc (frictional slip work
+;          ~ mu*N*us) and the shear-discard on opening steps
+;   - mean stiffness-normal falling while dt_mean is flat
+;       -> secant eroding without new damage (should NOT happen with the
+;          u_ult anchor cap; if it does, that guard has a hole)
+;
+; ADJUST the two lines marked <-- ADJUST for your geometry.
+; Property access uses block.subcontact.prop(...) -- the same intrinsic
+; family as the dbg_* histories; rename if your build differs.
+; =====================================================================
+
+; --- tag the rocking bed joint -----------------------------------------
+block contact group 'AuditJoint' range pos-y -0.001 0.001      ; <-- ADJUST: joint plane elevation
+
+; --- collect the contacts of that joint (same pattern as your cstav) ---
+fish define auditContacts
+    local allpts = list(block.contact.list)
+    local check  = block.contact.isgroup(::block.contact.list,'AuditJoint')
+    auditContacts = allpts(check)
+end
+@auditContacts
+
+; --- pull material constants from the first subcontact so the audit ---
+; --- is always consistent with the assigned joint properties        ---
+fish define _audit_const
+    local cx1 = auditContacts(1)
+    local sc1 = block.contact.subcontactlist(cx1)
+    local sc  = sc1(1)
+    global aud_ft  = block.subcontact.prop(sc,'tension')
+    global aud_GI  = block.subcontact.prop(sc,'G_I')
+    global aud_GII = block.subcontact.prop(sc,'G_II')
+    global aud_kn0 = block.subcontact.prop(sc,'stiffness-initial')
+    global aud_uel = aud_ft / aud_kn0
+end
+@_audit_const
+
+; --- closed-form mode-I dissipation per unit area at damage dt --------
+;   envelope work  0->u_dam : 0.5*ft*uel + G_I*dt
+;   recoverable (secant)    : 0.5*ft*(1-dt)*u_dam
+;   u_dam(dt) = uel + (G_I/ft)*ln(1/(1-dt)) ; dt=1 -> 0.5*ft*uel + G_I
+fish define _wdiss_I(dtv)
+    if dtv <= 0.0 then
+        _wdiss_I = 0.0
+        exit
+    endif
+    if dtv >= 1.0 then
+        _wdiss_I = 0.5*aud_ft*aud_uel + aud_GI
+        exit
+    endif
+    local u_dam = aud_uel + (aud_GI/aud_ft) * math.ln(1.0/(1.0-dtv))
+    _wdiss_I = 0.5*aud_ft*aud_uel + aud_GI*dtv - 0.5*aud_ft*(1.0-dtv)*u_dam
+end
+
+; --- the per-step audit ------------------------------------------------
+fish define audit
+    local jarea   = 0.0
+    local wI      = 0.0
+    local wII     = 0.0
+    local sdt     = 0.0
+    local sds     = 0.0
+    local sdts    = 0.0
+    local skn     = 0.0
+    local fnsum   = 0.0
+    local openmax = 0.0
+    local usacc   = 0.0
+    loop foreach local cx auditContacts
+        local scx = block.contact.subcontactlist(cx)
+        loop foreach local sc scx
+            local a_  = block.subcontact.area(sc)
+            local dt_ = block.subcontact.prop(sc,'dt_hist')
+            local ds_ = block.subcontact.prop(sc,'ds_hist')
+            jarea   = jarea + a_
+            wI      = wI  + a_ * _wdiss_I(dt_)
+            wII     = wII + a_ * aud_GII * ds_          ; proxy: cohesion softening only
+            sdt     = sdt  + a_ * dt_
+            sds     = sds  + a_ * ds_
+            sdts    = sdts + a_ * block.subcontact.prop(sc,'d_ts')
+            skn     = skn  + a_ * block.subcontact.prop(sc,'stiffness-normal')
+            fnsum   = fnsum + block.subcontact.force.norm(sc)
+            local op_ = -block.subcontact.disp.norm(sc)   ; convention: negative = open
+            if op_ < openmax then
+                openmax = op_
+            endif
+            usacc = usacc + block.subcontact.disp.shear.mag(sc) * a_
+        endloop
+    endloop
+    if jarea > 0.0 then
+        audit      = wI                     ; J  (mode-I dissipated, closed form)
+        aud_WII    = wII                    ; J  (mode-II cohesion proxy)
+        aud_dtm    = sdt  / jarea           ; area-weighted mean dt
+        aud_dsm    = sds  / jarea
+        aud_dtsm   = sdts / jarea
+        aud_knm    = skn  / jarea           ; mean stiffness-normal (secant health)
+        aud_Fn     = fnsum                  ; total joint normal force (weight check)
+        aud_open   = openmax                ; most-open subcontact [m], negative
+        aud_us     = usacc / jarea          ; mean accumulated |shear disp| [m]
+    endif
+end
+@audit
+
+fish history audit          ; W_I  [J]
+fish history aud_WII        ; W_II proxy [J]
+fish history aud_dtm
+fish history aud_dsm
+fish history aud_dtsm
+fish history aud_knm
+fish history aud_Fn
+fish history aud_open
+fish history aud_us
+
+; ---------------------------------------------------------------------
+; NOT covered by this audit, by construction:
+;   - frictional sliding work (mu*N*du_s): needs a per-step integral;
+;     if W_I + W_II stall while decay continues and aud_us keeps
+;     growing, friction is the sink -- integrate it in post from the
+;     aud_Fn / aud_us histories, or enable the jmodel energy interface
+;     (energy-shear accumulates it exactly).
+;   - shear-spring discard on opening (tensionCorrection zeroes Fs):
+;     bounded by 0.5*|Fs|^2/(ks*A) per opening event; if the sinks
+;     above don't close the balance, this is the remaining suspect.
+; =====================================================================
+; EOF

@@ -1,0 +1,151 @@
+;;; Masonry mechanical properties
+fish def joint_prop
+    dens = 1835                 ; masorny density
+    fb = 16.33e6                ; unit/brick compressive strength
+    fcj = 6.20e6                ; masonry compressive strength
+    fbond = 0.238e6             ; masonry flexural bond stength
+    tensj = 0.238e6             ; masonry tensile strength
+    cohej = 0.21e6              ; masonry cohesion
+    frictj = math.atan(0.42)*180/math.pi ; masonry friction angle [°]
+    Emasonry = 3256e6           ; masonry Young's modulus 
+    Gmasonry = 0.4*Emasonry     ; masonry shear modulus
+    v  = 0.15                   ; Poisson's ratio
+    Eb = 355*fb                 ; unit/brick Young's modulus (355 for Calcium Silicate)
+    Gb = Eb/(2*(1+v))           ; unit/brick shear modulus
+    Emortar = 914e6             ; mortar Young's modulus
+    Gmortar = Emortar/(2*(1+v)) ; unit/brick shear modulus
+    
+    thick = 0.01  ; mortar joint thickness
+
+    knj = Emortar/thick
+	ksj = Gmortar/thick
+	
+    Gt = 0.025*((2*tensj*1e-6)^0.7)*1000
+    Gs = 10*Gt
+    Gc = (15+(0.43*fcj*1e-6)-(0.0036*fcj*fcj*1e-12))*1000  
+end
+@joint_prop
+
+fish def foundation_prop
+global dens_found, E_found, v_found
+    dens_found = 2000
+    E_found = 3e10
+    v_found = 0.17
+end
+@foundation_prop
+
+fish def steel_prop
+    dens_steel = 9449 ; equivalent density to have O=0.1 MPa
+    E_steel = 3e10
+    v_steel = 0.17
+end
+@steel_prop
+
+;;; ASSIGN MATERIAL PROPERTIES TO BLOCK GROUPS
+block hide range group "foundation" not
+block zone cmodel assign elastic
+block zone property density [dens_found] young [E_found] pois [v_found]
+block hide off 
+
+block hide range group "brickUp" not
+block zone cmodel assign elastic
+block zone property density [dens] young [Eb] pois [v]
+block hide off 
+
+block hide range group "brickDown" not
+block zone cmodel assign elastic
+block zone property density [dens] young [Eb] pois [v]
+block hide off 
+
+block hide range group "steel beam" not
+block zone cmodel assign elastic
+block zone property density [dens_steel] young [E_steel] pois [v_steel]
+block hide off 
+
+
+;;; DEFINE CONTACT PROPERTIES
+model large-strain on
+;;; Masonry
+;;; mason_debug2
+;;; Assign constitutive model
+block contact jmodel assign mason_debug2 range group "BrickUpToBrickUp" slot "components"
+block contact jmodel assign mason_debug2 range group "BrickDownToBrickDown" slot "components"
+block contact jmodel assign mason_debug2 range group "MidCrack" slot "components"
+block contact jmodel assign mason_debug2 range group "BrickToFoundation" slot "components"
+block contact jmodel assign mason_debug2 range group "BrickToSteel" slot "components"
+
+;;; BrickUpToBrickUp
+block contact prop stiffness-normal @knj stiffness-initial @knj stiffness-shear @ksj nlimit1 [1e-8] nlimit2 [1e-6] ...
+    tension @tensj cohesion @cohej friction @frictj friction-residual @frictj cohesion-residual 0 ...
+    G_I @Gt G_II @Gs G_c @Gc compression @fcj comp-residual [fcj*0.2] Cn [0] Cnn [1] Css [9] peak_ratio [3.0] mult_base [2.0] mult_dc_gain [4.0] ...
+    range group "BrickUpToBrickUp" slot "components"
+
+;;; BrickDownToBrickDown
+block contact prop stiffness-normal @knj stiffness-initial @knj stiffness-shear @ksj nlimit1 [1e-8] nlimit2 [1e-6] ...
+    tension @tensj cohesion @cohej friction @frictj friction-residual @frictj cohesion-residual 0 ...
+    G_I @Gt G_II @Gs G_c @Gc compression @fcj comp-residual [fcj*0.2] Cn [0] Cnn [1] Css [9] peak_ratio [3.0] mult_base [2.0] mult_dc_gain [4.0] ...
+    range group "BrickDownToBrickDown" slot "components"
+
+;;; MidCrack
+block contact prop stiffness-normal @knj stiffness-initial @knj stiffness-shear @ksj nlimit1 [1e-8] nlimit2 [1e-6] ...
+    tension 0 cohesion 0 friction @frictj friction-residual @frictj cohesion-residual 0 ...
+    G_I @Gt G_II @Gs G_c @Gc compression @fcj comp-residual [fcj*0.2] Cn [0] Cnn [1] Css [9] peak_ratio [3.0] mult_base [2.0] mult_dc_gain [4.0] ...
+    Cn 0 Cnn 1 Css 9 peak_ratio 3.0 &
+    range group "MidCrack" slot "components"
+
+;;; BrickToFoundation
+block contact prop stiffness-normal @knj stiffness-initial @knj stiffness-shear @ksj nlimit1 [1e-8] nlimit2 [1e-6] ...
+    tension 0 cohesion 0 friction @frictj friction-residual @frictj cohesion-residual 0 ...
+    G_I @Gt G_II @Gs G_c @Gc compression @fcj comp-residual [fcj*0.2] Cn [0] Cnn [1] Css [9] peak_ratio [3.0] mult_base [2.0] mult_dc_gain [4.0] ...
+    Cn 0 Cnn 1 Css 9 peak_ratio 3.0 &
+    range group "BrickToFoundation" slot "components"
+
+;;; BrickToSteel
+block contact prop stiffness-normal @knj stiffness-initial @knj stiffness-shear @ksj nlimit1 [1e-8] nlimit2 [1e-6] ...
+    tension 0 cohesion 0 friction @frictj friction-residual @frictj cohesion-residual 0 ...
+    G_I @Gt G_II @Gs G_c @Gc compression @fcj comp-residual [fcj*0.2] Cn [0] Cnn [1] Css [9] peak_ratio [3.0] mult_base [2.0] mult_dc_gain [4.0] ...
+    Cn 0 Cnn 1 Css 9 peak_ratio 3.0 &
+    range group "BrickToSteel" slot "components"
+
+;;; New contacts properties if large-strain on
+block contact material-table default jmodel mason_debug2
+block contact material-table default prop stiffness-normal @knj stiffness-initial @knj stiffness-shear @ksj nlimit1 [1e-8] nlimit2 [1e-6] ...
+    tension 0 cohesion 0 friction @frictj friction-residual @frictj cohesion-residual 0 ...
+    G_I @Gt G_II @Gs G_c @Gc compression @fcj comp-residual [fcj*0.2] Cn [0] Cnn [1] Css [9] peak_ratio [3.0] mult_base [2.0] mult_dc_gain [4.0]
+
+;;; brickUp - brickUp
+block contact material-table add jmodel mason_debug2 prop &
+    stiffness-normal @knj stiffness-initial @knj stiffness-shear @ksj nlimit1 [1e-8] nlimit2 [1e-6] ...
+    tension 0 cohesion 0 friction @frictj friction-residual @frictj cohesion-residual 0 ...
+    G_I @Gt G_II @Gs G_c @Gc compression @fcj comp-residual [fcj*0.2] Cn [0] Cnn [1] Css [9] peak_ratio [3.0] mult_base [2.0] mult_dc_gain [4.0] ...
+    range group-intersection "brickUp" "brickUp" slot "components"
+
+;;; brickDown - brickDown
+block contact material-table add jmodel mason_debug2 prop &
+    stiffness-normal @knj stiffness-initial @knj stiffness-shear @ksj nlimit1 [1e-8] nlimit2 [1e-6] ...
+    tension 0 cohesion 0 friction @frictj friction-residual @frictj cohesion-residual 0 ...
+    G_I @Gt G_II @Gs G_c @Gc compression @fcj comp-residual [fcj*0.2] Cn [0] Cnn [1] Css [9] peak_ratio [3.0] mult_base [2.0] mult_dc_gain [4.0] ...
+    range group-intersection "brickDown" "brickDown" slot "components"
+
+;;; brickUp - brickDown (mid-crack)
+block contact material-table add jmodel mason_debug2 prop &
+    stiffness-normal @knj stiffness-initial @knj stiffness-shear @ksj nlimit1 [1e-8] nlimit2 [1e-6] ...
+    tension 0 cohesion 0 friction @frictj friction-residual @frictj cohesion-residual 0 ...
+    G_I @Gt G_II @Gs G_c @Gc compression @fcj comp-residual [fcj*0.2] Cn [0] Cnn [1] Css [9] peak_ratio [3.0] mult_base [2.0] mult_dc_gain [4.0] ...
+    range group-intersection "brickUp" "brickDown" slot "components"
+
+;;; brickDown - foundation
+block contact material-table add jmodel mason_debug2 prop &
+    stiffness-normal @knj stiffness-initial @knj stiffness-shear @ksj nlimit1 [1e-8] nlimit2 [1e-6] ...
+    tension 0 cohesion 0 friction @frictj friction-residual @frictj cohesion-residual 0 ...
+    G_I @Gt G_II @Gs G_c @Gc compression @fcj comp-residual [fcj*0.2] Cn [0] Cnn [1] Css [9] peak_ratio [3.0] mult_base [2.0] mult_dc_gain [4.0] ...
+    range group-intersection "brickDown" "foundation" slot "components"
+
+;;; brickUp - steel beam
+block contact material-table add jmodel mason_debug2 prop &
+    stiffness-normal @knj stiffness-initial @knj stiffness-shear @ksj nlimit1 [1e-8] nlimit2 [1e-6] ...
+    tension 0 cohesion 0 friction @frictj friction-residual @frictj cohesion-residual 0 ...
+    G_I @Gt G_II @Gs G_c @Gc compression @fcj comp-residual [fcj*0.2] Cn [0] Cnn [1] Css [9] peak_ratio [3.0] mult_base [2.0] mult_dc_gain [4.0] ...
+    range group-intersection "brickUp" "steel beam" slot "components"
+
+model save "SAV/gable_prop.sav"

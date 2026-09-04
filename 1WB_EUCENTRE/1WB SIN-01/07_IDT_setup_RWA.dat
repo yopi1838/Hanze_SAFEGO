@@ -1,0 +1,29 @@
+; Test #9 (RWA_1 100%)
+[seqFact=0.01]
+[time =10.00000000]
+table 1 delete
+table 1 import "INPUT/RWA_1_BottomShakeTable.txt"
+call "08_IDT_load_RWA.dat"
+
+; Test #10 (RWA_2 100%)
+[seqFact=0.02]
+[time =10.00000000]
+table 1 delete
+table 1 import "INPUT/RWA_2_BottomShakeTable.txt"
+call "08_IDT_load_RWA.dat"
+
+; Test #11 (RWA_3 100%)
+[seqFact=0.03]
+[time =10.00000000]
+table 1 delete
+table 1 import "INPUT/RWA_3_BottomShakeTable.txt"
+call "08_IDT_load_RWA.dat"
+
+; Test #12 (RWA_4 100%)
+[seqFact=0.04]
+[time =10.00000000]
+table 1 delete
+table 1 import "INPUT/RWA_4_BottomShakeTable.txt"
+call "08_IDT_load_RWA.dat"
+
+;;;;RWA finished

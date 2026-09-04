@@ -1,0 +1,30 @@
+;;; Generate block FE mesh
+block zone generate hexahedra divisions 1 2 1 range group 'brickDown'
+block zone generate hexahedra divisions 1 2 1 range group 'brickUp'
+block zone generate hexahedra divisions 2 5 12 range group 'foundation'
+block zone generate hexahedra divisions 2 2 12 range group 'steel beam'
+
+;;; Assign contact groups
+block hide range group 'brickUp' not
+block contact group 'BrickUpToBrickUp' slot 'components'
+block hide off
+
+block hide range group 'brickDown' not
+block contact group 'BrickDownToBrickDown' slot 'components'
+block hide off
+
+block hide range group 'brickDown' or "brickUp" not
+block contact group 'MidCrack' slot 'components' range group-intersection 'brickDown' 'brickUp'
+block hide off
+
+block hide range group 'brickDown' or "foundation" not
+block contact group 'BrickToFoundation' slot 'components' range group-intersection 'brickDown' 'foundation'
+block hide off
+
+block hide range group 'brickUp' or "steel beam" not
+block contact group 'BrickToSteel' slot 'components' range group-intersection 'brickUp' 'steel beam'
+block hide off
+
+;block contact gen-sub
+
+model save 'SAV/contactGrouped.sav'

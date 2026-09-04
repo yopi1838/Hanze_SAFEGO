@@ -1,0 +1,31 @@
+;;; Initialize condition for IDT analysis
+[rev=1] ; Revision of the analysis run
+[specName=string.build("SIN_O1_00_Gr_1_%1",seqFact*100)]
+[pathfile=string.build("NUM/%1_rev%2",specName,rev)]
+[retval=system.directory.create(pathfile)]
+block gridpoint initialize displacement 0 0 0
+model calm
+history delete
+fish history @norm_bedjoint_B
+history rename "norm_bedjoint_B" name "1"
+fish history @shear_bedjoint_B
+history rename "shear_bedjoint_B" name "2"
+fish history @norm_bedjoint_T
+history rename "norm_bedjoint_T" name "3"
+fish history @shear_bedjoint_T
+history rename "shear_bedjoint_T" name "4"
+fish history @shearforce
+history rename "shearforce" name "5"
+call "instrument_history.dat"
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+block gridpoint apply-remove vel-y range group "foundation"
+block gridpoint apply-remove vel-y range group "steel beam"
+block gridpoint apply velocity-y 1 table 1 range group "foundation" ; Apply in increments
+block gridpoint apply velocity-y 1 table 1 range group "steel beam" ; Apply in increments
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+model dynamic time-total 0
+model history dynamic time-total
+model update-interval 2000
+model solve time [time] 
+call "export_csv.dat"
+model save [string.build("./%1/SIN_01_00.sav",pathfile,rev)] compress

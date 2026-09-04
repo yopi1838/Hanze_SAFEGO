@@ -1,0 +1,13 @@
+fish define hist_export
+    local path = string.build("%1/hist_files",pathfile)
+    local retval = system.directory.create(path)
+    f = file.open("hist_labels.txt","read","text")
+    label = file.read(f)
+    loop local i (1,list.size(label),1)
+        hist_label = label(i)
+        command
+            history export [hist_label] vs 12 file [string.build("%1/%2.csv",path,hist_label)] truncate
+        endcommand
+    endloop
+end
+@hist_export

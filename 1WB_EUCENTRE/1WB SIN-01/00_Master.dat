@@ -1,0 +1,25 @@
+;;; 01. Geometry import
+call "01_Geometry.dat"
+;;; 02. Block and contact generation
+call "02_Block_contact_groups.dat"
+;;; 03. Set fish file to compute contact forces
+call "03_Fish"
+;;; 04. Properties definition for blocks and contacts 
+call "04_Block_contact_properties.dat"
+;;; 05. Define boundary conditions and apply selfweight + vertical loads
+call "05_Boundary_selfweight_overburden.dat"
+;;; 06. Setup for IDT simulation 
+call "06_dynamic_load.dat"
+;;; 07. Scenario Gr_1
+call '07_IDT_setup_Gr_1.dat'
+;;; 07. Scenario RWA
+;call '07_IDT_setup_RWA.dat'
+;;; 07. Scenario Gr_2
+call '07_IDT_setup_Gr_2.dat'
+
+[io.out(time.kernel/(3600*1000))] ;;Show the elapsed time in the end
+
+
+
+
+

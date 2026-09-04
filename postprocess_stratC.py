@@ -325,23 +325,80 @@ def extract_topq_avg_to_table(sim_dir):
     return out
 
 
+def _is_missing(v):
+    """Blank, None, or a non-finite float -- i.e. needs the log fallback."""
+    if v == "" or v is None:
+        return True
+    try:
+        return not np.isfinite(float(v))
+    except (TypeError, ValueError):
+        return False          # a non-numeric string (e.g. tid_source) counts as present
+
+
 def join_driver_summary(data, sim_dir):
-    """Merge every column of strategy_C_summary.csv into the run dicts."""
+    """Merge every column of strategy_C_summary.csv into the run dicts, then
+    backfill anything missing (absent run, blank, or NaN) from
+    strategy_C_log.csv.
+
+    WHY THE FALLBACK EXISTS: the summary CSV is rewritten at the end of a
+    driver session from the in-memory summary list, so a resume that restarted
+    that list truncates it (a stratF folder was seen with 12 summary rows
+    against 25 log rows). The log is opened in append mode and flushed after
+    every run, so it is the complete record. Backfilled T_end values are
+    tagged T_end_src = "log" and drawn as OPEN markers in fig7, because for a
+    run whose identification was rejected the log's T_end is the legacy
+    single-channel estimator, not the three-channel PSD method -- a different
+    measurement, kept visibly distinct rather than blended into the series."""
+    cols = []
     sumf = Path(sim_dir) / "strategy_C_summary.csv"
-    if not sumf.exists():
-        print("  ! strategy_C_summary.csv not found, driver columns skipped")
-        return []
-    with open(str(sumf)) as f:
-        rdr = csv.DictReader(f)
-        cols = [c for c in rdr.fieldnames if c not in ("run", "record")]
-        for row in rdr:
-            rn = int(row["run"])
-            if rn in data:
-                for k in cols:
-                    try:
-                        data[rn][k] = float(row[k])
-                    except (ValueError, TypeError):
-                        data[rn][k] = row[k]
+    if sumf.exists():
+        with open(str(sumf)) as f:
+            rdr = csv.DictReader(f)
+            cols = [c for c in rdr.fieldnames if c not in ("run", "record")]
+            for row in rdr:
+                rn = int(row["run"])
+                if rn in data:
+                    for k in cols:
+                        try:
+                            data[rn][k] = float(row[k])
+                        except (ValueError, TypeError):
+                            data[rn][k] = row[k]
+                    if not _is_missing(row.get("T_end")):
+                        data[rn]["T_end_src"] = "summary"
+    else:
+        print("  ! strategy_C_summary.csv not found, trying the log alone")
+
+    logf = Path(sim_dir) / "strategy_C_log.csv"
+    filled = []
+    if logf.exists():
+        with open(str(logf)) as f:
+            for row in csv.DictReader(f):
+                try:
+                    rn = int(row["run"])
+                except (TypeError, ValueError, KeyError):
+                    continue
+                if rn not in data:
+                    continue
+                for k, v in row.items():
+                    if k in ("run", "record") or _is_missing(v):
+                        continue
+                    if k not in cols:
+                        cols.append(k)
+                    if _is_missing(data[rn].get(k, "")):
+                        try:
+                            data[rn][k] = float(v)
+                        except (ValueError, TypeError):
+                            data[rn][k] = v
+                        if k == "T_end":
+                            data[rn]["T_end_src"] = "log"
+                            filled.append(rn)
+    if filled:
+        print("  T_end backfilled from strategy_C_log.csv for run(s): {}"
+              .format(", ".join(str(r) for r in sorted(set(filled)))))
+        print("    (open markers in fig7 -- the log value for a rejected "
+              "identification is the legacy estimator)")
+        if "T_end_src" not in cols:
+            cols.append("T_end_src")
     return cols
 
 
@@ -488,8 +545,19 @@ def chan_series(data, ch, metric):
 
 
 def run_series(data, key):
-    rn = sorted(r for r in data if key in data[r] and data[r][key] != "")
-    return np.array(rn), np.array([float(data[r][key]) for r in rn])
+    rn, vals = [], []
+    for r in sorted(data):
+        v = data[r].get(key, "")
+        if v == "" or v is None:
+            continue
+        try:
+            fv = float(v)
+        except (TypeError, ValueError):
+            continue
+        if not np.isfinite(fv):
+            continue
+        rn.append(r); vals.append(fv)
+    return np.array(rn), np.array(vals)
 
 
 def all_channels(data):
@@ -623,10 +691,16 @@ def fig_period_compare(main, main_lbl, exps, out_dir):
             break
 
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
+    bf = set(r for r in main
+             if str(main[r].get("T_end_src", "")) == "log")
 
     # ---- panel A: absolute period ----
     ax1.plot(xs, ys_abs, "-o", color="tab:purple", lw=2, ms=6,
              label=r"Sim  ring-down $T_{end}$", zorder=3)
+    if bf:
+        m = np.isin(xs, sorted(bf))
+        ax1.plot(xs[m], ys_abs[m], "o", ms=6, mfc="white", mec="tab:purple",
+                 mew=1.6, zorder=4, label="backfilled from log (legacy est.)")
     for e in exps:
         xe, ye = exp_period(e)
         if len(xe):
@@ -641,6 +715,10 @@ def fig_period_compare(main, main_lbl, exps, out_dir):
     # ---- panel B: normalised elongation, log-y ----
     ax2.plot(xs, ys_rat, "-o", color="tab:purple", lw=2, ms=6,
              label=r"Sim  $T_{end}/T_{init}$", zorder=3)
+    if bf:
+        m2 = np.isin(xs, sorted(bf))
+        ax2.plot(xs[m2], ys_rat[m2], "o", ms=6, mfc="white", mec="tab:purple",
+                 mew=1.6, zorder=4)
     for e in exps:
         xe, ye = exp_period_ratio(e)
         if len(xe):
@@ -648,8 +726,20 @@ def fig_period_compare(main, main_lbl, exps, out_dir):
                      ms=5, lw=1.2, mfc="none", alpha=0.9,
                      label=r"{}  $T_1/T_1$(run 1)".format(e["label"]), zorder=2)
     ax2.set_yscale("log")
-    ax2.set_yticks([1, 1.5, 2, 3, 5, 8])
-    ax2.set_yticklabels(["1.0", "1.5", "2.0", "3.0", "5.0", "8.0"])
+    # y-limits from the data, not a fixed 1-8 span: with elongations of only
+    # 1.0-1.25 the old fixed axis flattened every series onto the baseline.
+    ymax = float(np.nanmax(ys_rat)) if len(ys_rat) else 1.3
+    for e in exps:
+        _, ye_r = exp_period_ratio(e)
+        if len(ye_r):
+            ymax = max(ymax, float(np.nanmax(ye_r)))
+    ytop = max(1.3, 1.08 * ymax)
+    yticks = [t for t in (1.0, 1.05, 1.1, 1.15, 1.2, 1.3, 1.5, 2.0, 3.0, 5.0, 8.0)
+              if t <= ytop * 1.001]
+    ax2.set_yticks(yticks)
+    ax2.set_yticklabels(["{:.2f}".format(t) for t in yticks])
+    ax2.yaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
+    ax2.set_ylim(0.98, 1.5)
     ax2.axhline(1.0, color="0.7", lw=0.8)
     ax2.set_xlabel("Run")
     ax2.set_ylabel("Period elongation factor  (log scale)")
@@ -900,7 +990,7 @@ def console_table(main_data):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("sim_dir", nargs="?",
-    default="stratC_results_NODAMP_v10")
+    default="stratF_full_results_US1")
     ap.add_argument("--ycap", type=float, default=None,
                     help="fig6 y-axis cap in mm (default: automatic, only "
                          "applied when the simulation dwarfs the experiment)")

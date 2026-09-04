@@ -24,8 +24,8 @@ import numpy as np
 import period_id_exp as P
 
 # ---------------------------------------------------------------------
-SIM_DIR = "stratC_results_LS_MAXWELL_1p5"   # <-- edit
-LABEL = "Maxwell_LargeStrain"                    # <-- edit
+SIM_DIR = "stratF_full_results_US1"   # <-- edit
+LABEL = "Full_results_noDamp"                    # <-- edit
 DRIVER_LOG = "strategy_C_log.csv"          # written by the driver, optional
 
 # MEASURED experimental period, per run. This file already exists in the repo

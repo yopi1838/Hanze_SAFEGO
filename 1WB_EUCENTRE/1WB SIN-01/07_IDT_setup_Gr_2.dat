@@ -1,0 +1,22 @@
+; Test #13 (100% Gr_2)
+[seqFact=1.0]
+[time =17.34330000]
+table 1 delete
+table 1 import "INPUT/Gr_2_100_BottomShakeTable.txt"
+call "08_IDT_load_Gr_2.dat"
+
+; Test #14 (150% Gr_2)
+[seqFact=1.5]
+[time =17.63240000]
+table 1 delete
+table 1 import "INPUT/Gr_2_150_BottomShakeTable.txt"
+call "08_IDT_load_Gr_2.dat"
+
+; Test #15 (200% Gr_2)
+[seqFact=2.0]
+[time =17.98820000]
+table 1 delete
+table 1 import "INPUT/Gr_2_200_BottomShakeTable.txt"
+call "08_IDT_load_Gr_2.dat"
+
+;;;;Gr_2 finished

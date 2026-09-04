@@ -1,0 +1,322 @@
+model new
+model configure dynamic
+
+block create brick 0 2.1 0 1.05 0 0.4
+block group "foundation" slot 'components'
+block hide group "foundation"
+
+;line 1
+block create brick 0.3335 0.5505 0.474 0.575 0.4 0.486
+block create brick 0.5505 0.7725 0.474 0.575 0.4 0.486
+block create brick 0.7725 0.9945 0.474 0.575 0.4 0.486
+block create brick 0.9945 1.2165 0.474 0.575 0.4 0.486
+block create brick 1.2165 1.4385 0.474 0.575 0.4 0.486
+block create brick 1.4385 1.6605 0.474 0.575 0.4 0.486
+block create brick 1.6605 1.7715 0.474 0.575 0.4 0.486
+
+;line 2
+block create brick 0.3335 0.4445 0.474 0.575 0.486 0.567
+block create brick 0.4445 0.6665 0.474 0.575 0.486 0.567
+block create brick 0.6665 0.8885 0.474 0.575 0.486 0.567
+block create brick 0.8885 1.1105 0.474 0.575 0.486 0.567
+block create brick 1.1105 1.3325 0.474 0.575 0.486 0.567
+block create brick 1.3325 1.5545 0.474 0.575 0.486 0.567
+block create brick 1.5545 1.7715 0.474 0.575 0.486 0.567
+
+;line 3
+block create brick 0.3335 0.5505 0.474 0.575 0.567 0.648
+block create brick 0.5505 0.7725 0.474 0.575 0.567 0.648
+block create brick 0.7725 0.9945 0.474 0.575 0.567 0.648
+block create brick 0.9945 1.2165 0.474 0.575 0.567 0.648
+block create brick 1.2165 1.4385 0.474 0.575 0.567 0.648
+block create brick 1.4385 1.6605 0.474 0.575 0.567 0.648
+block create brick 1.6605 1.7715 0.474 0.575 0.567 0.648
+
+;line 4
+block create brick 0.3335 0.4445 0.474 0.575 0.648 0.729
+block create brick 0.4445 0.6665 0.474 0.575 0.648 0.729
+block create brick 0.6665 0.8885 0.474 0.575 0.648 0.729
+block create brick 0.8885 1.1105 0.474 0.575 0.648 0.729
+block create brick 1.1105 1.3325 0.474 0.575 0.648 0.729
+block create brick 1.3325 1.5545 0.474 0.575 0.648 0.729
+block create brick 1.5545 1.7715 0.474 0.575 0.648 0.729
+
+;line 5
+block create brick 0.3335 0.5505 0.474 0.575 0.729 0.81
+block create brick 0.5505 0.7725 0.474 0.575 0.729 0.81
+block create brick 0.7725 0.9945 0.474 0.575 0.729 0.81
+block create brick 0.9945 1.2165 0.474 0.575 0.729 0.81
+block create brick 1.2165 1.4385 0.474 0.575 0.729 0.81
+block create brick 1.4385 1.6605 0.474 0.575 0.729 0.81
+block create brick 1.6605 1.7715 0.474 0.575 0.729 0.81
+
+;line 6
+block create brick 0.3335 0.4445 0.474 0.575 0.81 0.891
+block create brick 0.4445 0.6665 0.474 0.575 0.81 0.891
+block create brick 0.6665 0.8885 0.474 0.575 0.81 0.891
+block create brick 0.8885 1.1105 0.474 0.575 0.81 0.891
+block create brick 1.1105 1.3325 0.474 0.575 0.81 0.891
+block create brick 1.3325 1.5545 0.474 0.575 0.81 0.891
+block create brick 1.5545 1.7715 0.474 0.575 0.81 0.891
+
+;line 7
+block create brick 0.3335 0.5505 0.474 0.575 0.891 0.972
+block create brick 0.5505 0.7725 0.474 0.575 0.891 0.972
+block create brick 0.7725 0.9945 0.474 0.575 0.891 0.972
+block create brick 0.9945 1.2165 0.474 0.575 0.891 0.972
+block create brick 1.2165 1.4385 0.474 0.575 0.891 0.972
+block create brick 1.4385 1.6605 0.474 0.575 0.891 0.972
+block create brick 1.6605 1.7715 0.474 0.575 0.891 0.972
+
+;line 8
+block create brick 0.3335 0.4445 0.474 0.575 0.972 1.053
+block create brick 0.4445 0.6665 0.474 0.575 0.972 1.053
+block create brick 0.6665 0.8885 0.474 0.575 0.972 1.053
+block create brick 0.8885 1.1105 0.474 0.575 0.972 1.053
+block create brick 1.1105 1.3325 0.474 0.575 0.972 1.053
+block create brick 1.3325 1.5545 0.474 0.575 0.972 1.053
+block create brick 1.5545 1.7715 0.474 0.575 0.972 1.053
+
+;line 9
+block create brick 0.3335 0.5505 0.474 0.575 1.053 1.134
+block create brick 0.5505 0.7725 0.474 0.575 1.053 1.134
+block create brick 0.7725 0.9945 0.474 0.575 1.053 1.134
+block create brick 0.9945 1.2165 0.474 0.575 1.053 1.134
+block create brick 1.2165 1.4385 0.474 0.575 1.053 1.134
+block create brick 1.4385 1.6605 0.474 0.575 1.053 1.134
+block create brick 1.6605 1.7715 0.474 0.575 1.053 1.134
+
+;line 10
+block create brick 0.3335 0.4445 0.474 0.575 1.134 1.215
+block create brick 0.4445 0.6665 0.474 0.575 1.134 1.215
+block create brick 0.6665 0.8885 0.474 0.575 1.134 1.215
+block create brick 0.8885 1.1105 0.474 0.575 1.134 1.215
+block create brick 1.1105 1.3325 0.474 0.575 1.134 1.215
+block create brick 1.3325 1.5545 0.474 0.575 1.134 1.215
+block create brick 1.5545 1.7715 0.474 0.575 1.134 1.215
+
+;line 11
+block create brick 0.3335 0.5505 0.474 0.575 1.215 1.296
+block create brick 0.5505 0.7725 0.474 0.575 1.215 1.296
+block create brick 0.7725 0.9945 0.474 0.575 1.215 1.296
+block create brick 0.9945 1.2165 0.474 0.575 1.215 1.296
+block create brick 1.2165 1.4385 0.474 0.575 1.215 1.296
+block create brick 1.4385 1.6605 0.474 0.575 1.215 1.296
+block create brick 1.6605 1.7715 0.474 0.575 1.215 1.296
+
+;line 12
+block create brick 0.3335 0.4445 0.474 0.575 1.296 1.377
+block create brick 0.4445 0.6665 0.474 0.575 1.296 1.377
+block create brick 0.6665 0.8885 0.474 0.575 1.296 1.377
+block create brick 0.8885 1.1105 0.474 0.575 1.296 1.377
+block create brick 1.1105 1.3325 0.474 0.575 1.296 1.377
+block create brick 1.3325 1.5545 0.474 0.575 1.296 1.377
+block create brick 1.5545 1.7715 0.474 0.575 1.296 1.377
+
+;line 13
+block create brick 0.3335 0.5505 0.474 0.575 1.377 1.458
+block create brick 0.5505 0.7725 0.474 0.575 1.377 1.458
+block create brick 0.7725 0.9945 0.474 0.575 1.377 1.458
+block create brick 0.9945 1.2165 0.474 0.575 1.377 1.458
+block create brick 1.2165 1.4385 0.474 0.575 1.377 1.458
+block create brick 1.4385 1.6605 0.474 0.575 1.377 1.458
+block create brick 1.6605 1.7715 0.474 0.575 1.377 1.458
+
+;line 14
+block create brick 0.3335 0.4445 0.474 0.575 1.458 1.539
+block create brick 0.4445 0.6665 0.474 0.575 1.458 1.539
+block create brick 0.6665 0.8885 0.474 0.575 1.458 1.539
+block create brick 0.8885 1.1105 0.474 0.575 1.458 1.539
+block create brick 1.1105 1.3325 0.474 0.575 1.458 1.539
+block create brick 1.3325 1.5545 0.474 0.575 1.458 1.539
+block create brick 1.5545 1.7715 0.474 0.575 1.458 1.539
+
+;line 15
+block create brick 0.3335 0.5505 0.474 0.575 1.539 1.62
+block create brick 0.5505 0.7725 0.474 0.575 1.539 1.62
+block create brick 0.7725 0.9945 0.474 0.575 1.539 1.62
+block create brick 0.9945 1.2165 0.474 0.575 1.539 1.62
+block create brick 1.2165 1.4385 0.474 0.575 1.539 1.62
+block create brick 1.4385 1.6605 0.474 0.575 1.539 1.62
+block create brick 1.6605 1.7715 0.474 0.575 1.539 1.62
+
+;line 16
+block create brick 0.3335 0.4445 0.474 0.575 1.62 1.701
+block create brick 0.4445 0.6665 0.474 0.575 1.62 1.701
+block create brick 0.6665 0.8885 0.474 0.575 1.62 1.701
+block create brick 0.8885 1.1105 0.474 0.575 1.62 1.701
+block create brick 1.1105 1.3325 0.474 0.575 1.62 1.701
+block create brick 1.3325 1.5545 0.474 0.575 1.62 1.701
+block create brick 1.5545 1.7715 0.474 0.575 1.62 1.701
+
+;line 17
+block create brick 0.3335 0.5505 0.474 0.575 1.701 1.782
+block create brick 0.5505 0.7725 0.474 0.575 1.701 1.782
+block create brick 0.7725 0.9945 0.474 0.575 1.701 1.782
+block create brick 0.9945 1.2165 0.474 0.575 1.701 1.782
+block create brick 1.2165 1.4385 0.474 0.575 1.701 1.782
+block create brick 1.4385 1.6605 0.474 0.575 1.701 1.782
+block create brick 1.6605 1.7715 0.474 0.575 1.701 1.782
+
+;line 18
+block create brick 0.3335 0.4445 0.474 0.575 1.782 1.863
+block create brick 0.4445 0.6665 0.474 0.575 1.782 1.863
+block create brick 0.6665 0.8885 0.474 0.575 1.782 1.863
+block create brick 0.8885 1.1105 0.474 0.575 1.782 1.863
+block create brick 1.1105 1.3325 0.474 0.575 1.782 1.863
+block create brick 1.3325 1.5545 0.474 0.575 1.782 1.863
+block create brick 1.5545 1.7715 0.474 0.575 1.782 1.863
+
+;line 19
+block create brick 0.3335 0.5505 0.474 0.575 1.863 1.944
+block create brick 0.5505 0.7725 0.474 0.575 1.863 1.944
+block create brick 0.7725 0.9945 0.474 0.575 1.863 1.944
+block create brick 0.9945 1.2165 0.474 0.575 1.863 1.944
+block create brick 1.2165 1.4385 0.474 0.575 1.863 1.944
+block create brick 1.4385 1.6605 0.474 0.575 1.863 1.944
+block create brick 1.6605 1.7715 0.474 0.575 1.863 1.944
+
+block group "brickDown" slot 'components'
+block hide group "brickDown"
+
+;line 20
+block create brick 0.3335 0.4445 0.474 0.575 1.944 2.025
+block create brick 0.4445 0.6665 0.474 0.575 1.944 2.025
+block create brick 0.6665 0.8885 0.474 0.575 1.944 2.025
+block create brick 0.8885 1.1105 0.474 0.575 1.944 2.025
+block create brick 1.1105 1.3325 0.474 0.575 1.944 2.025
+block create brick 1.3325 1.5545 0.474 0.575 1.944 2.025
+block create brick 1.5545 1.7715 0.474 0.575 1.944 2.025
+
+;line 21
+block create brick 0.3335 0.5505 0.474 0.575 2.025 2.106
+block create brick 0.5505 0.7725 0.474 0.575 2.025 2.106
+block create brick 0.7725 0.9945 0.474 0.575 2.025 2.106
+block create brick 0.9945 1.2165 0.474 0.575 2.025 2.106
+block create brick 1.2165 1.4385 0.474 0.575 2.025 2.106
+block create brick 1.4385 1.6605 0.474 0.575 2.025 2.106
+block create brick 1.6605 1.7715 0.474 0.575 2.025 2.106
+
+;line 22
+block create brick 0.3335 0.4445 0.474 0.575 2.106 2.187
+block create brick 0.4445 0.6665 0.474 0.575 2.106 2.187
+block create brick 0.6665 0.8885 0.474 0.575 2.106 2.187
+block create brick 0.8885 1.1105 0.474 0.575 2.106 2.187
+block create brick 1.1105 1.3325 0.474 0.575 2.106 2.187
+block create brick 1.3325 1.5545 0.474 0.575 2.106 2.187
+block create brick 1.5545 1.7715 0.474 0.575 2.106 2.187
+
+;line 23
+block create brick 0.3335 0.5505 0.474 0.575 2.187 2.268
+block create brick 0.5505 0.7725 0.474 0.575 2.187 2.268
+block create brick 0.7725 0.9945 0.474 0.575 2.187 2.268
+block create brick 0.9945 1.2165 0.474 0.575 2.187 2.268
+block create brick 1.2165 1.4385 0.474 0.575 2.187 2.268
+block create brick 1.4385 1.6605 0.474 0.575 2.187 2.268
+block create brick 1.6605 1.7715 0.474 0.575 2.187 2.268
+
+;line 24
+block create brick 0.3335 0.4445 0.474 0.575 2.268 2.349
+block create brick 0.4445 0.6665 0.474 0.575 2.268 2.349
+block create brick 0.6665 0.8885 0.474 0.575 2.268 2.349
+block create brick 0.8885 1.1105 0.474 0.575 2.268 2.349
+block create brick 1.1105 1.3325 0.474 0.575 2.268 2.349
+block create brick 1.3325 1.5545 0.474 0.575 2.268 2.349
+block create brick 1.5545 1.7715 0.474 0.575 2.268 2.349
+
+;line 25
+block create brick 0.3335 0.5505 0.474 0.575 2.349 2.43
+block create brick 0.5505 0.7725 0.474 0.575 2.349 2.43
+block create brick 0.7725 0.9945 0.474 0.575 2.349 2.43
+block create brick 0.9945 1.2165 0.474 0.575 2.349 2.43
+block create brick 1.2165 1.4385 0.474 0.575 2.349 2.43
+block create brick 1.4385 1.6605 0.474 0.575 2.349 2.43
+block create brick 1.6605 1.7715 0.474 0.575 2.349 2.43
+
+;line 26
+block create brick 0.3335 0.4445 0.474 0.575 2.43 2.511
+block create brick 0.4445 0.6665 0.474 0.575 2.43 2.511
+block create brick 0.6665 0.8885 0.474 0.575 2.43 2.511
+block create brick 0.8885 1.1105 0.474 0.575 2.43 2.511
+block create brick 1.1105 1.3325 0.474 0.575 2.43 2.511
+block create brick 1.3325 1.5545 0.474 0.575 2.43 2.511
+block create brick 1.5545 1.7715 0.474 0.575 2.43 2.511
+
+;line 27
+block create brick 0.3335 0.5505 0.474 0.575 2.511 2.592
+block create brick 0.5505 0.7725 0.474 0.575 2.511 2.592
+block create brick 0.7725 0.9945 0.474 0.575 2.511 2.592
+block create brick 0.9945 1.2165 0.474 0.575 2.511 2.592
+block create brick 1.2165 1.4385 0.474 0.575 2.511 2.592
+block create brick 1.4385 1.6605 0.474 0.575 2.511 2.592
+block create brick 1.6605 1.7715 0.474 0.575 2.511 2.592
+
+;line 28
+block create brick 0.3335 0.4445 0.474 0.575 2.592 2.673
+block create brick 0.4445 0.6665 0.474 0.575 2.592 2.673
+block create brick 0.6665 0.8885 0.474 0.575 2.592 2.673
+block create brick 0.8885 1.1105 0.474 0.575 2.592 2.673
+block create brick 1.1105 1.3325 0.474 0.575 2.592 2.673
+block create brick 1.3325 1.5545 0.474 0.575 2.592 2.673
+block create brick 1.5545 1.7715 0.474 0.575 2.592 2.673
+
+;line 29
+block create brick 0.3335 0.5505 0.474 0.575 2.673 2.754
+block create brick 0.5505 0.7725 0.474 0.575 2.673 2.754
+block create brick 0.7725 0.9945 0.474 0.575 2.673 2.754
+block create brick 0.9945 1.2165 0.474 0.575 2.673 2.754
+block create brick 1.2165 1.4385 0.474 0.575 2.673 2.754
+block create brick 1.4385 1.6605 0.474 0.575 2.673 2.754
+block create brick 1.6605 1.7715 0.474 0.575 2.673 2.754
+
+;line 30
+block create brick 0.3335 0.4445 0.474 0.575 2.754 2.835
+block create brick 0.4445 0.6665 0.474 0.575 2.754 2.835
+block create brick 0.6665 0.8885 0.474 0.575 2.754 2.835
+block create brick 0.8885 1.1105 0.474 0.575 2.754 2.835
+block create brick 1.1105 1.3325 0.474 0.575 2.754 2.835
+block create brick 1.3325 1.5545 0.474 0.575 2.754 2.835
+block create brick 1.5545 1.7715 0.474 0.575 2.754 2.835
+
+;line 31
+block create brick 0.3335 0.5505 0.474 0.575 2.835 2.916
+block create brick 0.5505 0.7725 0.474 0.575 2.835 2.916
+block create brick 0.7725 0.9945 0.474 0.575 2.835 2.916
+block create brick 0.9945 1.2165 0.474 0.575 2.835 2.916
+block create brick 1.2165 1.4385 0.474 0.575 2.835 2.916
+block create brick 1.4385 1.6605 0.474 0.575 2.835 2.916
+block create brick 1.6605 1.7715 0.474 0.575 2.835 2.916
+
+;line 32
+block create brick 0.3335 0.4445 0.474 0.575 2.916 2.997
+block create brick 0.4445 0.6665 0.474 0.575 2.916 2.997
+block create brick 0.6665 0.8885 0.474 0.575 2.916 2.997
+block create brick 0.8885 1.1105 0.474 0.575 2.916 2.997
+block create brick 1.1105 1.3325 0.474 0.575 2.916 2.997
+block create brick 1.3325 1.5545 0.474 0.575 2.916 2.997
+block create brick 1.5545 1.7715 0.474 0.575 2.916 2.997
+
+;line 33
+block create brick 0.3335 0.5505 0.474 0.575 2.997 3.078
+block create brick 0.5505 0.7725 0.474 0.575 2.997 3.078
+block create brick 0.7725 0.9945 0.474 0.575 2.997 3.078
+block create brick 0.9945 1.2165 0.474 0.575 2.997 3.078
+block create brick 1.2165 1.4385 0.474 0.575 2.997 3.078
+block create brick 1.4385 1.6605 0.474 0.575 2.997 3.078
+block create brick 1.6605 1.7715 0.474 0.575 2.997 3.078
+
+;line 34
+block create brick 0.3335 0.4445 0.474 0.575 3.078 3.164
+block create brick 0.4445 0.6665 0.474 0.575 3.078 3.164
+block create brick 0.6665 0.8885 0.474 0.575 3.078 3.164
+block create brick 0.8885 1.1105 0.474 0.575 3.078 3.164
+block create brick 1.1105 1.3325 0.474 0.575 3.078 3.164
+block create brick 1.3325 1.5545 0.474 0.575 3.078 3.164
+block create brick 1.5545 1.7715 0.474 0.575 3.078 3.164
+
+block group "brickUp" slot 'components'
+block hide group "brickUp"
+
+block create brick 0 2.1 0.4 0.65 3.164 3.464
+block group "steel beam" slot 'components'
+block hide off

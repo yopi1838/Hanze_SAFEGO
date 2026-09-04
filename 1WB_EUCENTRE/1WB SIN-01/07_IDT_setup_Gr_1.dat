@@ -1,0 +1,56 @@
+; Test #1 (40% Gr_1)
+[seqFact=0.4]
+[time =4.44140000]
+table 1 import "INPUT/Gr_1_40_BottomShakeTable.txt"
+call "08_IDT_load_Gr_1.dat"
+
+; Test #2 (80% Gr_1)
+[time =4.45320000]
+[seqFact=0.8]
+table 1 delete
+table 1 import "INPUT/Gr_1_80_BottomShakeTable.txt"
+call "08_IDT_load_Gr_1.dat"
+
+; Test #3 (100% Gr_1)
+[time =4.48830000]
+[seqFact=1.0]
+table 1 delete
+table 1 import "INPUT/Gr_1_100_BottomShakeTable.txt"
+call "08_IDT_load_Gr_1.dat"
+
+; Test #4 (160% Gr_1)
+[time =4.85150000]
+[seqFact=1.6]
+table 1 delete
+table 1 import "INPUT/Gr_1_160_BottomShakeTable.txt"
+call "08_IDT_load_Gr_1.dat"
+
+; Test #5 (200% Gr_1)
+[time =5.41020000]
+[seqFact=2.0]
+table 1 delete
+table 1 import "INPUT/Gr_1_200_BottomShakeTable.txt"
+call "08_IDT_load_Gr_1.dat"
+
+; Test #6 (250% Gr_1)
+[time =5.55860000]
+[seqFact=2.5]
+table 1 delete
+table 1 import "INPUT/Gr_1_250_BottomShakeTable.txt"
+call "08_IDT_load_Gr_1.dat"
+
+; Test #7 (300% Gr_1)
+[time =5.67190000]
+[seqFact=3.0]
+table 1 delete
+table 1 import "INPUT/Gr_1_300_BottomShakeTable.txt"
+call "08_IDT_load_Gr_1.dat"
+
+; Test #8 (350% Gr_1)
+[time =5.75390000]
+[seqFact=3.5]
+table 1 delete
+table 1 import "INPUT/Gr_1_350_BottomShakeTable.txt"
+call "08_IDT_load_Gr_1.dat"
+
+;;;;Gr_1 finished

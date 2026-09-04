@@ -1,0 +1,27 @@
+fish define joint_force
+    global norm_bedjoint_B, shear_bedjoint_B, norm_bedjoint_T, shear_bedjoint_T, shearforce
+	local norm_bdj_B, shear_bdj_B, norm_bdj_T, shear_bdj_T
+    
+    norm_bdj_B   = 0.0
+    shear_bdj_B  = 0.0
+    norm_bdj_T = 0.0
+    shear_bdj_T  = 0.0
+
+    loop foreach cx block.subcontact.list()
+        local cid = block.subcontact.contact(cx)
+        if block.contact.group(cid, 'components') == "BrickToFoundation" then
+            norm_bdj_B  += block.subcontact.force.norm(cx)
+            shear_bdj_B += block.subcontact.force.shear.y(cx)
+        else if block.contact.group(cid, 'components') == "BrickToSteel" then
+            norm_bdj_T  += block.subcontact.force.norm(cx)
+            shear_bdj_T += block.subcontact.force.shear.y(cx)
+        end_if
+    end_loop
+		
+	norm_bedjoint_B  = norm_bdj_B  	    
+	shear_bedjoint_B = shear_bdj_B 	    
+	norm_bedjoint_T  = norm_bdj_T  	    
+	shear_bedjoint_T = shear_bdj_T 	
+    shearforce = shear_bedjoint_B - shear_bedjoint_T
+end
+@joint_force
