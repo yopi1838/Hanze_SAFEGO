@@ -1,63 +1,59 @@
 # -*- coding: ascii -*-
 """
-pushover_oop_3dec_v2.py -- OOP pushover of the US-1 wall (3DEC 9),
-ascending AND descending branch.
+pushover_oop_3dec_dispctrl.py -- DISPLACEMENT-CONTROLLED OOP pushover of
+the US-1 wall (3DEC 9). Traces the FULL capacity curve, rising branch AND
+post-peak softening, in one consistent loading condition.
 
-WHAT CHANGED vs pushover_oop_3dec.py (v1), AND WHERE IT CAME FROM
-    v1 was load-controlled: ramp lateral gravity, and the step where the
-    static solve stops converging IS the peak -- but the curve ends there.
-    K_sec beyond the peak was unreachable, which the capacity law needs
-    for d up to ~30 mm if the model peaks earlier.
+WHY DISPLACEMENT CONTROL (and why the load-controlled v2.2 could not do it)
+    v2.2 ramped a lateral body force (tilted gravity) and read the
+    reaction. That is load control: past the limit point there is NO
+    static equilibrium at any load >= the peak, so the solve diverges and
+    the softening branch is unreachable. v2.2's ascending branch is still
+    the validation anchor -- it peaked at F_tot = 29.0 kN, matching
+    Table 4's 29.5 kN within 2%.
+    Here displacement is the independent variable, so F is free to
+    DECREASE as d grows -- that is what makes the descending branch
+    traceable.
 
-    This version adopts two ideas from Nicolo's pushover driver:
-    1. QUASI-STATIC STEPPING WITH A BUDGET. Heavy local damping (0.9) and
-       `model solve ratio ... cycles ...`: a step that cannot reach the
-       ratio inside the budget does not kill the run -- it is LOGGED as
-       unconverged (conv column) and the controller reacts. Equilibrium
-       quality is a recorded quantity, not an assumption.
-    2. THE PARTICIPATING-MASS DESCENDING CONTROLLER. Past the peak, load
-       control cannot trace softening. Nicolo's controller measures the
-       base shear V and the mass still moving WITH the push (m_part),
-       then commands
-           a_next = lambda * (V - a*(m_tot - m_part)) / m_part
-       i.e. push only as hard as the still-resisting mass can carry,
-       amplified by lambda (1.30) so the mechanism keeps failing. Exit
-       when V ~ 0 or the control displacement passes D_STOP_MM.
+HOW
+    The top beam T_B is driven at a small constant velocity in the push
+    direction (an actuator platen). Gravity is VERTICAL ONLY -- no lateral
+    body force any more; the lateral demand now comes entirely from the
+    imposed top motion. Heavy local damping (0.9) + short dynamic chunks
+    keep it quasi-static; a kinetic-energy monitor reports whether that
+    held (KE_frac column; large -> slow VPUSH down).
 
-    TRANSLATED, NOT COPIED: Nicolo's model is deformable (block.zone.*,
-    gridpoint BCs, z-up, push in y, density 1835, half-model factor 0.5).
-    Ours is rigid-block, y-up, push in z, Masonry density 1885, full
-    model. Zone loops became block loops; his @shearforce is our @cstav
-    (kN, from the build's own Reaction-group FISH); his manual restart at
-    a fixed acceleration became an automatic switch on lost convergence.
+    d_ctrl = mean(Top_Quarter_A/B) at 2.06 m -- the paper's Eq.(1) EDP,
+             the same point the dynamic scheme matches Sd against.
+    F_base = base + joist reaction (cstav), sign-flipped so it is POSITIVE
+             with the drift -- this is the base shear, Fig 13's y-axis, and
+             the column capacity_law consumes.
+    F_appl = the T_B/Masonry joint force (topj) -- the actuator force. In
+             equilibrium |F_appl| ~ |F_base|; the two tracking each other
+             is the quasi-static check. They are NOT summed (that was the
+             load-control quantity; here summing would double-count).
 
-STARTING POINT: model restore of part_I_mason_LS.sav -- built with the
-equivalent-density file, gravity + spring load applied, solved to
-equilibrium in large strain. Record_Disp / cstav / @kn / @ks all return
-with the save; nothing is re-applied.
+  ** LOAD-PATTERN CAVEAT -- state this in any write-up. **
+    Driving T_B applies the lateral load at the TOP (2.68 m). v2.2's body
+    force was mass-proportional (distributed). A top load has a longer
+    lever about the base hinge, so this pushover may PEAK BELOW v2.2's
+    29 kN -- that is the pattern difference, not an error. The check is
+    built in: the run prints its own peak F_base next to the 29.0 kN
+    load-control anchor. If they are close, the pattern effect is second
+    order and the descending branch is trustworthy; if far apart, the
+    capacity is pattern-sensitive and BOTH numbers must be reported. A
+    mass-proportional displacement control (servo on a body-force
+    multiplier) removes this caveat but needs an arc-length solver 3DEC
+    does not provide out of the box -- flagged for Nicolo, not attempted
+    here.
 
-DAMPING WARNING: this driver sets `block mech damp local 0.9` for the
-quasi-static push. Saves written by this run carry that damping --
-NEVER seed a dynamic run from them.
+STARTING POINT / DAMPING / x2 CHECK / UNVERIFIED INTRINSICS: identical to
+v2.2 -- see that file's header. Saves carry damp 0.9; never seed a
+dynamic run from them.
 
-THE x2 CHECK: the baseline printout reports ncstav from the restored
-state. ~0.10 MPa -> precompression correct; ~0.20 MPa -> doubled (in the
-dynamic runs too) -- resolve that before trusting this curve.
-
-UNVERIFIED FISH INTRINSICS (rigid-block side): block.list,
-block.isgroup, block.vol, block.vel.z. Your files verify the contact-
-side family and block.gp.*; these are the standard names by the same
-convention. If 3DEC rejects the @wall_mass_part define, send the error
-text -- it will be a rename, not a logic change.
-
-OUTPUT
-    <OUT_DIR>/pushover_<dir>.csv :
-        phase, a_mps2, d_ctrl_mm, F_base_kN, conv, m_part_kg
-    phase asc = load-controlled ramp; phase desc = participating-mass
-    controller. d_ctrl = mean(Top_Quarter_A/B) - baseline (Ch3/Ch4
-    positions, paper Eq. 1). F_base = cstav - baseline (paper Eq. 2
-    counterpart). RUN BOTH DIRECTIONS (PUSH_DIR = +1 / -1): Table 4
-    reports them separately and the joists make the wall asymmetric.
+OUTPUT  <OUT_DIR>/pushover_disp_<dir>.csv :
+    d_ctrl_mm, F_base_kN, F_appl_kN, KE_frac, maxvel_mms
+    F_base_kN is the capacity-law input (base shear, +ve with drift).
 """
 
 import itasca as it
@@ -66,45 +62,36 @@ import os, csv, math
 it.command("python-reset-state false")
 
 # ============================ CONFIG =================================
-RESTORE_SAV = "part_I_mason_LS"   # .sav from the EQDENS build, solved in LS
+RESTORE_SAV = "part_I_mason_LS"
 OUT_DIR     = "pushover_results"
-PUSH_DIR    = +1        # +1 / -1 : run both, separate executions
-A_START     = 0.5       # m/s2, first ascending step
-DA_ASC      = 0.5       # m/s2 per ascending step (expected peak ~22 m/s2
-                        # if Table 4's 29.5 kN / 1318 kg transfers)
-A_MAX       = 30.0      # m/s2 hard stop for the ascending ramp
-RATIO       = 1e-5      # per-step convergence target
-CYC_BUDGET  = 150000    # cycles allowed per step before it is declared
-                        # unconverged (Nicolo's time cap, in cycles)
-CONV_SWITCH = 0.10      # |a*m - V|/(a*m) above this after a full budget
-                        # -> peak reached -> descending controller starts
-LAMBDA_DESC = 1.30      # Nicolo's amplification on the descending branch
-V_EXIT_KN   = 0.5       # descending exit: base shear essentially gone
-D_STOP_MM   = 80.0      # or the control displacement is far past 30 mm
-DESC_STEPS_MAX = 200    # safety cap on descending iterations
-TOP_JOINT   = "elastic" # "elastic" or "mohr" (Fig 17: no cracking there)
+PUSH_DIR    = +1          # +1 / -1 : run both, separate executions
+VPUSH       = 1.0e-4      # m/s imposed top velocity (quasi-static). If
+                          # KE_frac stays high, halve it and rerun.
+DT_STEP     = 0.5         # s of model time per recorded point
+                          # -> d increment ~ VPUSH*DT_STEP = 0.05 mm/point
+D_STOP_MM   = 40.0        # push comfortably past the 29.5 mm target
+NPTS_MAX    = 1200        # safety cap
+TOP_JOINT   = "elastic"
 TOPJ_Y      = (2.57, 2.59)
-MASONRY_RHO = 1885.0    # kg/m3, from the build (line 24)
+MASONRY_RHO = 1885.0
+KE_FRAC_WARN = 0.05       # KE / |push work| above this -> not quasi-static
+F_ANCHOR_KN = 29.0        # v2.2 load-control peak, for the pattern check
 
 os.makedirs(OUT_DIR, exist_ok=True)
-
-def fget(name):
-    try:
-        return it.fish.get(name)
-    except Exception:
-        return it.fish.get(name.lower())
 
 # ============================ RESTORE ================================
 if not (os.path.isfile(RESTORE_SAV) or os.path.isfile(RESTORE_SAV + ".sav")):
     raise RuntimeError("missing save file: {}(.sav)".format(RESTORE_SAV))
 it.command("model restore '{}'".format(RESTORE_SAV))
 it.command("python-reset-state false")
-it.command("model large-strain on")     # guard; the save is already LS
-
-# quasi-static: heavy local damping, Nicolo's setting. See DAMPING WARNING.
+it.command("model large-strain on")
+it.command("model dynamic active on")
 it.command("block mech damp local 0.9")
 
-# ---- top joint (unchanged from v1) ----------------------------------
+# gravity stays VERTICAL -- the lateral demand is the imposed top motion
+it.command("model gravity 0 -9.81 0")
+
+# ---- top joint (same as v2.2) ---------------------------------------
 if TOP_JOINT == "elastic":
     it.command("block contact jmodel assign elastic "
                "range group-intersection 'T_B' 'Masonry'")
@@ -118,125 +105,117 @@ else:
                "range group-intersection 'T_B' 'Masonry'")
 it.command("block contact group 'TopJ' range pos-y {} {}".format(*TOPJ_Y))
 
-# ---- masonry mass + participating mass (Nicolo's zone loop, on blocks)
+# top-joint force (actuator) -- accumulate into a LOCAL, assign name once
 it.command("""
-fish define wall_mass_part
-    global m_tot = 0.0
-    global m_part = 0.0
-    loop foreach local b block.list
-        if block.isgroup(b, 'Masonry')
-            local mb = {rho} * block.vol(b)
-            m_tot = m_tot + mb
-            if math.sgn(block.vel.z(b)) == math.sgn(push_sign)
-                m_part = m_part + mb
-            endif
+fish define topj_shear
+    local _tjs = 0.0
+    loop foreach local cx block.contact.list
+        if block.contact.isgroup(cx, 'TopJ') then
+            loop foreach local sc block.contact.subcontactlist(cx)
+                _tjs = _tjs + block.subcontact.force.shear.z(sc)
+            endloop
         endif
     endloop
+    topj_shear = _tjs / 1000.0
+end
+""")
+
+# quasi-static monitor: peak masonry block speed + kinetic energy
+it.command("""
+fish define wall_kinematics
+    local _mv = 0.0
+    local _ke = 0.0
+    loop foreach local b block.list
+        if block.isgroup(b, 'Masonry') then
+            local vz = block.vel.z(b)
+            local sp = math.abs(vz)
+            if sp > _mv then
+                _mv = sp
+            endif
+            _ke = _ke + 0.5 * {rho} * block.vol(b) * vz * vz
+        endif
+    endloop
+    global wall_maxvel = _mv
+    global wall_ke = _ke
 end
 """.format(rho=MASONRY_RHO))
-it.command("[global push_sign = {:d}]".format(int(PUSH_DIR)))
 
-# re-settle after the top-joint reassignment
-it.command("model solve ratio {:g} cycles {:d}".format(RATIO, CYC_BUDGET))
+# ---- drive T_B at constant velocity in the push direction -----------
+# build already fixed rotation-y/z on T_B and set vel-x = 0; we override
+# vel-z with the push. vel-y stays free so the beam can settle vertically.
+it.command("block apply velocity-z {:.8f} range group 'T_B'"
+           .format(VPUSH * PUSH_DIR))
 
 # ============================ BASELINE ===============================
 it.command("@Record_Disp")
-it.command("@cstav")
-it.command("@wall_mass_part")
-d0 = 0.5 * (fget("Top_Quarter_A_Disp") + fget("Top_Quarter_B_Disp")) * 1000.0
-F0 = fget("cstav")
-m_tot = fget("m_tot")
-sig_n = fget("ncstav")
-print("settled baseline: d = {:.4f} mm, F = {:.4f} kN, wall mass = {:.1f} kg "
-      "(hand value 1318)".format(d0, F0, m_tot))
+d0 = 0.5 * (it.fish.get("Top_Quarter_A_Disp") +
+            it.fish.get("Top_Quarter_B_Disp")) * 1000.0
+F0b = it.fish.call_function("cstav")       # base+joist reaction, kN
+F0t = it.fish.call_function("topj_shear")  # top-joint force, kN
+sig_n = it.fish.get("ncstav")
+print("baseline: d = {:.4f} mm, cstav = {:.4f} kN, topj = {:.4f} kN".format(
+    d0, F0b, F0t))
 print("avg base normal stress = {:.3f} MPa  "
-      "(~0.10 = precompression correct; ~0.20 = the x2 doubles it)"
-      .format(abs(sig_n) / 1e6))
-if abs(m_tot - 1318.0) / 1318.0 > 0.05:
-    print("** WARNING: FISH wall mass differs from the hand value by >5% -- "
-          "check block.vol/group before trusting the descending controller.")
+      "(~0.10 correct; ~0.20 = x2 doubles it)".format(abs(sig_n) / 1e6))
+print("driving T_B at {:.2e} m/s ({:+d}); vertical gravity only."
+      .format(VPUSH, int(PUSH_DIR)))
 
-# ============================ HELPERS ================================
-def read_state():
-    it.command("@Record_Disp")
-    it.command("@cstav")
-    it.command("@wall_mass_part")
-    d = 0.5 * (fget("Top_Quarter_A_Disp") +
-               fget("Top_Quarter_B_Disp")) * 1000.0 - d0
-    F = fget("cstav") - F0            # kN, signed
-    return d, F, fget("m_part")
-
-def solve_step(a_mps2):
-    it.command("model gravity 0 -9.81 {:.6f}".format(a_mps2))
-    it.command("model solve ratio {:g} cycles {:d}".format(RATIO, CYC_BUDGET))
-
+# ============================ PUSH ===================================
 rows = []
 csv_path = os.path.join(OUT_DIR,
-    "pushover_{}.csv".format("pos" if PUSH_DIR > 0 else "neg"))
-
-# ============================ ASCENDING ==============================
-print("\nascending: dir {:+d}, da {:.2f} m/s2, budget {} cycles/step"
-      .format(int(PUSH_DIR), DA_ASC, CYC_BUDGET))
-a = 0.0
-a_peak = None
-while a < A_MAX:
-    a = A_START if a == 0.0 else a + DA_ASC
-    solve_step(PUSH_DIR * a)
-    d, F, m_part = read_state()
-    # equilibrium quality: commanded inertial load vs measured base shear
-    target_kN = a * m_tot / 1000.0
-    conv = abs(target_kN - abs(F)) / target_kN if target_kN > 0 else 0.0
-    rows.append(("asc", round(PUSH_DIR * a, 4), round(d, 4), round(F, 4),
-                 round(conv, 5), round(m_part, 1)))
-    print("  asc a {:6.2f}  d {:8.3f} mm  F {:8.3f} kN  conv {:.4f}"
-          .format(PUSH_DIR * a, d, F, conv))
-    if conv > CONV_SWITCH:
-        a_peak = a
-        print("  ** equilibrium lost at a = {:.2f} m/s2 (conv {:.3f} > {}) "
-              "-- PEAK. Switching to the descending controller."
-              .format(a, conv, CONV_SWITCH))
-        break
+    "pushover_disp_{}.csv".format("pos" if PUSH_DIR > 0 else "neg"))
+peak_F = 0.0
+print("\ndisplacement-controlled push:")
+for k in range(NPTS_MAX):
+    it.command("model solve dynamic time {:.6f}".format(DT_STEP))
+    it.command("@Record_Disp")
+    it.command("@wall_kinematics")
+    d = 0.5 * (it.fish.get("Top_Quarter_A_Disp") +
+               it.fish.get("Top_Quarter_B_Disp")) * 1000.0 - d0
+    # base shear as a positive resistance with the drift (Fig 13 sign):
+    # cstav is the reaction (opposes motion), so resistance = -reaction,
+    # then folded to the push direction.
+    F_base = -(it.fish.call_function("cstav") - F0b) * PUSH_DIR
+    F_appl = (it.fish.call_function("topj_shear") - F0t) * PUSH_DIR
+    maxv = it.fish.get("wall_maxvel")
+    ke = it.fish.get("wall_ke")
+    push_work = abs(F_appl) * 1e3 * abs(d) / 1000.0 + 1e-9   # J, rough
+    ke_frac = ke / push_work
+    rows.append((round(d, 4), round(F_base, 4), round(F_appl, 4),
+                 round(ke_frac, 5), round(maxv * 1000.0, 4)))
+    if abs(F_base) > abs(peak_F):
+        peak_F = F_base
+    if k % 20 == 0 or abs(d) > D_STOP_MM:
+        print("  d {:8.3f} mm  F_base {:8.3f} kN  F_appl {:8.3f} kN  "
+              "KE_frac {:.4f}  maxv {:.3f} mm/s".format(
+                  d, F_base, F_appl, ke_frac, maxv * 1000.0))
+    if ke_frac > KE_FRAC_WARN and abs(d) > 1.0:
+        print("  ** KE_frac {:.3f} > {} -- NOT quasi-static at d = {:.2f} mm. "
+              "Halve VPUSH and rerun.".format(ke_frac, KE_FRAC_WARN, d))
     if abs(d) > D_STOP_MM:
-        print("  stop: |d| > {} mm on the ascending branch".format(D_STOP_MM))
+        print("  stop: |d| > {} mm".format(D_STOP_MM))
         break
 
-# ============================ DESCENDING =============================
-# Nicolo's participating-mass controller, on rigid blocks. The commanded
-# acceleration follows what the still-resisting mass can carry:
-#     a_next = LAMBDA * (V - a*(m_tot - m_part)) / m_part
-# (all in N and m/s2 internally; cstav is kN, hence the 1e3.)
-if a_peak is not None:
-    a_i = a_peak
-    for k in range(DESC_STEPS_MAX):
-        solve_step(PUSH_DIR * a_i)
-        d, F, m_part = read_state()
-        rows.append(("desc", round(PUSH_DIR * a_i, 4), round(d, 4),
-                     round(F, 4), None, round(m_part, 1)))
-        print("  desc a {:6.2f}  d {:8.3f} mm  F {:8.3f} kN  m_part {:7.1f} kg"
-              .format(PUSH_DIR * a_i, d, F, m_part))
-        if abs(F) < V_EXIT_KN:
-            print("  descending exit: |F| < {} kN".format(V_EXIT_KN))
-            break
-        if abs(d) > D_STOP_MM:
-            print("  descending exit: |d| > {} mm".format(D_STOP_MM))
-            break
-        if m_part < 0.02 * m_tot:
-            print("  descending exit: participating mass ~ 0")
-            break
-        V_N = abs(F) * 1e3
-        a_new = (V_N - a_i * (m_tot - m_part)) / m_part
-        a_i = max(LAMBDA_DESC * a_new, 0.05)
-    it.command("model save '{}'".format(
-        os.path.join(OUT_DIR, "pushover_{}_end".format(
-            "pos" if PUSH_DIR > 0 else "neg")).replace("\\", "/")))
-
-# ============================ OUTPUT =================================
 with open(csv_path, "w", newline="") as f:
     w = csv.writer(f)
-    w.writerow(["phase", "a_mps2", "d_ctrl_mm", "F_base_kN", "conv", "m_part_kg"])
+    w.writerow(["d_ctrl_mm", "F_base_kN", "F_appl_kN", "KE_frac", "maxvel_mms"])
     w.writerows(rows)
+it.command("model save '{}'".format(
+    os.path.join(OUT_DIR, "pushover_disp_{}_end".format(
+        "pos" if PUSH_DIR > 0 else "neg")).replace("\\", "/")))
+
 print("-> {}".format(csv_path))
-print("capacity_law reads this file directly once you rename/derive columns "
-      "d_ctrl_mm and F_base_kN -- they are already named so; no edit needed.")
-print("next: peak F vs Table 4 (+29.5 / -29.5 kN); K_sec(d) = F/d including "
-      "the descending branch; T_sec = 2*pi*sqrt(m_eff/K_sec).")
+print("\nPEAK base shear (disp control) = {:.2f} kN".format(abs(peak_F)))
+print("load-control anchor (v2.2)     = {:.2f} kN".format(F_ANCHOR_KN))
+print("Table 4                        = 29.5 kN")
+dev = abs(abs(peak_F) - F_ANCHOR_KN) / F_ANCHOR_KN * 100.0
+if dev < 15.0:
+    print("-> within {:.0f}% of the load-control peak: load pattern is a "
+          "second-order effect, descending branch trustworthy.".format(dev))
+else:
+    print("-> {:.0f}% below the load-control peak: capacity IS pattern-"
+          "sensitive. Report BOTH; the top-load number is a lower bound."
+          .format(dev))
+print("next: F_base_kN column feeds capacity_law directly (base shear, "
+      "+ve with drift). K_sec(29.5 mm) now comes from the model, not the "
+      "flag-extrapolated envelope.")
