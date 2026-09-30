@@ -35,7 +35,7 @@ block property density [5510*1.034] range group "Joist"
 call 'mat_case.dat'
 ;CONTACT PROPERTIES
 block contact generate-subcontacts
-block contact jmodel assign mason_v9
+block contact jmodel assign mason_v10d
 block contact prop stiffness-normal @kn stiffness-initial @kn  stiffness-shear @ks ...
     tension @tension cohesion @cohesion friction @friction ...
     friction-residual @friction cohesion-residual [0.1*cohesion] ...
@@ -57,7 +57,7 @@ block contact property stiffness-normal [kn*0.1] stiffness-shear 1 ...
 ; sweep can vary it. Small-strain freezes block positions and contact
 ; detection, which removes the toe-area reduction and the geometric (P-Delta)
 ; restoring action that rocking amplification depends on -- see case G00.
-block contact	material-table	default	jmodel mason_v9
+block contact material-table	default	jmodel mason_v10d
 block contact material-table default prop stiffness-normal @kn stiffness-initial @kn ...
     stiffness-shear @ks tension 0 cohesion 0 friction @friction ...
     friction-residual @friction cohesion-residual 0 G_I @Gt G_II @Gs ...
@@ -195,5 +195,5 @@ block property density [rho_tb] range group 'T_B'
 
 model solve ratio 5e-8
 
-model save 'part_I_mason_LS'
+model save 'part_I_mason_LS_strong'
 ;;call "sinus_wave_analysis.dat"

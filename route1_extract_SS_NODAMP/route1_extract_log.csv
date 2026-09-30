@@ -1,0 +1,3 @@
+run,record,scale,window_a_s,window_b_s,dur_s,baseline_zero,vpeak_applied_mps,net_base_disp_mm,peak_edp_mm,resid_edp_mm,edp_source,case,large_strain,damping_cmd,start_save
+23,FR76,1.5,12.461,14.106,1.6401,1,0.34133,0.001,3.163,-0.046,rel_disp_top_exp_mm,SS_NODAMP,off,,stratF_full_LS_MAXWELL_1p5\stratC_run_22.sav
+24,FR76,1.75,12.461,14.106,1.6401,1,0.39822,0.001,3.75,-0.0,rel_disp_top_exp_mm,SS_NODAMP,off,,stratF_full_LS_MAXWELL_1p5\stratC_run_22.sav

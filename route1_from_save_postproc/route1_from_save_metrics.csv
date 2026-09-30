@@ -1,0 +1,6 @@
+pair,series,run_or_scale,peak_disp_mm,peak_shear_kN,max_tilt_deg,resid_tilt_deg,ratio_route1_over_record_disp,PGV_mps,T_pulse_s,N_cycles,v0_mps,PGA_g,stroke_mm
+"from run 24, x2.0",control record,25,41.6264,17.864,1.1594,0.0204,,0.25239,0.495,1.0,0.50477,0.6527,79.53
+"from run 24, x2.0",Route 1,2.0,27.3148,15.4239,0.7606,0.0067,0.656,0.25239,0.495,1.0,0.50477,0.6527,79.53
+"from run 23, x1.75",control record,24,8.2871,12.226,0.231,0.0235,,0.25239,0.495,1.0,0.44168,0.5711,69.59
+"from run 23, x1.75",Route 1,1.75,7.8609,9.4031,0.2189,0.0062,0.949,0.25239,0.495,1.0,0.44168,0.5711,69.59
+experiment,US-1 run 24,24,29.483,29.5,,,,,,,

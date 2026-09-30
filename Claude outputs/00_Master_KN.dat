@@ -1,0 +1,41 @@
+;;; 00_Master_KN.dat -- rebuild the SIN model from geometry with SCALED joint
+;;; stiffness (kn and ks together), for the frequency calibration against
+;;; Graziotti et al. (2016) Table 6 (SIN-01-00 14.27 Hz, SIN-03-00 18.75 Hz).
+;;;
+;;; Runs 01 -> 06 exactly as 00_Master.dat does, except:
+;;;   - 04_Block_contact_properties_KN.dat is called instead of 04_...  (knj, ksj x kn_scale)
+;;;   - the final state is ALSO saved under a case-tagged name, so several
+;;;     scalings can coexist:  SAV/SinleLeaf_onerun_ready_<case_tag>.sav
+;;; 02 / 05 / 06 still write their fixed intermediate saves (contactGrouped,
+;;; precomp_applied, SinleLeaf_onerun_ready), so run the cases ONE AFTER THE
+;;; OTHER, not in parallel 3DEC sessions.
+;;;
+;;; Sweep for SIN-01-00 (homogenised estimate: 0.25 / 0.31 / 0.40 -> 13.2 / 14.3 / 15.6 Hz):
+;;;   set kn_scale and case_tag below, call this file, then run id_frequency_3dec.py
+;;;   with START_SAVE pointing at the tagged save.
+
+model new
+;;; ---------------- CASE ----------------
+[kn_scale = 0.31]                     ; 1.0 = the original model
+[case_tag = 'kn0p31']                 ; used in the save names; keep it filename-safe
+[dyn_file = '06_dynamic_load.dat']    ; or the no-damp variant of 06 you are using
+;;; --------------------------------------
+[io.out(string.build("KN/KS scaling case %1: kn_scale = %2", case_tag, kn_scale))]
+
+;;; 01. Geometry import
+call "01_Geometry.dat"
+;;; 02. Block and contact generation
+call "02_Block_contact_groups.dat"
+;;; 03. Fish file to compute contact forces
+call "03_Fish"
+;;; 04. Properties -- SCALED variant
+call "04_Block_contact_properties_KN.dat"
+[io.out(string.build("  knj = %1 Pa/m, ksj = %2 Pa/m", knj, ksj))]
+;;; 05. Boundary conditions, self weight, overburden (writes SAV/precomp_applied.sav)
+call "05_Boundary_selfweight_overburden.dat"
+model save [string.build("SAV/precomp_applied_%1.sav", case_tag)]
+;;; 06. Dynamic setup (restores SAV/precomp_applied.sav, writes SAV/SinleLeaf_onerun_ready.sav)
+call [dyn_file]
+model save [string.build("SAV/SinleLeaf_onerun_ready_%1.sav", case_tag)]
+[io.out(string.build("ready save written: SAV/SinleLeaf_onerun_ready_%1.sav", case_tag))]
+[io.out(time.kernel/(3600*1000))]     ;; elapsed hours

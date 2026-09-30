@@ -1,0 +1,13 @@
+CASE=LS_MAXWELL_1p5
+CASE_ID=R2_LS_MAXWELL_1p5
+DAMP_MODE=maxwell
+DAMP_RATIO=0.0
+F_CENTRE_Hz=6.084943
+command=block mech damp maxwell 0.0120 1.0006 0.0093 9.0193 0.0104 40.0000
+LARGE_STRAIN=on
+BASE_SAVE=part_I_mason_LS_strong.sav
+damping_twin=route2_full25_LS_NODAMP
+geometry_twin=route2_full25_SS_MAXWELL_1p5
+record_control=stratF_full_LS_MAXWELL_1p5
+record_control_save=Part_I_MASON_v8.sav
+matches_control=False

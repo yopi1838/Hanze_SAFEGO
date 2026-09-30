@@ -22,7 +22,7 @@ fish define properties
     kn       = 2.5e9
     ks       = 2.5e9
     tension  = 0.344e6
-    cohesion = 0.750e6
+    cohesion = 0.75e6
     friction = 36
     fc_comp  = 20e6
     Gt = 0.025*((2*tension*1e-6)^0.7)*1000
@@ -38,4 +38,4 @@ end
 ; ---------------------------------------------------------------------
 ; THE ONE CHANGE. Costs solve time and requires contact re-detection.
 ; ---------------------------------------------------------------------
-model large-strain off
+model large-strain on

@@ -1,0 +1,7 @@
+run,scale,series,peak_disp_mm,resid_disp_mm,peak_shear_kN,max_tilt_deg,resid_tilt_deg,edp_src,shear_src,ratio_route1_over_record_disp,ratio_route1_over_US1_disp,vpeak_applied_mps,net_base_disp_mm,window_s,case
+23,1.5,record,5.8855,1.0112,9.3414,0.1651,0.0279,rel_disp_top_exp_mm,cstav (base+joist only),,,,,,SS_NODAMP
+23,1.5,Route 1 extraction,3.1631,-0.0456,8.88,0.088,-0.0013,rel_disp_top_exp_mm,cstav (base+joist only),0.537,0.24,0.34133,0.001,1.6400950000000005,SS_NODAMP
+23,1.5,US-1,13.154,,27.041,,,,,,,,,,
+24,1.75,record,8.2871,0.8432,12.226,0.231,0.0235,rel_disp_top_exp_mm,cstav (base+joist only),,,,,,SS_NODAMP
+24,1.75,Route 1 extraction,3.7499,-0.0002,9.9589,0.1045,-0.0,rel_disp_top_exp_mm,cstav (base+joist only),0.452,0.127,0.39822,0.001,1.6400950000000005,SS_NODAMP
+24,1.75,US-1,29.483,,29.5,,,,,,,,,,

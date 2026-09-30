@@ -1,0 +1,19 @@
+{
+ "case": "SS_NODAMP",
+ "large_strain": "off",
+ "damping": "",
+ "base_save": "Part_I_MASON_v8_SmallStrain.sav",
+ "start_save": "stratF_full_LS_MAXWELL_1p5\\stratC_run_22.sav",
+ "start_how": "auto",
+ "source": "vel_FR.txt",
+ "window": [
+  12.461,
+  14.106
+ ],
+ "dur_s": 1.6400950000000005,
+ "baseline_zero": true,
+ "net_raw_mm": -27.11636692943533,
+ "net_final_mm": 0.0006665254098647821,
+ "vpeak_mps": 0.22755239958109172,
+ "control": "stratF_full_SS_NODAMP"
+}

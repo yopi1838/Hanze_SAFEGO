@@ -1,0 +1,75 @@
+series,run,peak_chord_tilt_deg,resid_chord_tilt_deg
+"3DEC model, record (Strategy F)",1,0.0,0.0
+"3DEC model, record (Strategy F)",2,0.0,-0.006
+"3DEC model, record (Strategy F)",3,0.0,-0.00218
+"3DEC model, record (Strategy F)",4,0.0,-0.00893
+"3DEC model, record (Strategy F)",5,0.0,-0.01285
+"3DEC model, record (Strategy F)",6,0.0,-0.03039
+"3DEC model, record (Strategy F)",7,0.07879,-0.00106
+"3DEC model, record (Strategy F)",8,0.06309,-0.00151
+"3DEC model, record (Strategy F)",9,0.07746,-0.00016
+"3DEC model, record (Strategy F)",10,0.06298,-0.00152
+"3DEC model, record (Strategy F)",11,0.07269,-0.00188
+"3DEC model, record (Strategy F)",12,0.06628,-0.00175
+"3DEC model, record (Strategy F)",13,0.06373,-0.00077
+"3DEC model, record (Strategy F)",14,0.07598,-0.00145
+"3DEC model, record (Strategy F)",15,0.08102,-0.00176
+"3DEC model, record (Strategy F)",16,0.09922,-0.00228
+"3DEC model, record (Strategy F)",17,0.11457,-0.00356
+"3DEC model, record (Strategy F)",18,0.11056,-0.0026
+"3DEC model, record (Strategy F)",19,0.25837,-0.00045
+"3DEC model, record (Strategy F)",20,0.38188,0.00871
+"3DEC model, record (Strategy F)",21,0.47187,0.01476
+"3DEC model, record (Strategy F)",22,0.10335,0.02038
+"3DEC model, record (Strategy F)",23,0.16369,0.03771
+"3DEC model, record (Strategy F)",24,0.23049,0.06009
+"3DEC model, record (Strategy F)",25,1.15764,0.0729
+"3DEC model, Route 2",1,0.022,0.00246
+"3DEC model, Route 2",2,0.06877,-0.00864
+"3DEC model, Route 2",3,0.04532,0.00091
+"3DEC model, Route 2",4,0.07458,-0.00565
+"3DEC model, Route 2",5,0.06998,0.008
+"3DEC model, Route 2",6,0.07825,-0.00478
+"3DEC model, Route 2",7,0.06259,-0.00613
+"3DEC model, Route 2",8,0.06072,0.0059
+"3DEC model, Route 2",9,0.12129,0.00577
+"3DEC model, Route 2",10,0.10466,-0.00099
+"3DEC model, Route 2",11,0.09564,-0.00166
+"3DEC model, Route 2",12,0.10544,-0.00467
+"3DEC model, Route 2",13,0.11266,-0.00031
+"3DEC model, Route 2",14,0.12018,-0.0104
+"3DEC model, Route 2",15,0.12178,-0.0076
+"3DEC model, Route 2",16,0.13761,-0.01412
+"3DEC model, Route 2",17,0.14827,-0.00847
+"3DEC model, Route 2",18,0.17575,-0.00649
+"3DEC model, Route 2",19,0.21673,-0.00675
+"3DEC model, Route 2",20,0.25334,-0.00529
+"3DEC model, Route 2",21,0.59909,-0.00152
+"3DEC model, Route 2",22,0.22556,0.00057
+"3DEC model, Route 2",23,0.7945,0.01489
+"3DEC model, Route 2",24,0.89257,0.13592
+"3DEC model, Route 2",25,1.07406,-0.01189
+"US-1 (Test 9), potentiometers",1,0.00966,-0.00459
+"US-1 (Test 9), potentiometers",2,0.01007,-0.00718
+"US-1 (Test 9), potentiometers",3,0.00288,-0.00718
+"US-1 (Test 9), potentiometers",4,0.01407,-0.00631
+"US-1 (Test 9), potentiometers",5,0.0217,-0.00711
+"US-1 (Test 9), potentiometers",6,0.01013,-0.00864
+"US-1 (Test 9), potentiometers",7,0.02928,-0.00734
+"US-1 (Test 9), potentiometers",8,0.01919,-0.01085
+"US-1 (Test 9), potentiometers",9,0.03665,-0.00741
+"US-1 (Test 9), potentiometers",10,0.051,-0.01077
+"US-1 (Test 9), potentiometers",11,0.02291,-0.01093
+"US-1 (Test 9), potentiometers",12,0.05607,-0.01139
+"US-1 (Test 9), potentiometers",13,0.06434,-0.01191
+"US-1 (Test 9), potentiometers",14,0.07802,-0.01188
+"US-1 (Test 9), potentiometers",15,0.0913,-0.01179
+"US-1 (Test 9), potentiometers",16,0.11583,-0.01262
+"US-1 (Test 9), potentiometers",17,0.15377,-0.01382
+"US-1 (Test 9), potentiometers",18,0.22112,-0.02068
+"US-1 (Test 9), potentiometers",19,0.28073,-0.02142
+"US-1 (Test 9), potentiometers",20,0.35497,-0.02762
+"US-1 (Test 9), potentiometers",21,0.42693,-0.02967
+"US-1 (Test 9), potentiometers",22,0.09398,-0.02103
+"US-1 (Test 9), potentiometers",23,0.33839,0.00852
+"US-1 (Test 9), potentiometers",24,0.75416,0.04035

@@ -1,0 +1,9 @@
+item,value
+f_zc s=1.0,20.095
+f_fft s=1.0,20.034
+f_zc s=0.31,13.452
+f_fft s=0.31,13.393
+C_blocks,0.4467
+C_joints,0.5533
+kn_scale for 14.27 Hz,0.3602
+kn_scale for 18.75 Hz,0.7883

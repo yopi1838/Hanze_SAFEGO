@@ -1,0 +1,96 @@
+; instrument_baseshear_exp.dat  --  experiment-equivalent base shear for the US-1 model
+; ------------------------------------------------------------------------
+; Call AFTER instrument_history_new.dat (and instrument_tilt_v2.dat if used),
+; inside setup_dynamic() and after every `history delete`, exactly like those.
+;
+; WHY
+;   The model's 'cstav' channel is the base+joist SUPPORT REACTION. The test's
+;   base shear (Moshfeghi et al. 2024, Eq. 2) is  F = sum_j m_j a_j  with the
+;   ABSOLUTE acceleration at three wall accelerometers and their tributary
+;   masses, times the processing factor mass_scale = 2.317348.  The two are
+;   not the same quantity, so loops built from cstav cannot be compared to the
+;   test's.  This file records what is needed to build the test's quantity
+;   from the model with the same formula.
+;
+; SENSORS (SAFEGo instrumentation figure / Test9_Info.xlsx), wall centreline:
+;   Acc 15  bottom quarter  z = 0.60 m  (info sheet says 0.66; 0.60 reproduces
+;                                        the tributary masses exactly -> used)
+;   Acc 16  mid             z = 1.26 m
+;   Acc 17  top quarter     z = 2.06 m
+;   Model axes: x along the wall (centre 0.646), y = height, z = out-of-plane.
+;
+; TRIBUTARY MASSES (unscaled; wall 1.292 x 2.58 x 0.21 m at 1619 kg/m3 = 1133.3 kg,
+; split at the mid-points between sensors):
+;   m15 = 408.52 kg   m16 = 320.66 kg   m17 = 404.13 kg      (x 2.317348 in the test files)
+;
+; WHAT IS RECORDED
+;   vz_acc15 / vz_acc16 / vz_acc17 : absolute OOP velocity at the sensor points
+;   az_acc15 / az_acc16 / az_acc17 : finite-difference acceleration between history samples
+;   base_shear_exp_kN              : 9.81-free  sum(m_j a_j) * MASS_SCALE / 1000
+; Differentiating in FISH at the history interval is noisy; the postprocess
+; (baseshear_exp_from_model.py) rebuilds F from the velocities with a 50 Hz
+; low-pass, which is the number to use. base_shear_exp_kN here is a live check.
+
+[acc_y_bot = 0.60]
+[acc_y_mid = 1.26]
+[acc_y_top = 2.06]
+[m_acc15 = 408.52]
+[m_acc16 = 320.66]
+[m_acc17 = 404.13]
+[mass_scale_exp = 2.317348]     ; the test's factor, applied to BOTH sides so loops are like-for-like
+[x_centre_bs = 0.646]
+[z_face_bs   = 0.21]
+
+[t_prev_bs = -1.0]
+[vz15_prev = 0.0]
+[vz16_prev = 0.0]
+[vz17_prev = 0.0]
+[vz_acc15 = 0.0]
+[vz_acc16 = 0.0]
+[vz_acc17 = 0.0]
+[az_acc15 = 0.0]
+[az_acc16 = 0.0]
+[az_acc17 = 0.0]
+[base_shear_exp_kN = 0.0]
+
+fish define base_shear_exp_update
+    local gp15 = block.gp.near(x_centre_bs, acc_y_bot, z_face_bs)
+    local gp16 = block.gp.near(x_centre_bs, acc_y_mid, z_face_bs)
+    local gp17 = block.gp.near(x_centre_bs, acc_y_top, z_face_bs)
+    vz_acc15 = block.gp.vel.z(gp15)
+    vz_acc16 = block.gp.vel.z(gp16)
+    vz_acc17 = block.gp.vel.z(gp17)
+    local tnow = mech.time.total
+    if t_prev_bs >= 0.0 then
+        local dtb = tnow - t_prev_bs
+        if dtb > 0.0 then
+            az_acc15 = (vz_acc15 - vz15_prev) / dtb
+            az_acc16 = (vz_acc16 - vz16_prev) / dtb
+            az_acc17 = (vz_acc17 - vz17_prev) / dtb
+        endif
+    endif
+    t_prev_bs = tnow
+    vz15_prev = vz_acc15
+    vz16_prev = vz_acc16
+    vz17_prev = vz_acc17
+    base_shear_exp_kN = (m_acc15 * az_acc15 + m_acc16 * az_acc16 + m_acc17 * az_acc17) * mass_scale_exp / 1000.0
+    base_shear_exp_update = base_shear_exp_kN
+end
+
+; Register the FUNCTION (not the variables) so it is evaluated every history
+; interval -- same rule as instrument_tilt_v2.dat.
+fish history name 'base_shear_exp_kN' base_shear_exp_update
+fish history name 'vz_acc15' vz_acc15
+fish history name 'vz_acc16' vz_acc16
+fish history name 'vz_acc17' vz_acc17
+fish history name 'az_acc15' az_acc15
+fish history name 'az_acc16' az_acc16
+fish history name 'az_acc17' az_acc17
+
+; EXPORT (add to instrument_history_export_v2.dat, or call after each run; the
+; time history id 'vs' must match the one that file uses -- it is 12 in the
+; EUCENTRE files; check `history list` in this model):
+;   history export 'vz_acc15' vs <time_hist> file '<OUT_DIR>/<label>_vz_acc15.csv' truncate
+;   history export 'vz_acc16' vs <time_hist> file '<OUT_DIR>/<label>_vz_acc16.csv' truncate
+;   history export 'vz_acc17' vs <time_hist> file '<OUT_DIR>/<label>_vz_acc17.csv' truncate
+;   history export 'base_shear_exp_kN' vs <time_hist> file '<OUT_DIR>/<label>_base_shear_exp_kN.csv' truncate

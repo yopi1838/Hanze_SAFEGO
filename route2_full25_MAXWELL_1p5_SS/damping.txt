@@ -1,0 +1,9 @@
+CASE_ID=R2_SS_MAXWELL_1p5
+DAMP_MODE=maxwell
+DAMP_RATIO=0.0
+F_CENTRE_Hz=6.084943
+command=block mech damp maxwell 0.0120 1.0006 0.0093 9.0193 0.0104 40.0000
+LARGE_STRAIN=off
+BASE_SAVE=Part_I_MASON_v8_SmallStrain.sav
+matches_control=True
+control=stratF_full_SS_MAXWELL_1p5

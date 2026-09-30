@@ -1,0 +1,5 @@
+curve,force,peak_F_kN,d_at_peak_mm,d_max_mm,K1_kNmm,T1_s,F_at_29.5mm_kN,Ksec_29.5mm_kNmm,Teff_29.5mm_s
+force control (tilted gravity),F_base (base+joists only),0.4758,0.1427,0.1427,3.3343,0.1391,nan,nan,nan
+displacement control (top beam driven),F_base (base+joists only),4.5383,34.9169,40.0348,0.2496,0.5085,4.0373,0.1369,0.6868
+"test, positive branch",Fig 13 (total),30.2582,7.416,25.132,6.2436,0.1017,nan,nan,nan
+"test, negative branch",Fig 13 (total),30.0213,14.832,30.076,8.4243,0.0875,14.6229,0.4957,0.3609

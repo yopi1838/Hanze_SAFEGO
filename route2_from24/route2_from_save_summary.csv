@@ -1,0 +1,2 @@
+from_save,from_run,scale,T_A_s,SdA_mm,VampA_mps,PGA_A_g,T_B_s,SdB_mm,VampB_mps,PGA_B_g,N_A,N_B,gap_s,m_eff,peak_edp_mm,edp_source,control_ref_run,control_ref_mm
+stratF_full_results_US1/stratC_run_24.sav,24,2.0,0.095,2.865,0.09366,0.62,0.36,50.877,0.42068,0.7475,1.0,1.0,0.5,1635.0,85.271,rel_disp_top_exp_mm,25,41.626

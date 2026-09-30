@@ -1,0 +1,6 @@
+series,peak_u_mm,F_at_peak_u_kN,peak_F_kN,u_at_peak_F_mm,shear
+record run 25,41.626,-1.508,17.864,10.963,cstav (base+joists only)
+"Route 1 (PGV sine, N=1)",27.315,1.412,15.424,9.367,cstav (base+joists only)
+"Route 2 (two-stage, N_B=1)",85.271,7.238,21.857,0.414,cstav (base+joists only)
+"Route 2 (two-stage, N_B=3)",5.434,-4.613,11.503,-3.211,cstav (base+joists only)
+US-1 run 24 (test),29.483,2.995,29.5,-11.383,sum(m a) x-1

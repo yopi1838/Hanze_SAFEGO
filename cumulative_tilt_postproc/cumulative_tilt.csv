@@ -1,0 +1,325 @@
+series,channel,run,resid_deg,peak_deg
+record on the model (Strategy F),tilt_bot_seg,1,-5e-05,0.01406
+record on the model (Strategy F),tilt_bot_seg,2,-8e-05,0.02199
+record on the model (Strategy F),tilt_bot_seg,3,5e-05,0.02323
+record on the model (Strategy F),tilt_bot_seg,4,-0.00025,0.04079
+record on the model (Strategy F),tilt_bot_seg,5,-5e-05,0.05895
+record on the model (Strategy F),tilt_bot_seg,6,-0.00187,0.09585
+record on the model (Strategy F),tilt_bot_seg,7,-0.00273,0.111
+record on the model (Strategy F),tilt_bot_seg,8,0.0004,0.09709
+record on the model (Strategy F),tilt_bot_seg,9,0.00019,0.11961
+record on the model (Strategy F),tilt_bot_seg,10,-0.00163,0.10749
+record on the model (Strategy F),tilt_bot_seg,11,0.00035,0.11125
+record on the model (Strategy F),tilt_bot_seg,12,4e-05,0.08607
+record on the model (Strategy F),tilt_bot_seg,13,-0.00027,0.10768
+record on the model (Strategy F),tilt_bot_seg,14,-0.00064,0.10992
+record on the model (Strategy F),tilt_bot_seg,15,0.00171,0.13347
+record on the model (Strategy F),tilt_bot_seg,16,0.00164,0.17017
+record on the model (Strategy F),tilt_bot_seg,17,0.00181,0.1832
+record on the model (Strategy F),tilt_bot_seg,18,0.00566,0.19418
+record on the model (Strategy F),tilt_bot_seg,19,0.00397,0.24541
+record on the model (Strategy F),tilt_bot_seg,20,0.00886,0.31609
+record on the model (Strategy F),tilt_bot_seg,21,0.00875,0.4472
+record on the model (Strategy F),tilt_bot_seg,22,0.01149,0.10967
+record on the model (Strategy F),tilt_bot_seg,23,0.02345,0.18048
+record on the model (Strategy F),tilt_bot_seg,24,0.03957,0.22301
+record on the model (Strategy F),tilt_bot_seg,25,0.03286,1.06478
+record on the model (Strategy F),tilt_low_seg,1,-8e-05,0.02441
+record on the model (Strategy F),tilt_low_seg,2,-0.00016,0.0402
+record on the model (Strategy F),tilt_low_seg,3,0.00013,0.0439
+record on the model (Strategy F),tilt_low_seg,4,-0.00045,0.07442
+record on the model (Strategy F),tilt_low_seg,5,-1e-05,0.11127
+record on the model (Strategy F),tilt_low_seg,6,-0.00384,0.1862
+record on the model (Strategy F),tilt_low_seg,7,-0.00291,0.18428
+record on the model (Strategy F),tilt_low_seg,8,-0.00491,0.16387
+record on the model (Strategy F),tilt_low_seg,9,-0.00131,0.1747
+record on the model (Strategy F),tilt_low_seg,10,-0.00446,0.16505
+record on the model (Strategy F),tilt_low_seg,11,-0.00562,0.14879
+record on the model (Strategy F),tilt_low_seg,12,-0.0053,0.14993
+record on the model (Strategy F),tilt_low_seg,13,-0.00269,0.15487
+record on the model (Strategy F),tilt_low_seg,14,-0.00438,0.18773
+record on the model (Strategy F),tilt_low_seg,15,-0.00587,0.21022
+record on the model (Strategy F),tilt_low_seg,16,-0.00727,0.20163
+record on the model (Strategy F),tilt_low_seg,17,-0.01072,0.26497
+record on the model (Strategy F),tilt_low_seg,18,-0.00937,0.22705
+record on the model (Strategy F),tilt_low_seg,19,-0.0087,0.43736
+record on the model (Strategy F),tilt_low_seg,20,0.00354,0.57386
+record on the model (Strategy F),tilt_low_seg,21,0.01026,0.63462
+record on the model (Strategy F),tilt_low_seg,22,0.01761,0.19875
+record on the model (Strategy F),tilt_low_seg,23,0.03766,0.23897
+record on the model (Strategy F),tilt_low_seg,24,0.06334,0.34016
+record on the model (Strategy F),tilt_low_seg,25,0.0737,1.28071
+record on the model (Strategy F),tilt_up_seg,1,1e-05,0.00272
+record on the model (Strategy F),tilt_up_seg,2,1e-05,0.00357
+record on the model (Strategy F),tilt_up_seg,3,1e-05,0.0075
+record on the model (Strategy F),tilt_up_seg,4,7e-05,0.00991
+record on the model (Strategy F),tilt_up_seg,5,6e-05,0.01059
+record on the model (Strategy F),tilt_up_seg,6,0.00094,0.04408
+record on the model (Strategy F),tilt_up_seg,7,0.00174,0.05044
+record on the model (Strategy F),tilt_up_seg,8,-0.00048,0.07815
+record on the model (Strategy F),tilt_up_seg,9,0.00053,0.06372
+record on the model (Strategy F),tilt_up_seg,10,0.00085,0.07293
+record on the model (Strategy F),tilt_up_seg,11,-0.00082,0.06556
+record on the model (Strategy F),tilt_up_seg,12,-0.00047,0.03065
+record on the model (Strategy F),tilt_up_seg,13,0.00036,0.08561
+record on the model (Strategy F),tilt_up_seg,14,0.00021,0.0917
+record on the model (Strategy F),tilt_up_seg,15,-0.0014,0.10556
+record on the model (Strategy F),tilt_up_seg,16,-0.00162,0.09116
+record on the model (Strategy F),tilt_up_seg,17,-0.00263,0.11368
+record on the model (Strategy F),tilt_up_seg,18,-0.00424,0.10349
+record on the model (Strategy F),tilt_up_seg,19,0.00303,0.28532
+record on the model (Strategy F),tilt_up_seg,20,0.01322,0.37429
+record on the model (Strategy F),tilt_up_seg,21,0.02371,0.38631
+record on the model (Strategy F),tilt_up_seg,22,0.0308,0.06061
+record on the model (Strategy F),tilt_up_seg,23,0.05049,0.18362
+record on the model (Strategy F),tilt_up_seg,24,0.07595,0.21751
+record on the model (Strategy F),tilt_up_seg,25,0.10793,1.33957
+record on the model (Strategy F),tilt_beam_seg,1,0.00014,0.0396
+record on the model (Strategy F),tilt_beam_seg,2,0.00025,0.065
+record on the model (Strategy F),tilt_beam_seg,3,-0.00022,0.07326
+record on the model (Strategy F),tilt_beam_seg,4,0.00066,0.12037
+record on the model (Strategy F),tilt_beam_seg,5,-9e-05,0.17899
+record on the model (Strategy F),tilt_beam_seg,6,0.00459,0.29146
+record on the model (Strategy F),tilt_beam_seg,7,0.00345,0.29211
+record on the model (Strategy F),tilt_beam_seg,8,0.0049,0.22792
+record on the model (Strategy F),tilt_beam_seg,9,-0.00011,0.28843
+record on the model (Strategy F),tilt_beam_seg,10,0.00478,0.23522
+record on the model (Strategy F),tilt_beam_seg,11,0.00593,0.27271
+record on the model (Strategy F),tilt_beam_seg,12,0.00542,0.24337
+record on the model (Strategy F),tilt_beam_seg,13,0.0018,0.23581
+record on the model (Strategy F),tilt_beam_seg,14,0.00415,0.28326
+record on the model (Strategy F),tilt_beam_seg,15,0.00518,0.30045
+record on the model (Strategy F),tilt_beam_seg,16,0.00688,0.36824
+record on the model (Strategy F),tilt_beam_seg,17,0.01155,0.42467
+record on the model (Strategy F),tilt_beam_seg,18,0.00783,0.41356
+record on the model (Strategy F),tilt_beam_seg,19,0.00058,0.96984
+record on the model (Strategy F),tilt_beam_seg,20,-0.03092,1.42781
+record on the model (Strategy F),tilt_beam_seg,21,-0.05338,1.76755
+record on the model (Strategy F),tilt_beam_seg,22,-0.07224,0.38553
+record on the model (Strategy F),tilt_beam_seg,23,-0.12863,0.62261
+record on the model (Strategy F),tilt_beam_seg,24,-0.20216,0.87031
+record on the model (Strategy F),tilt_beam_seg,25,-0.25005,4.32331
+record on the model (Strategy F),tilt_full_wall,1,-4e-05,0.0106
+record on the model (Strategy F),tilt_full_wall,2,-7e-05,0.01741
+record on the model (Strategy F),tilt_full_wall,3,6e-05,0.01963
+record on the model (Strategy F),tilt_full_wall,4,-0.00018,0.03226
+record on the model (Strategy F),tilt_full_wall,5,1e-05,0.04796
+record on the model (Strategy F),tilt_full_wall,6,-0.00135,0.07845
+record on the model (Strategy F),tilt_full_wall,7,-0.00105,0.0784
+record on the model (Strategy F),tilt_full_wall,8,-0.00149,0.06135
+record on the model (Strategy F),tilt_full_wall,9,-0.00012,0.07735
+record on the model (Strategy F),tilt_full_wall,10,-0.00149,0.06329
+record on the model (Strategy F),tilt_full_wall,11,-0.00184,0.07313
+record on the model (Strategy F),tilt_full_wall,12,-0.00172,0.06533
+record on the model (Strategy F),tilt_full_wall,13,-0.00073,0.06352
+record on the model (Strategy F),tilt_full_wall,14,-0.0014,0.07653
+record on the model (Strategy F),tilt_full_wall,15,-0.0017,0.08068
+record on the model (Strategy F),tilt_full_wall,16,-0.00222,0.09877
+record on the model (Strategy F),tilt_full_wall,17,-0.00356,0.1146
+record on the model (Strategy F),tilt_full_wall,18,-0.00256,0.11198
+record on the model (Strategy F),tilt_full_wall,19,-8e-05,0.25913
+record on the model (Strategy F),tilt_full_wall,20,0.009,0.38172
+record on the model (Strategy F),tilt_full_wall,21,0.015,0.47224
+record on the model (Strategy F),tilt_full_wall,22,0.02077,0.10369
+record on the model (Strategy F),tilt_full_wall,23,0.03809,0.16508
+record on the model (Strategy F),tilt_full_wall,24,0.06062,0.23103
+record on the model (Strategy F),tilt_full_wall,25,0.07391,1.1594
+record on the model (Strategy F),proxy_2.06m,1,0.0,0.0
+record on the model (Strategy F),proxy_2.06m,2,-0.006,0.0
+record on the model (Strategy F),proxy_2.06m,3,-0.00218,0.0
+record on the model (Strategy F),proxy_2.06m,4,-0.00893,0.0
+record on the model (Strategy F),proxy_2.06m,5,-0.01285,0.0
+record on the model (Strategy F),proxy_2.06m,6,-0.03039,0.0
+record on the model (Strategy F),proxy_2.06m,7,-0.00106,0.07879
+record on the model (Strategy F),proxy_2.06m,8,-0.00151,0.06308
+record on the model (Strategy F),proxy_2.06m,9,-0.00016,0.07746
+record on the model (Strategy F),proxy_2.06m,10,-0.00152,0.06298
+record on the model (Strategy F),proxy_2.06m,11,-0.00188,0.07269
+record on the model (Strategy F),proxy_2.06m,12,-0.00175,0.06628
+record on the model (Strategy F),proxy_2.06m,13,-0.00077,0.06373
+record on the model (Strategy F),proxy_2.06m,14,-0.00145,0.07598
+record on the model (Strategy F),proxy_2.06m,15,-0.00176,0.08102
+record on the model (Strategy F),proxy_2.06m,16,-0.00228,0.09922
+record on the model (Strategy F),proxy_2.06m,17,-0.00356,0.11457
+record on the model (Strategy F),proxy_2.06m,18,-0.0026,0.11056
+record on the model (Strategy F),proxy_2.06m,19,-0.00045,0.25837
+record on the model (Strategy F),proxy_2.06m,20,0.00871,0.38188
+record on the model (Strategy F),proxy_2.06m,21,0.01476,0.47187
+record on the model (Strategy F),proxy_2.06m,22,0.02038,0.10335
+record on the model (Strategy F),proxy_2.06m,23,0.03771,0.16369
+record on the model (Strategy F),proxy_2.06m,24,0.06009,0.23049
+record on the model (Strategy F),proxy_2.06m,25,0.0729,1.15762
+Route 2 (full sequence),tilt_bot_seg,1,0.00306,0.02683
+Route 2 (full sequence),tilt_bot_seg,2,-0.01248,0.08506
+Route 2 (full sequence),tilt_bot_seg,3,0.00022,0.05715
+Route 2 (full sequence),tilt_bot_seg,4,-0.00754,0.10523
+Route 2 (full sequence),tilt_bot_seg,5,0.0074,0.1087
+Route 2 (full sequence),tilt_bot_seg,6,-0.01383,0.10772
+Route 2 (full sequence),tilt_bot_seg,7,-0.00948,0.10559
+Route 2 (full sequence),tilt_bot_seg,8,0.00526,0.10087
+Route 2 (full sequence),tilt_bot_seg,9,0.00421,0.18508
+Route 2 (full sequence),tilt_bot_seg,10,-0.00566,0.18629
+Route 2 (full sequence),tilt_bot_seg,11,-0.00395,0.13492
+Route 2 (full sequence),tilt_bot_seg,12,-0.00804,0.14136
+Route 2 (full sequence),tilt_bot_seg,13,-0.00266,0.16766
+Route 2 (full sequence),tilt_bot_seg,14,-0.00846,0.19317
+Route 2 (full sequence),tilt_bot_seg,15,-0.00511,0.19667
+Route 2 (full sequence),tilt_bot_seg,16,-0.01132,0.22752
+Route 2 (full sequence),tilt_bot_seg,17,0.00633,0.26403
+Route 2 (full sequence),tilt_bot_seg,18,0.01467,0.34805
+Route 2 (full sequence),tilt_bot_seg,19,0.00749,0.48594
+Route 2 (full sequence),tilt_bot_seg,20,0.00939,0.56585
+Route 2 (full sequence),tilt_bot_seg,21,6e-05,0.80932
+Route 2 (full sequence),tilt_bot_seg,22,0.00324,0.3767
+Route 2 (full sequence),tilt_bot_seg,23,0.00954,1.05041
+Route 2 (full sequence),tilt_bot_seg,24,0.05619,1.25976
+Route 2 (full sequence),tilt_bot_seg,25,-1.05701,1.8783
+Route 2 (full sequence),tilt_low_seg,1,0.00582,0.05134
+Route 2 (full sequence),tilt_low_seg,2,-0.01999,0.15672
+Route 2 (full sequence),tilt_low_seg,3,0.00232,0.10592
+Route 2 (full sequence),tilt_low_seg,4,-0.01231,0.17775
+Route 2 (full sequence),tilt_low_seg,5,0.01987,0.17228
+Route 2 (full sequence),tilt_low_seg,6,-0.01025,0.19824
+Route 2 (full sequence),tilt_low_seg,7,-0.01494,0.1837
+Route 2 (full sequence),tilt_low_seg,8,0.0143,0.15711
+Route 2 (full sequence),tilt_low_seg,9,0.01427,0.2976
+Route 2 (full sequence),tilt_low_seg,10,-0.00192,0.23354
+Route 2 (full sequence),tilt_low_seg,11,-0.00563,0.23182
+Route 2 (full sequence),tilt_low_seg,12,-0.01125,0.26069
+Route 2 (full sequence),tilt_low_seg,13,-0.00105,0.26989
+Route 2 (full sequence),tilt_low_seg,14,-0.026,0.2785
+Route 2 (full sequence),tilt_low_seg,15,-0.01904,0.2533
+Route 2 (full sequence),tilt_low_seg,16,-0.03388,0.30201
+Route 2 (full sequence),tilt_low_seg,17,-0.02304,0.35104
+Route 2 (full sequence),tilt_low_seg,18,-0.02125,0.43344
+Route 2 (full sequence),tilt_low_seg,19,-0.01979,0.44773
+Route 2 (full sequence),tilt_low_seg,20,-0.01508,0.48748
+Route 2 (full sequence),tilt_low_seg,21,-0.01058,0.80649
+Route 2 (full sequence),tilt_low_seg,22,-0.00739,0.41067
+Route 2 (full sequence),tilt_low_seg,23,0.00754,1.10429
+Route 2 (full sequence),tilt_low_seg,24,0.13328,1.16518
+Route 2 (full sequence),tilt_low_seg,25,0.37376,1.30903
+Route 2 (full sequence),tilt_up_seg,1,-0.00036,0.00766
+Route 2 (full sequence),tilt_up_seg,2,0.00325,0.02458
+Route 2 (full sequence),tilt_up_seg,3,3e-05,0.02821
+Route 2 (full sequence),tilt_up_seg,4,0.00147,0.04035
+Route 2 (full sequence),tilt_up_seg,5,-0.0008,0.04805
+Route 2 (full sequence),tilt_up_seg,6,0.00726,0.08555
+Route 2 (full sequence),tilt_up_seg,7,0.00378,0.07252
+Route 2 (full sequence),tilt_up_seg,8,0.00062,0.08442
+Route 2 (full sequence),tilt_up_seg,9,0.00072,0.11939
+Route 2 (full sequence),tilt_up_seg,10,0.00377,0.09782
+Route 2 (full sequence),tilt_up_seg,11,0.00329,0.11801
+Route 2 (full sequence),tilt_up_seg,12,0.00338,0.15679
+Route 2 (full sequence),tilt_up_seg,13,0.00236,0.13836
+Route 2 (full sequence),tilt_up_seg,14,-0.00036,0.13914
+Route 2 (full sequence),tilt_up_seg,15,-0.00136,0.12825
+Route 2 (full sequence),tilt_up_seg,16,-0.00221,0.15486
+Route 2 (full sequence),tilt_up_seg,17,-0.01019,0.13211
+Route 2 (full sequence),tilt_up_seg,18,-0.01299,0.14871
+Route 2 (full sequence),tilt_up_seg,19,-0.00881,0.24909
+Route 2 (full sequence),tilt_up_seg,20,-0.00985,0.25594
+Route 2 (full sequence),tilt_up_seg,21,0.00616,0.44749
+Route 2 (full sequence),tilt_up_seg,22,0.00635,0.11889
+Route 2 (full sequence),tilt_up_seg,23,0.02596,0.6294
+Route 2 (full sequence),tilt_up_seg,24,0.2064,1.07082
+Route 2 (full sequence),tilt_up_seg,25,0.5635,1.28352
+Route 2 (full sequence),tilt_beam_seg,1,-0.00945,0.08155
+Route 2 (full sequence),tilt_beam_seg,2,0.03199,0.25421
+Route 2 (full sequence),tilt_beam_seg,3,-0.00275,0.1643
+Route 2 (full sequence),tilt_beam_seg,4,0.02032,0.27661
+Route 2 (full sequence),tilt_beam_seg,5,-0.02912,0.26461
+Route 2 (full sequence),tilt_beam_seg,6,0.01709,0.29092
+Route 2 (full sequence),tilt_beam_seg,7,0.02217,0.22772
+Route 2 (full sequence),tilt_beam_seg,8,-0.02248,0.22543
+Route 2 (full sequence),tilt_beam_seg,9,-0.02156,0.44843
+Route 2 (full sequence),tilt_beam_seg,10,0.00263,0.39237
+Route 2 (full sequence),tilt_beam_seg,11,0.00499,0.35535
+Route 2 (full sequence),tilt_beam_seg,12,0.0159,0.39032
+Route 2 (full sequence),tilt_beam_seg,13,-0.00017,0.41561
+Route 2 (full sequence),tilt_beam_seg,14,0.03689,0.44105
+Route 2 (full sequence),tilt_beam_seg,15,0.02682,0.44913
+Route 2 (full sequence),tilt_beam_seg,16,0.05108,0.50216
+Route 2 (full sequence),tilt_beam_seg,17,0.03033,0.54098
+Route 2 (full sequence),tilt_beam_seg,18,0.02318,0.64139
+Route 2 (full sequence),tilt_beam_seg,19,0.02475,0.8013
+Route 2 (full sequence),tilt_beam_seg,20,0.01821,0.93438
+Route 2 (full sequence),tilt_beam_seg,21,0.00708,2.24667
+Route 2 (full sequence),tilt_beam_seg,22,-0.00059,0.83551
+Route 2 (full sequence),tilt_beam_seg,23,0.00338,3.02018
+Route 2 (full sequence),tilt_beam_seg,24,0.20667,3.34507
+Route 2 (full sequence),tilt_beam_seg,25,0.65319,4.02388
+Route 2 (full sequence),tilt_full_wall,1,0.00253,0.02183
+Route 2 (full sequence),tilt_full_wall,2,-0.00856,0.06811
+Route 2 (full sequence),tilt_full_wall,3,0.00076,0.04416
+Route 2 (full sequence),tilt_full_wall,4,-0.00543,0.07371
+Route 2 (full sequence),tilt_full_wall,5,0.00785,0.07081
+Route 2 (full sequence),tilt_full_wall,6,-0.0046,0.07833
+Route 2 (full sequence),tilt_full_wall,7,-0.00592,0.0617
+Route 2 (full sequence),tilt_full_wall,8,0.00609,0.06067
+Route 2 (full sequence),tilt_full_wall,9,0.00578,0.1202
+Route 2 (full sequence),tilt_full_wall,10,-0.00091,0.10554
+Route 2 (full sequence),tilt_full_wall,11,-0.00162,0.09504
+Route 2 (full sequence),tilt_full_wall,12,-0.00454,0.10418
+Route 2 (full sequence),tilt_full_wall,13,-0.00024,0.11171
+Route 2 (full sequence),tilt_full_wall,14,-0.01042,0.11913
+Route 2 (full sequence),tilt_full_wall,15,-0.00771,0.12042
+Route 2 (full sequence),tilt_full_wall,16,-0.01435,0.1355
+Route 2 (full sequence),tilt_full_wall,17,-0.00864,0.14647
+Route 2 (full sequence),tilt_full_wall,18,-0.00653,0.17449
+Route 2 (full sequence),tilt_full_wall,19,-0.00678,0.21768
+Route 2 (full sequence),tilt_full_wall,20,-0.00521,0.25462
+Route 2 (full sequence),tilt_full_wall,21,-0.00067,0.59857
+Route 2 (full sequence),tilt_full_wall,22,0.00135,0.22672
+Route 2 (full sequence),tilt_full_wall,23,0.01533,0.7936
+Route 2 (full sequence),tilt_full_wall,24,0.13698,0.89341
+Route 2 (full sequence),tilt_full_wall,25,-0.01099,1.07378
+Route 2 (full sequence),proxy_2.06m,1,0.00246,0.022
+Route 2 (full sequence),proxy_2.06m,2,-0.00864,0.06877
+Route 2 (full sequence),proxy_2.06m,3,0.00091,0.04532
+Route 2 (full sequence),proxy_2.06m,4,-0.00565,0.07458
+Route 2 (full sequence),proxy_2.06m,5,0.008,0.06998
+Route 2 (full sequence),proxy_2.06m,6,-0.00478,0.07825
+Route 2 (full sequence),proxy_2.06m,7,-0.00613,0.06259
+Route 2 (full sequence),proxy_2.06m,8,0.0059,0.06072
+Route 2 (full sequence),proxy_2.06m,9,0.00577,0.12129
+Route 2 (full sequence),proxy_2.06m,10,-0.00099,0.10466
+Route 2 (full sequence),proxy_2.06m,11,-0.00166,0.09564
+Route 2 (full sequence),proxy_2.06m,12,-0.00467,0.10544
+Route 2 (full sequence),proxy_2.06m,13,-0.00031,0.11266
+Route 2 (full sequence),proxy_2.06m,14,-0.0104,0.12018
+Route 2 (full sequence),proxy_2.06m,15,-0.0076,0.12178
+Route 2 (full sequence),proxy_2.06m,16,-0.01412,0.13761
+Route 2 (full sequence),proxy_2.06m,17,-0.00847,0.14827
+Route 2 (full sequence),proxy_2.06m,18,-0.00649,0.17575
+Route 2 (full sequence),proxy_2.06m,19,-0.00675,0.21673
+Route 2 (full sequence),proxy_2.06m,20,-0.00529,0.25334
+Route 2 (full sequence),proxy_2.06m,21,-0.00152,0.59909
+Route 2 (full sequence),proxy_2.06m,22,0.00057,0.22556
+Route 2 (full sequence),proxy_2.06m,23,0.01489,0.7945
+Route 2 (full sequence),proxy_2.06m,24,0.13592,0.89258
+Route 2 (full sequence),proxy_2.06m,25,-0.01189,1.07412
+US-1 potentiometers,tilt_full_wall,1,-0.00459,0.00966
+US-1 potentiometers,tilt_full_wall,2,-0.00718,0.01007
+US-1 potentiometers,tilt_full_wall,3,-0.00718,0.00288
+US-1 potentiometers,tilt_full_wall,4,-0.00631,0.01407
+US-1 potentiometers,tilt_full_wall,5,-0.00711,0.0217
+US-1 potentiometers,tilt_full_wall,6,-0.00864,0.01013
+US-1 potentiometers,tilt_full_wall,7,-0.00734,0.02928
+US-1 potentiometers,tilt_full_wall,8,-0.01085,0.01919
+US-1 potentiometers,tilt_full_wall,9,-0.00741,0.03665
+US-1 potentiometers,tilt_full_wall,10,-0.01077,0.051
+US-1 potentiometers,tilt_full_wall,11,-0.01093,0.02291
+US-1 potentiometers,tilt_full_wall,12,-0.01139,0.05607
+US-1 potentiometers,tilt_full_wall,13,-0.01191,0.06434
+US-1 potentiometers,tilt_full_wall,14,-0.01188,0.07802
+US-1 potentiometers,tilt_full_wall,15,-0.01179,0.0913
+US-1 potentiometers,tilt_full_wall,16,-0.01262,0.11583
+US-1 potentiometers,tilt_full_wall,17,-0.01382,0.15377
+US-1 potentiometers,tilt_full_wall,18,-0.02068,0.22112
+US-1 potentiometers,tilt_full_wall,19,-0.02142,0.28073
+US-1 potentiometers,tilt_full_wall,20,-0.02762,0.35497
+US-1 potentiometers,tilt_full_wall,21,-0.02967,0.42693
+US-1 potentiometers,tilt_full_wall,22,-0.02103,0.09398
+US-1 potentiometers,tilt_full_wall,23,0.00852,0.33839
+US-1 potentiometers,tilt_full_wall,24,0.04035,0.75416

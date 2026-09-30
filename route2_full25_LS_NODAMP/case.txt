@@ -1,0 +1,13 @@
+CASE=LS_NODAMP
+CASE_ID=R2_LS_NODAMP
+DAMP_MODE=none
+DAMP_RATIO=0.0
+F_CENTRE_Hz=6.084943
+command=
+LARGE_STRAIN=on
+BASE_SAVE=part_I_mason_LS_strong.sav
+damping_twin=route2_full25_LS_MAXWELL_1p5
+geometry_twin=route2_full25_SS_NODAMP
+record_control=None
+record_control_save=None
+matches_control=False

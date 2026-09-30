@@ -1,0 +1,3 @@
+case,from_save,from_run,scale,stage_B_phase,period_source,T_A_s,SdA_mm,VampA_mps,PGA_A_g,T_B_s,SdB_mm,VampB_mps,PGA_B_g,join_step_g,pulse_dur_s,table_end_mm,SdA_total_mm,SdB_total_mm,N_A,N_B,gap_s,m_eff,peak_edp_mm,edp_source,control_ref_run,control_ref_mm
+from24,stratF_full_results_US1/stratC_run_24.sav,24,2.0,same,bilinear/fig13,0.095,3.042,0.09946,0.6584,0.265,45.819,0.51596,1.2441,0.586,0.36,-0.0,6.693,45.329,1.0,1.0,0.0,1635.0,84.335,rel_disp_top_exp_mm,25,41.626
+from24,stratF_full_results_US1/stratC_run_24.sav,24,2.0,same,bilinear/model,0.11,3.501,0.09757,0.5604,0.24,27.257,0.33947,0.9034,0.343,0.35,-0.0,6.966,27.719,1.0,1.0,0.0,1635.0,52.698,rel_disp_top_exp_mm,25,41.626
