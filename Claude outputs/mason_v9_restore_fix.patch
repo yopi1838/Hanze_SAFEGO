@@ -1,0 +1,83 @@
+--- a/jmodelmason.h	2026-09-10 13:09:27.083816135 +0000
++++ b/jmodelmason.h	2026-09-10 13:09:47.111304075 +0000
+@@ -147,9 +147,9 @@
+         double fm_ro; //reloading stress
+         double un_hist_ten;
+         double reloadFlag; //reloading flag
+-        uint32 plasFlag;
++        uint32 plasFlag;   //envelope-touched gate for the unloading branch. PERSISTED as property 58 (restore fix): anything not in the property list is reset to 0 on model restore.
+         double dc_hist;
+-        uint32 pertFlag;
++        uint32 pertFlag;   //PERSISTED as property 59 (restore fix); currently unused by the logic but kept round-trip-safe.
+         double dt_hist;
+         double delta; //dilatancy gradient
+         double dilation_current;
+--- a/jmodelmason.cpp	2026-09-10 13:09:27.081243812 +0000
++++ b/jmodelmason.cpp	2026-09-10 13:09:47.111064290 +0000
+@@ -166,7 +166,8 @@
+             "tensile-disp-plastic    ,shear-disp-plastic ,"
+             "G_c, Cn, Cnn, Css, fc_current,  fric_current,   peak_ratio, ult_ratio,uel,un_hist_comp,peak_normal,ds_hist,"
+             "un_reloading,fm_reloading,un_hist_ten, dt_hist,dc_hist,delta,dilation_current,un_dilatant,dil_hist,ddil,reloadFlag,k_for_maxwell,nlimit1,nlimit2,mult_base,mult_dc_gain,"
+-            "dbg_un_new,dbg_un_current,dbg_tenflag,dbg_compflag,dbg_state");
++            "dbg_un_new,dbg_un_current,dbg_tenflag,dbg_compflag,dbg_state,"
++            "plasFlag,pertFlag");
+     }
+ 
+     string JModelMason::getStates() const
+@@ -235,6 +236,17 @@
+         case 55: return dbg_tenflag;
+         case 56: return dbg_compflag;
+         case 57: return dbg_state;
++        // RESTORE FIX: plasFlag/pertFlag are evolving state, not inputs.
++        // A plugin jmodel is persisted ONLY through this property interface,
++        // so anything absent here is silently reset to 0 on model restore.
++        // plasFlag gates the Facconi unloading branch (dn_<0 && plasFlag==1);
++        // losing it left reloadFlag/un_ro/fm_ro restored but their partner
++        // flag cleared -> elastic unloading after every restore until the
++        // compression envelope was touched again. Appended at the END so all
++        // existing property indices, .dat files and old .sav files are
++        // unaffected (old saves simply do not carry them -> same as before).
++        case 58: return (double)plasFlag;
++        case 59: return (double)pertFlag;
+         }
+         return 0.0;
+     }
+@@ -301,6 +313,8 @@
+         case 55: dbg_tenflag = prop.to<double>(); break;
+         case 56: dbg_compflag = prop.to<double>(); break;
+         case 57: dbg_state = prop.to<double>(); break;
++        case 58: plasFlag = (uint32)prop.to<double>(); break;   // RESTORE FIX (see getProperty)
++        case 59: pertFlag = (uint32)prop.to<double>(); break;   // RESTORE FIX
+         }
+     }
+ 
+@@ -362,6 +376,8 @@
+         dil_hist = mm->dil_hist;
+         ddil = mm->ddil;
+         reloadFlag = mm->reloadFlag;
++        plasFlag = mm->plasFlag;        // RESTORE FIX: was omitted -> clones lost the
++        pertFlag = mm->pertFlag;        // unloading-branch gate that reloadFlag pairs with
+         kn_for_maxwell_ = mm->kn_for_maxwell_;
+         nlimit1 = mm->nlimit1;
+         nlimit2 = mm->nlimit2;
+@@ -507,6 +523,20 @@
+ 
+         if (!s->area_) return;
+ 
++        // RESTORE FIX (derived state): tan_friction_/tan_res_friction_/
++        // tan_dilation_ and the softening-table pointers are rebuilt only in
++        // initialize(). Whether the host re-runs initialize() after a model
++        // restore is version-dependent; if it does not, these stay at their
++        // constructor values (0 / nullptr) and dilatancy or table-driven
++        // softening silently switches off after every restore. Rebuilding
++        // them here is cheap (three tan() calls; table fetch only when null)
++        // and makes run() self-sufficient regardless of restore behaviour.
++        tan_friction_ = tan(friction_ * dDegRad);
++        tan_res_friction_ = tan(res_friction_ * dDegRad);
++        tan_dilation_ = tan(dilation_ * dDegRad);
++        if (dtTable_.length() && !iTension_d_) iTension_d_ = s->getTableIndexFromID(dtTable_);
++        if (dsTable_.length() && !iShear_d_)   iShear_d_   = s->getTableIndexFromID(dsTable_);
++
+         //double kna = kn_ * s->area_;
+         double ksa = ks_ * s->area_;
+         double kn_comp_ = kn_initial_;

@@ -21,7 +21,9 @@ import matplotlib.pyplot as plt
 M = {"15": 408.52, "16": 320.66, "17": 404.13}     # tributary wall masses, kg (rho 1619, sensors 0.60/1.26/2.06)
 MASS_SCALE = 2.317348                              # the test's factor -- applied to both sides
 LP_HZ = 50.0                                       # low-pass on the differentiated velocities
-EXP_DIR = "EXPRAW"
+# Processed experimental workbooks live here in the current SAFEGo workspace.
+# Override with SAFEGO_EXP_DIR when running against a different copy.
+EXP_DIR = os.environ.get("SAFEGO_EXP_DIR", os.path.join("EXP_DATA", "processed_globalzero"))
 EXP = {"US-1 (Test 9)": "Test9", "US-2 (Test 12)": "Test12"}
 EXP_SHEAR_SIGN, MODEL_SHEAR_SIGN = -1.0, -1.0      # same conventions as postprocess_route2_full.py
 
