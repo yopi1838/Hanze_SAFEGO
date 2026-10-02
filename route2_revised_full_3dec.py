@@ -16,33 +16,30 @@ Nothing measured on the wall enters the loop: the periods are the same on
 run 1 and run 25, the amplitude follows the protocol scale. There is no
 gating (the old driver held stage B back until the wall had moved 2 mm).
 
-WHAT THIS TESTS: whether the single-shot results (virgin 19.5 mm vs record
-41.6; from run 24: 52.7 vs 41.6; from run 23: 46.0 vs 8.3) turn into a
-sequence that tracks, or one that crosses the 21 mm bond-failure
-displacement early and rocks at large amplitude from then on. Each run is
-~0.35 s of table + TAIL_SEC, so the 25 runs cost about a seventh of the
-record sequence.
+PARTIAL RE-RUN (added): to re-run a tail of the protocol with extra
+instrumentation without touching the finished 25-run results, set
+    RESUME_AFTER = 20                                   (run 21 is the first re-run)
+    RESUME_SAVE  = "route2_full25_revised/route2_run_20.sav"
+    OUT_DIR      = "route2_full25_revised_bs"           (a NEW folder)
+The new folder gets its own checkpoint/log holding runs 21..25 only; the
+original folder is never written to. Set RESUME_AFTER = 0 for the normal
+full run from BASE_SAVE.
 
 PEAK EDP per run = rel_disp_top_exp_mm channel (0.5(Ch3+Ch4) - Ch5), else
-rebuilt from Channel_3/4/5 -- NOT Record_Disp (the old driver's log used
-the integrated input; postprocess_route2_full.py recomputes anyway).
+rebuilt from Channel_3/4/5 -- NOT Record_Disp.
 
 RESUME: OUT_DIR/route2_checkpoint.json holds the last completed run; a
 restart restores that run's save and continues. Delete it to start over.
 
-OUTPUT (same layout as route2_full25_3dec.py, so postprocess_route2_full.py
-reads it with ROUTE_DIR = "route2_full25_revised"):
+OUTPUT (same layout as route2_full25_3dec.py):
     OUT_DIR/RunNN_REC_sXpYY/        channel CSVs
     OUT_DIR/route2_run_NN.sav
     OUT_DIR/RunNN_REC_sXpYY_vel.txt the applied table
-    OUT_DIR/route2_full_log.csv     run, record, scale, d_hist_mm, two_stage,
-        T_A_s, SdA_mm, VampA_mps, PGA_A_g, T_B_s, SdB_mm, VampB_mps, PGA_B_g,
-        gap_s, cap_note, peak_edp_mm, join_step_g, SdA_total_mm, SdB_total_mm,
-        period_source, edp_source
-REQUIRES next to this script: bilinear_idealisation/bilinear_periods.json
-(run bilinear_idealisation.py first), spectrum_HU12/EC40/FR76.csv,
-Part_I_MASON_v8_SmallStrain.sav, instrument_history_new.dat,
-instrument_history_export_v2.dat.
+    OUT_DIR/route2_full_log.csv
+REQUIRES next to this script: bilinear_idealisation/bilinear_periods.json,
+spectrum_HU12/EC40/FR76.csv, Part_I_MASON_v8_SmallStrain.sav,
+instrument_history_new.dat, instrument_baseshear_exp.dat,
+instrument_history_export_v2.dat (with the vz_acc15/16/17 export lines added).
 """
 
 import itasca as it
@@ -50,16 +47,19 @@ import os, csv, math, sys, json, glob
 import numpy as np
 
 # ============================ CONFIG =================================
-OUT_DIR       = "route2_full25_revised"
+OUT_DIR       = "route2_full25_revised_bs"       # NEW folder for the re-run (originals untouched)
 BASE_SAVE     = "Part_I_MASON_v8_SmallStrain.sav"
+RESUME_AFTER  = 20                               # 0 = full run from BASE_SAVE; N = start at run N+1 from RESUME_SAVE
+RESUME_SAVE   = "route2_full25_revised/route2_run_20.sav"
 BILINEAR_JSON = "bilinear_idealisation/bilinear_periods.json"
 BILINEAR_KEY  = "model"        # "model" (v3 pushover, prediction mode) or "fig13" (envelope)
 STAGE_B_PHASE = "same"         # "same" or "inverted"
 XI            = 0.05
 DELTA_T       = 0.005
-TAIL_SEC      = 2.5            # ring-down after the table stops (the single-shot driver used 2.5)
+TAIL_SEC      = 2.5            # ring-down after the table stops
 DRIVE_GROUPS  = ["S", "T_B"]
 PGA_WARN_G    = 0.90           # the table reached 0.78 g; above this is extrapolation
+INSTRUMENT_FILES = ["instrument_history_new.dat", "instrument_baseshear_exp.dat"]   # called together, every time
 SPECTRA = {"HU12": "spectrum_HU12.csv", "EC40": "spectrum_EC40.csv", "FR76": "spectrum_FR76.csv"}
 PROTOCOL = [
     ( 1, "HU12", 0.50), ( 2, "HU12", 0.75), ( 3, "EC40", 0.20),
@@ -151,6 +151,13 @@ def build_signal(rec, scale):
                 pgaA=pga_g(vA), pgaB=pga_g(vB), step=step, SdA_tot=float(tot[0]), SdB_tot=float(tot[1]))
 
 # ============================ MODEL SETUP ============================
+def call_instruments():
+    """every instrumentation file, in order -- used at setup AND after each run's `history delete`."""
+    for f in INSTRUMENT_FILES:
+        if not os.path.isfile(f):
+            raise RuntimeError("missing instrumentation file: " + f)
+        it.command("call '{}'".format(f))
+
 def setup_dynamic(save_file):
     it.command("model restore '{}'".format(cmd_path(save_file).replace(".sav", "")))
     it.command("python-reset-state false")
@@ -162,7 +169,7 @@ def setup_dynamic(save_file):
 block contact group 'Joist_S1_contact' range pos-y 0.25 0.3 pos-z 0.9 1.5
 block contact group 'Joist_S2_contact' range pos-y 2.0 2.5 pos-z 0.9 1.5
 """)
-    it.command("call 'instrument_history_new.dat'")
+    call_instruments()
     it.command("block free velocity-z range group 'S'")
     it.command("""
 block free rotation-y range group 'T_B'
@@ -204,20 +211,32 @@ def load_ckpt():
     return 0, []
 def save_ckpt(last, summary):
     with open(CKPT, "w") as f:
-        json.dump({"last_run": last, "summary": summary}, f, indent=1)
+        json.dump({"last_run": last, "summary": summary, "resume_after": RESUME_AFTER, "resume_save": RESUME_SAVE}, f, indent=1)
 
 # ============================ CHECKPOINT =============================
 it.command("python-reset-state false")
 it.command("program automatic-model-save active off")
 last_done, summary = load_ckpt()
 if last_done == 0:
-    if not os.path.isfile(BASE_SAVE):
-        raise RuntimeError("missing " + BASE_SAVE)
-    setup_dynamic(BASE_SAVE); print("fresh start from", BASE_SAVE)
+    if RESUME_AFTER > 0:
+        # partial re-run: state after run RESUME_AFTER, taken from another folder's save
+        if not os.path.isfile(RESUME_SAVE):
+            raise RuntimeError("RESUME_SAVE not found: " + RESUME_SAVE)
+        if os.path.abspath(os.path.dirname(RESUME_SAVE)) == os.path.abspath(OUT_DIR):
+            raise RuntimeError("OUT_DIR must be a NEW folder, not the one holding RESUME_SAVE")
+        setup_dynamic(RESUME_SAVE); last_done = RESUME_AFTER
+        print("partial re-run: state after run {} from {}; runs {}..{} go to {}".format(
+            RESUME_AFTER, RESUME_SAVE, RESUME_AFTER + 1, PROTOCOL[-1][0], OUT_DIR))
+    else:
+        if not os.path.isfile(BASE_SAVE):
+            raise RuntimeError("missing " + BASE_SAVE)
+        setup_dynamic(BASE_SAVE); print("fresh start from", BASE_SAVE)
 else:
+    if last_done < RESUME_AFTER:
+        raise RuntimeError("checkpoint says last_run {} but RESUME_AFTER is {}: delete {} or fix the config".format(last_done, RESUME_AFTER, CKPT))
     setup_dynamic(save_path(last_done)); print("resuming after run", last_done)
 
-log_new = (last_done == 0) or not os.path.isfile(LOG)
+log_new = (len(summary) == 0) or not os.path.isfile(LOG)
 logf = open(LOG, "w" if log_new else "a", newline="")
 logw = csv.writer(logf)
 if log_new:
@@ -262,10 +281,12 @@ for run_no, rec, sc in PROTOCOL[last_done:]:
     it.command("call 'instrument_history_export_v2.dat'")
     peak, src = peak_edp_mm(folder)
     print("  PEAK EDP ({}) = {}".format(src, "{:.2f} mm".format(peak) if peak is not None else "n/a"))
+    if find_ch(folder, "vz_acc15") is None:
+        print("  ! vz_acc15 not exported -- add the export lines from instrument_baseshear_exp.dat to instrument_history_export_v2.dat")
 
     it.command("table '{}' delete".format(tbl))
     it.command("history delete")
-    it.command("call 'instrument_history_new.dat'")
+    call_instruments()
 
     row = dict(run=run_no, record=rec, scale=sc, d_hist_mm=round(d_hist, 3), two_stage=1,
                T_A_s=round(S["TgA"], 5), SdA_mm=round(S["SdA"] * 1e3, 3), VampA_mps=round(S["VA"], 5), PGA_A_g=round(S["pgaA"], 4),
@@ -279,4 +300,4 @@ for run_no, rec, sc in PROTOCOL[last_done:]:
     save_ckpt(run_no, summary)
 
 logf.close()
-print("\ndone: {} runs in {}. Postprocess with postprocess_route2_full.py (ROUTE_DIR = '{}').".format(len(summary), OUT_DIR, OUT_DIR))
+print("\ndone: {} runs in {}. Loops: python baseshear_exp_from_model.py {} 21 22 23 24 25".format(len(summary), OUT_DIR, OUT_DIR))

@@ -96,3 +96,8 @@ history export 22 vs "time" file [string.build("%1/%2_rel_disp_top_exp_mm.csv",e
 history export 23 vs "time" file [string.build("%1/%2_tilt_local_incl.csv",exportdir,runlabel)] truncate
 history export 24 vs "time" file [string.build("%1/%2_bulge_top_mm.csv",exportdir,runlabel)] truncate
 
+history export 'vz_acc15' vs "time" file [string.build("%1/%2_vz_acc15.csv",exportdir,runlabel)] truncate
+history export 'vz_acc16' vs "time" file [string.build("%1/%2_vz_acc16.csv",exportdir,runlabel)] truncate
+history export 'vz_acc17'  vs "time" file [string.build("%1/%2_vz_acc17.csv",exportdir,runlabel)] truncate
+history export 'base_shear_exp_kN' vs "time" file [string.build("%1/%2_base_shear_exp_kN.csv",exportdir,runlabel)] truncate
+
