@@ -195,5 +195,5 @@ block property density [rho_tb] range group 'T_B'
 
 model solve ratio 5e-8
 
-model save 'part_I_mason_LS_strong'
+model save 'part_I_mason_SS_LATEST'
 ;;call "sinus_wave_analysis.dat"

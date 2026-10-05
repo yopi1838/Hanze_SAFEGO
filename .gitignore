@@ -37,6 +37,7 @@ stratC_results_*/Run[0-9][0-9]_*/
 !route2_results/
 !route2_comparison/
 !route2_four_methods/
+!1WB_EUCENTRE/
 # 3DEC bitmap dumps -- regenerate with export_plots.py
 stratC_results_*/plots/
 

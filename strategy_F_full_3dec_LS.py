@@ -197,7 +197,7 @@ MAXWELL_CMD = ''
 # small strain, "so a large-displacement or collapse result needs large-strain
 # on to be trusted". Exposed here rather than left implicit. Applied after the
 # restore, so the static build stays in small strain where it belongs.
-LARGE_STRAIN = "on"
+LARGE_STRAIN = "off"
 
 
 # >>> STRATEGY D : the protocol is a table, not a feedback loop.
@@ -232,11 +232,11 @@ BASE_TABLES = {
 }
 RUN_FROM      = 1          # first run to apply (inclusive)
 RUN_TO        = 25         # last run to apply (inclusive)
-START_SAVE    = "Part_I_MASON_v7.sav"   # undamaged base state (full sequence)
+START_SAVE    = "part_I_mason_SS_LATEST.sav"   # undamaged base state (full sequence)
 TAIL_SEC_RECORD = 2.5      # ring-down appended after each record (period ID)
 # <<< STRATEGY F (FULL)
 
-OUT_DIR = 'stratF_full_LS_NODAMP'
+OUT_DIR = 'stratF_full_SS_NODAMP_LATEST'
 
 # ---------------------------------------------------------------------
 # Optional per-case overrides, same mechanism and same filename as the pulse
