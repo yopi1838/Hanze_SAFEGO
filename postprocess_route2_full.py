@@ -47,7 +47,7 @@ import matplotlib; matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 # ============================ CONFIG =================================
-ROUTE_DIR   = "route2_full25_revised"     # or "route2_full25" for the old driver
+ROUTE_DIR   = "route2_method2_full25_v11/2_fixed_record"     # or "route2_full25" for the old driver
 ROUTE_LOG   = os.path.join(ROUTE_DIR, "route2_full_log.csv")
 ROUTE_LABEL = "Route 2 (full sequence)"
 CONTROL_DIR = "stratF_full_results_US1"

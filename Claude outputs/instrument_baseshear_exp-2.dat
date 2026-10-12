@@ -1,0 +1,117 @@
+; instrument_baseshear_exp.dat  --  experiment-equivalent base shear for the US-1 model
+; ------------------------------------------------------------------------
+; Call AFTER instrument_history_new.dat (and instrument_tilt_v2.dat if used),
+; inside setup_dynamic() and again after every `history delete`, exactly like
+; those files are called in route2_full25_cases_3dec.py.
+;
+; WHY
+;   The model's 'cstav' channel is the base+joist SUPPORT REACTION. The test's
+;   base shear (Moshfeghi et al. 2024, Eq. 2) is  F = sum_j m_j a_j  with the
+;   ABSOLUTE acceleration at three wall accelerometers and their tributary
+;   masses, times the processing factor mass_scale = 2.317348.  The two are
+;   not the same quantity, so loops built from cstav cannot be compared with
+;   the test's.  This file records what is needed to build the test's quantity
+;   from the model with the same formula (same masses, same factor).
+;
+; SENSORS (SAFEGo instrumentation figure / Test9_Info.xlsx), wall centreline:
+;   Acc 15  bottom quarter  z = 0.60 m  (info sheet says 0.66; 0.60 reproduces
+;                                        the processed tributary masses exactly)
+;   Acc 16  mid             z = 1.26 m
+;   Acc 17  top quarter     z = 2.06 m
+;   Model axes: x along the wall (centre 0.646), y = height, z = out-of-plane.
+;
+; MASSES (group's sheet, 5 Oct 2026): wall 13.16 kN at gamma 18.8 kN/m3 = 1340.1 kg split
+; 1/4 - 1/2 - 1/4 (335.0 / 670.1 / 335.0), slabs 120 kg each at the bottom and top quarter,
+; loading beam 151.4 kg lumped into the top quarter (no beam accelerometer). Springs (10.35 kN)
+; carry no inertia and are excluded. Total 1731.6 kg. No scale factor.
+;   m15 = 455.03 kg   m16 = 670.07 kg   m17 = 606.47 kg
+; (the earlier processed files used 946.7 / 743.1 / 936.5 = midpoint split at 1619 kg/m3 x 2.317; superseded)
+;
+; WHAT IS RECORDED
+;   vz_acc15 / vz_acc16 / vz_acc17 : absolute OOP velocity at the sensor points  (use these)
+;   az_acc15 / az_acc16 / az_acc17 : finite-difference acceleration between history samples
+;   base_shear_exp_kN              : sum(m_j a_j) * mass_scale / 1000, live check only
+; Differentiating in FISH at the history interval is noisy; the postprocess
+; (baseshear_exp_from_model.py) rebuilds F from the velocities with a 50 Hz
+; low-pass. That is the number to use.
+
+[acc_y_bot = 0.60]
+[acc_y_mid = 1.26]
+[acc_y_top = 2.06]
+[m_acc15 = 455.03]
+[m_acc16 = 670.07]
+[m_acc17 = 606.47]
+[mass_scale_exp = 1.0]     ; the test's factor, applied to BOTH sides so loops are like-for-like
+[x_centre_bs = 0.646]
+[z_face_bs   = 0.21]
+; Joist / slab points for the five-term formula (slab 1 on acc 13 at 0.49 m, slab 2 + beam on acc 14 at 2.28 m).
+; VERIFY these against the model: the point must land on the JOIST block, i.e. outside the wall face
+; (z > 0.21, the joists run along z) at the joist's own bearing height in this model. Print
+; block.gp.near(...) once and check it belongs to the joist, not the wall.
+[acc_y_s1   = 0.49]
+[acc_y_s2   = 2.28]
+[z_joist_bs = 0.60]
+
+[t_prev_bs = -1.0]
+[vz15_prev = 0.0]
+[vz16_prev = 0.0]
+[vz17_prev = 0.0]
+[vz_acc15 = 0.0]
+[vz_acc16 = 0.0]
+[vz_acc17 = 0.0]
+[vz_acc13 = 0.0]
+[vz_acc14 = 0.0]
+[az_acc15 = 0.0]
+[az_acc16 = 0.0]
+[az_acc17 = 0.0]
+[base_shear_exp_kN = 0.0]
+
+fish define base_shear_exp_update
+    local gp15 = block.gp.near(x_centre_bs, acc_y_bot, z_face_bs)
+    local gp16 = block.gp.near(x_centre_bs, acc_y_mid, z_face_bs)
+    local gp17 = block.gp.near(x_centre_bs, acc_y_top, z_face_bs)
+    vz_acc15 = block.gp.vel.z(gp15)
+    vz_acc16 = block.gp.vel.z(gp16)
+    vz_acc17 = block.gp.vel.z(gp17)
+    local gp13 = block.gp.near(x_centre_bs, acc_y_s1, z_joist_bs)
+    local gp14 = block.gp.near(x_centre_bs, acc_y_s2, z_joist_bs)
+    vz_acc13 = block.gp.vel.z(gp13)
+    vz_acc14 = block.gp.vel.z(gp14)
+    local tnow = mech.time.total
+    if t_prev_bs >= 0.0 then
+        local dtb = tnow - t_prev_bs
+        if dtb > 0.0 then
+            az_acc15 = (vz_acc15 - vz15_prev) / dtb
+            az_acc16 = (vz_acc16 - vz16_prev) / dtb
+            az_acc17 = (vz_acc17 - vz17_prev) / dtb
+        endif
+    endif
+    t_prev_bs = tnow
+    vz15_prev = vz_acc15
+    vz16_prev = vz_acc16
+    vz17_prev = vz_acc17
+    base_shear_exp_kN = (m_acc15 * az_acc15 + m_acc16 * az_acc16 + m_acc17 * az_acc17) * mass_scale_exp / 1000.0
+    base_shear_exp_update = base_shear_exp_kN
+end
+
+; Register the FUNCTION (not only the variables) so it is evaluated every
+; history interval -- the same rule instrument_tilt_v2.dat follows.
+fish history name 'base_shear_exp_kN' base_shear_exp_update
+fish history name 'vz_acc15' vz_acc15
+fish history name 'vz_acc16' vz_acc16
+fish history name 'vz_acc17' vz_acc17
+fish history name 'vz_acc13' vz_acc13
+fish history name 'vz_acc14' vz_acc14
+fish history name 'az_acc15' az_acc15
+fish history name 'az_acc16' az_acc16
+fish history name 'az_acc17' az_acc17
+
+; EXPORT -- add to instrument_history_export_v2.dat (or issue after each run).
+; <time_hist> is the id of the time history that file already uses; check
+; `history list` in this model. <label> = the run label, e.g. Run22_FR76_s1p00.
+;   history export 'vz_acc15' vs <time_hist> file '<OUT_DIR>/<label>_vz_acc15.csv' truncate
+;   history export 'vz_acc16' vs <time_hist> file '<OUT_DIR>/<label>_vz_acc16.csv' truncate
+;   history export 'vz_acc17' vs <time_hist> file '<OUT_DIR>/<label>_vz_acc17.csv' truncate
+;   history export 'vz_acc13' vs <time_hist> file '<OUT_DIR>/<label>_vz_acc13.csv' truncate
+;   history export 'vz_acc14' vs <time_hist> file '<OUT_DIR>/<label>_vz_acc14.csv' truncate
+;   history export 'base_shear_exp_kN' vs <time_hist> file '<OUT_DIR>/<label>_base_shear_exp_kN.csv' truncate

@@ -888,6 +888,7 @@ def setup_model_for_dynamic(save_file):
     block contact group 'Joist_S2_contact' range pos-y 2.0 2.5 pos-z 0.9 1.5
     """)
     it.command("call 'instrument_history_new.dat'")
+    it.command("call 'instrument_baseshear_exp.dat'")
     it.command("""
     block free velocity-z range group 'S'
     """)
