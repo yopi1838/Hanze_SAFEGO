@@ -1,0 +1,79 @@
+; =====================================================================
+; joint_tension_test.dat -- one bed joint of mason_v11 in uniaxial tension
+;
+; Question: with the properties in mat_case.dat, does the joint lose its
+; tension by ~0.25 mm of opening (brittle: ft/kn = 0.14 mm elastic, then
+; ~2*Gt/ft = 0.11 mm of softening) -- or does it keep carrying load?
+; The wall pushover holds 29 kN to 20 mm of mid-height displacement, i.e.
+; ~3 mm of joint opening at the hinge joints. If this test snaps at
+; 0.25 mm, the ductility is structural (go look at the crack pattern);
+; if it does not, the softening terms are the defect, not ft.
+;
+; Two rigid bricks, 0.21 x 0.05 x 0.10 m (same section as the wall units).
+; Bottom block fixed; top block pulled up at constant velocity.
+; Output: joint_tension_test.csv  (opening_mm, stress_MPa)
+; Adjust NCYC so that the final opening printed is ~0.6 mm.
+; =====================================================================
+model new
+model large-strain off
+model gravity 0 0 0
+
+block create brick 0 0.21  0.00 0.05  0 0.10 group 'bot'
+block create brick 0 0.21  0.05 0.10  0 0.10 group 'top'
+
+block property density 1885
+call 'mat_case.dat'
+block contact generate-subcontacts
+block contact jmodel assign mason_v12
+block contact prop stiffness-normal @kn stiffness-initial @kn  stiffness-shear @ks ...
+    tension @tension cohesion @cohesion friction @friction ...
+    friction-residual @friction cohesion-residual [0.1*cohesion] ...
+    G_I @Gt G_II @Gs G_c @Gc compression @fc_comp ...
+    comp-residual [fc_comp*0.2] Cn [Cn] Cnn [Cnn] Css [Css] peak_ratio [n]
+model large-strain off      ; mat_case.dat switches it on; not wanted for a single joint
+
+block fix range group 'bot'
+block fix velocity-x velocity-z rotation range group 'top'   ; pure opening, no shear or tilt
+
+[global v_pull = 2.0e-3]    ; m/s, slow enough to be quasi-static with local damping
+block apply velocity-y [v_pull] range group 'top'
+
+; --- joint stress and opening, summed over the one contact ---
+fish define joint_state
+    local f = 0.0
+    local a = 0.0
+    local u = 0.0
+    local n = 0
+    loop foreach local cx block.contact.list
+        loop foreach local sc block.contact.subcontactlist(cx)
+            f = f + block.subcontact.force.norm(sc)
+            a = a + block.subcontact.area(sc)
+            u = u + block.subcontact.disp.norm(sc)
+            n = n + 1
+        endloop
+    endloop
+    if a > 0 then
+        global joint_stress_MPa = f / a / 1e6      ; tension positive or negative per 3DEC sign: see note below
+    endif
+    if n > 0 then
+        global joint_open_mm = u / n * 1e3
+    endif
+    global top_disp_mm = block.disp.y(block.near(0.105, 0.075, 0.05)) * 1e3
+    joint_state = joint_stress_MPa
+end
+fish history joint_state
+fish history joint_open_mm
+fish history top_disp_mm
+history interval 200
+
+; NOTE on sign: 3DEC reports contact normal force positive in COMPRESSION.
+; In tension the summed force goes negative; the CSV keeps the raw sign.
+; Expect: linear to -0.344 MPa at ~0.14 mm, then a drop to ~0 by ~0.25 mm.
+
+[global NCYC = 300000]      ; 0.6 mm at 2e-3 m/s = 0.3 s; raise/lower NCYC to reach ~0.6 mm
+model cycle [NCYC]
+[io.out('final top displacement = ' + string(top_disp_mm) + ' mm  (want ~0.6)')]
+[io.out('final joint stress     = ' + string(joint_stress_MPa) + ' MPa (want ~0 if brittle)')]
+
+history export 1 vs 3 file 'joint_tension_test.csv' truncate
+model save 'joint_tension_test'

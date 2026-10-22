@@ -1,6 +1,6 @@
 # -*- coding: ascii -*-
 """
-Strategy F (FULL) -- significant-duration-truncated records, runs 1-25.
+Strategy F (FULL) -- recorded table motions, runs 1-25: the CONTROL on the corrected wall.
 
 The fidelity counterpart to the pulse strategies, run as the FULL cumulative
 sequence from run 1. There are THREE base velocity tables -- the HU12 / EC40 /
@@ -15,88 +15,49 @@ SCALING (Table 2)
     Run 3  -> velocity-z 0.20 table 'vel_EC'      (EC40 x 0.20)
     Run 22 -> velocity-z 1.00 table 'vel_FR'      (FR76 x 1.00)
     ... 25 runs, HU12 0.50-6.00, EC40 0.20-0.50, FR76 1.00-2.00. See
-    PROTOCOL_TABLE2. The velocity-z coefficient multiplies the base table, so
-    the record shape is fixed and only its amplitude scales run to run.
+    PROTOCOL_TABLE2.
 
 TRUNCATION (done upstream in integrate_table_accel.py)
     Each base table is the channel-12 acceleration integrated to velocity, kept
     from t = 0 and cut at the velocity zero-crossing nearest its 95% Arias time,
     so the applied motion starts and ends at rest with no velocity step.
 
-WHY IT EXISTS
-    The diagnostic profile figure showed the model reaching about a sixth of
-    the experimental out-of-plane displacement while reproducing the mechanism
-    shape. Two causes are possible: intensity starvation (a loading problem the
-    pulse strategies can fix) or the model itself under-responding. The single
-    thing that separates them is applying the REAL motion and seeing whether
-    the wall then reaches the experimental displacement. This driver does that.
-
-    Run it against a pulse strategy at the same damage state:
-      - if the record reaches the experimental displacement and the pulse does
-        not, the gap is the pulse's missing cycles (a loading limitation), and
-        the fidelity-vs-cost trade is real and quantified.
-      - if the record ALSO falls short, the gap is in the model (boundary
-        conditions, large-strain, damping), and no loading change fixes it.
-
-TWO WAYS TO RUN IT
-    Full cumulative sequence: START_SAVE at the base save, RUN_FROM/RUN_TO
-        spanning all runs. About 180 s of model time for US-1's 24 records,
-        roughly 11 h at ~230 s wall per s model. This is the complete fidelity
-        model, directly comparable run-for-run to the pulse strategies.
-    Targeted benchmark (cheaper, and the decisive test): START_SAVE at a
-        damaged save from a pulse run, RUN_FROM/RUN_TO at just the FR76 runs
-        22-24. One to three records, ~1 h, answers the loading-vs-model
-        question without the full sequence.
-
-    NB a warm start from another strategy's save inherits that strategy's
-    damage history. For a clean run-for-run comparison, start both the record
-    and the pulse analysis from the same state.
-
-INPUTS
-    vel_HU.txt, vel_EC.txt, vel_FR.txt in TABLE_DIR (the 100%-intensity base
-    tables), written by integrate_table_accel.py. Generate them first:
-        python integrate_table_accel.py
-
 REPORTED
     T_end from the ring-down after each record, as a damage measure. It drives
     nothing. Run folders are Run{NN}_{record}_s{scale}, so postprocess_stratC.py
     parses them unchanged and the comparison figures work as-is.
 
-LIMITATIONS
-    Same model caveats as the pulse strategies: the top beam is driven with the
-    base motion, and large-strain is off, so a large-displacement or collapse
-    result needs large-strain on to be trusted. What this driver removes is the
-    loading approximation, not the model approximations.
-
-GENERATED FROM strategy_F_3dec.py: only the config block (manifest name, table
-prefix, RUN_FROM/RUN_TO = 1..25, OUT_DIR) differs. The pulse-synthesis helpers
-(pulse_arrays, calibrate_amplitude_pgd, newmark_sd, ...) remain in the file but
-are unused here. Preserve the 3DEC-embedded Python style. run_strategy_C() is
-kept as the entry-point name only, for diff-ability against the siblings.
-
-OUTPUT
-    stratF_full_results_US{n}/
+GENERATED FROM strategy_F_3dec.py: only the config block differs. The
+pulse-synthesis helpers remain in the file but are unused here.
+run_strategy_C() is kept as the entry-point name only, for diff-ability.
 """
 
 # =====================================================================
-# STANDALONE CASE: F_LS_NODAMP
+# STANDALONE CASE: F_LS_MAXWELL15_v12  -- the CONTROL on the corrected wall
 # =====================================================================
 # This file is a COMPLETE copy of the driver with the case constants baked in.
-# It reads no overrides file -- the loader below is disabled -- so a stale
-# stratC/stratF_overrides.json left over from another case cannot change what
-# this script does. Run it directly:
+# It reads no overrides file. Run it directly:
 #
 #     python-reset-state false
 #     call '<this file>'
 #
+#   build      : 10.35 kN spring load as an APPLIED FORCE on T_B (no equivalent
+#                density, no follower traction), f_t ~ 0 / c = 0.2 MPa joints,
+#                settle Part_I_MASON_v8_LargeStrain_springforce_ft0
 #   geometry   : large-strain on
-#   damping    : NONE (contact dissipation only)
-#   period ID  : experiment   (T1_init = 0.0948 s)
-#   output     : stratF_full_LS_NODAMP
+#   damping    : Maxwell, three units at 0.0085 (1.5 / 6 / 25 Hz) = 1.5 %
+#                MEASURED on this wall by ring-down (ringdown_check v2).
+#                NOT the 1-40 Hz triplet of strategy_C_3dec_maxwell.py, which
+#                was never verified on this build.
+#   period ID  : experiment   (T1_init = 0.103 s; undamped ring-down 9.7 Hz)
+#   output     : stratF_full_LS_MAXWELL15_v12
 #
-# The cost of a standalone copy is that it does NOT track edits to the driver
-# it was generated from. If you change the physics in the base driver,
-# regenerate these copies or the two will silently disagree.
+# NOT comparable with stratF_full_SS_NODAMP_LATEST (small strain, undamped,
+# 2x springs as density, f_t = 0.344). This is a NEW BASELINE: every surrogate
+# (Method 2, Route 2, ...) is scored against this sequence.
+#
+# A fresh start aborts if the save's joint tension is above TENSION_MAX_PA, so
+# pointing this at the bonded build fails before any solving.
 # =====================================================================
 
 import itasca as it
@@ -104,8 +65,6 @@ import numpy as np
 import os, csv, math, json, sys
 
 # Experiment-matched period identification (Moshfeghi et al. 2024 sec. 3.2).
-# Same module the pulse driver uses, so T_end means the same thing in both and
-# the fidelity-vs-pulse comparison is not confounded by the measurement.
 try:
     import period_id_exp
     _HAVE_PERIOD_ID_EXP = True
@@ -115,17 +74,7 @@ except Exception as _e:                                  # pragma: no cover
     print("WARNING: period_id_exp not importable ({}). Falling back to the "
           "legacy single-channel displacement estimator.".format(_e))
 
-# "experiment" = three accelerometers, cropped at the record end, PSD ->
-#                singular values -> peak-pick, seeded once then tracked.
-# "legacy"     = the original single-channel DISPLACEMENT estimator.
-# Both are computed and logged every run; this selects which is reported as
-# T_end. Strategy F does not feed T_end back into the loading, so this changes
-# the DAMAGE MEASURE only -- but that is the quantity plotted against Fig 14.
 PERIOD_ID_METHOD = "experiment"
-
-# Running anchor for the tracker. Seeded on the first run of the session and
-# carried forward. A resume re-seeds, which is visible in the log as
-# tid_source = "seed" partway through a sequence.
 _T_TRACK = None
 
 # >>> RATCHETING : make ratcheting_pulse.py importable and import it
@@ -147,7 +96,9 @@ it.command("program automatic-model-save active off")
 # =====================================================================
 # 1.  PARAMETERS
 # =====================================================================
-T1_init     = 0.0948
+T1_init     = 0.103      # s. Corrected wall rings at 9.7 Hz undamped (was 0.0948).
+                         # Feeds the period-ID windows and the T_end/T_init
+                         # column only; never the loading.
 xi          = 0.05
 delta_t     = 0.005
 n_cycles    = 1.5
@@ -165,66 +116,35 @@ OUT_DIR = None   # set just below, once RECORD_TEST exists
 STATE_FILE_NAME = "stratC_checkpoint.json"
 
 # >>> RATCHETING : controls
-USE_RATCHETING = False   # OFF for this variant: symmetric pulse, ASYM_K inert
-ASYM_K         = 1.0     # global asymmetry sharpening (>=1 sharpens); calibrate out-of-sample
-# Damping is exposed here so it is explicit and printed at startup.
-# The conference paper used FULL Rayleigh at 3%. The pasted driver used
-# mass-proportional 0.06, which over-damps the slow rocking and is the wrong
-# choice for a collapse study. Default below is full Rayleigh 3%; change if needed.
-DAMP_RATIO = 0.0         # fraction of critical at the centre frequency
-DAMP_TYPE  = ""          # "" = full Rayleigh (mass+stiffness); "mass"; "stiffness"
+USE_RATCHETING = False   # OFF: symmetric pulse helpers, unused in Strategy F
+ASYM_K         = 1.0
+# Rayleigh damping OFF. Damping is Maxwell (below).
+DAMP_RATIO = 0.0
+DAMP_TYPE  = ""
 
 # Maxwell (frequency-band) damping, issued verbatim after local/global damping
 # are zeroed. Empty string = no Maxwell damping.
 #
-# 1.5% over 1-40 Hz is:
-#     block mech damp maxwell 0.0120 1.0006 0.0093 9.0193 0.0104 40.0000
-# the same three (weight, frequency) pairs used by strategy_C_3dec_maxwell.py
-# and sweep_cases.py, so a damped record run is directly comparable to the
-# damped pulse runs. Unlike mass-proportional Rayleigh it stays near-constant
-# across the band and does not over-damp the slow rocking mode.
+# 1.5 % over 1.5-25 Hz on THIS build, verified by ring-down (ringdown_check v2):
+# three units at 0.0085 each superpose to xi = 0.015 +- 0.001 at ~10 Hz
+# (0.015 each gave 0.0266). Adds ~1.6 % to the elastic frequency, < 1 % in the
+# rocking range; static stiffness unaffected.
 #
-# CAUTION, and it applies harder here than to the pulse strategies. The note at
-# the end of JModelMason::run() records that getMaxShearStiffness() returns a
-# constant ks_ regardless of contact state, so if 3DEC applies the Maxwell
-# shear dashpot to open subcontacts a separated joint transmits viscous shear
-# c*ks*v_rel across the gap. A full record is far longer than a 3-cycle pulse,
-# so a cracked band spends much more time open. Log energy-shear and check it
-# before trusting a damped record run.
-MAXWELL_CMD = ''
+# CAUTION (from the JModelMason::run() note): getMaxShearStiffness() returns a
+# constant ks_ regardless of contact state, so if 3DEC applies the Maxwell shear
+# dashpot to open subcontacts a separated joint transmits viscous shear across
+# the gap. A full record keeps cracked joints open far longer than a pulse.
+# Check: after run 19 exists, repeat run 19 from stratC_run_18.sav with
+# MAXWELL_CMD = '' and compare peaks; more than ~5 % difference means the
+# dashpot is acting across open joints and the damping model must change.
+MAXWELL_CMD = 'block mech damp maxwell 0.0112 1.0005 0.0081 7.4315 0.0096 25.0004'   # 1.5 % flat, 1-25 Hz (MATLAB-optimised)
 
-# Geometry mode. The module docstring notes this driver has always run in
-# small strain, "so a large-displacement or collapse result needs large-strain
-# on to be trusted". Exposed here rather than left implicit. Applied after the
-# restore, so the static build stays in small strain where it belongs.
-LARGE_STRAIN = "off"
+# Geometry mode. Applied after the restore, so the static build is untouched.
+LARGE_STRAIN = "on"
 
-
-# >>> STRATEGY D : the protocol is a table, not a feedback loop.
-#
-# Each run is defined by two numbers measured from the corresponding
-# shake-table record, and by nothing about the model:
-#
-#   PGD_amp_mm  amplitude of the table displacement (half its peak-to-peak)
-#   T_eq_s      equivalent period, pi * PGD / PGV
-#
-# Both are properties of the ground motion, so the intensity measure is
-# record-invariant. That is the defect that sank the Strategy C variants:
-# Sd(record, T_current) is a function of the damaged structure, so it created
-# an intensity-damage feedback loop with no stable regime, and its values were
-# not comparable between runs or against any other study.
-#
-# The pulse amplitude is calibrated so the applied table displacement equals
-# PGD_amp_mm exactly. The pulse period is T_eq_s. Nothing here adapts.
-# T_end is still identified from the ring-down and logged, purely as a damage
-# measure. It does not influence the excitation.
-# >>> STRATEGY F (FULL) : significant-duration-truncated records, runs 1-25.
+# >>> STRATEGY F (FULL) : recorded table motions, runs 1-25.
 RECORD_TEST   = 9          # only used for the output-folder suffix
 TABLE_DIR     = "."        # folder holding vel_HU.txt / vel_EC.txt / vel_FR.txt
-# record class -> (3DEC table name, table file). These are the 100%-intensity
-# truncated velocity tables written by integrate_table_accel.py. Each run
-# applies its record's base table SCALED by the Table-2 factor, via the
-# velocity-z multiplier (e.g. run 1 -> velocity-z 0.50 table 'vel_HU').
 BASE_TABLES = {
     "HU12": ("vel_HU", "vel_HU.txt"),
     "EC40": ("vel_EC", "vel_EC.txt"),
@@ -232,138 +152,41 @@ BASE_TABLES = {
 }
 RUN_FROM      = 1          # first run to apply (inclusive)
 RUN_TO        = 25         # last run to apply (inclusive)
-START_SAVE    = "part_I_mason_SS_LATEST.sav"   # undamaged base state (full sequence)
+START_SAVE    = "Part_I_MASON_v8_LargeStrain_springforce.sav"   # f_t ~ 0 / c = 0.2 build
 TAIL_SEC_RECORD = 2.5      # ring-down appended after each record (period ID)
+TENSION_MAX_PA  = 0.05e6   # fresh start aborts if the save's joint tension exceeds this
 # <<< STRATEGY F (FULL)
 
-OUT_DIR = 'stratF_full_SS_NODAMP_LATEST'
+OUT_DIR = 'stratF_full_LS_MAXWELL15_v12'
+CASE_ID = 'F_LS_MAXWELL15_v12'
 
-# ---------------------------------------------------------------------
-# Optional per-case overrides, same mechanism and same filename as the pulse
-# driver, so one wrapper script can drive either. A key not on the whitelist
-# is reported as ignored rather than silently applied.
-# ---------------------------------------------------------------------
-# NOTE ON PLACEMENT. This block MUST come after every constant it can
-# override. An earlier version sat immediately after DAMP_TYPE, which is above
-# the assignments of RECORD_TEST, RUN_FROM, RUN_TO, START_SAVE, TAIL_SEC_RECORD
-# and OUT_DIR -- so overriding any of those was silently undone a few lines
-# later and the run would have reported the override as applied while using the
-# baseline value. If you add a new constant, add it BELOW this block or the
-# same trap reopens.
+# Overrides DISABLED: standalone case file.
 _OVERRIDABLE_F = ("OUT_DIR", "START_SAVE", "RUN_FROM", "RUN_TO", "CASE_ID",
                   "DAMP_RATIO", "DAMP_TYPE", "MAXWELL_CMD", "LARGE_STRAIN",
                   "PERIOD_ID_METHOD", "T1_init", "TAIL_SEC_RECORD",
                   "RECORD_TEST")
-CASE_ID = 'F_LS_NODAMP'
 _OVR_FILE_F = "stratF_overrides.json"
-if False:   # DISABLED: this is a standalone case file
-    try:
-        with open(_OVR_FILE_F) as _f:
-            _ovrF = json.load(_f)
-        print("\n--- overrides from {} ---".format(_OVR_FILE_F))
-        for _k in sorted(_ovrF):
-            if _k in _OVERRIDABLE_F:
-                globals()[_k] = _ovrF[_k]
-                print("    {:<20} = {}".format(_k, _ovrF[_k]))
-            else:
-                print("    ! IGNORED (not overridable): {}".format(_k))
-    except Exception as _e:
-        raise RuntimeError("Cannot parse {}: {}".format(_OVR_FILE_F, _e))
-else:
-    print("\n(no {} found -- running baseline constants)".format(_OVR_FILE_F))
+print("\n(standalone case {}: overrides file ignored)".format(CASE_ID))
 
-# If RECORD_TEST was overridden but OUT_DIR was not, re-derive OUT_DIR so the
-# two cannot disagree.
-if os.path.exists(_OVR_FILE_F):
-    try:
-        _seen = json.load(open(_OVR_FILE_F))
-    except Exception:
-        _seen = {}
-    if "RECORD_TEST" in _seen and "OUT_DIR" not in _seen:
-        OUT_DIR = "stratF_full_results_US{}".format(1 if RECORD_TEST == 9 else 2)
-        print("    (OUT_DIR re-derived from RECORD_TEST -> {})".format(OUT_DIR))
-# <<< STRATEGY D
-
-# >>> RETIRED : the Strategy C feedback controls. None is read in Strategy D;
-# they are kept so the stratC_results_* folders stay reproducible from history.
-#
-# THE PROBLEM THIS FIXES
-#   Sd_target = scale * Sd(record, T). Until now T was the period identified
-#   from the post-run free-vibration ring-down, which is a SMALL-AMPLITUDE
-#   measurement. For a wall that has cracked into a rocking mechanism that
-#   period stays short (it saturated at ~1.30 * T1 in stratC_results_GI_NORATCH)
-#   while the effective response period migrates long. Because all three target
-#   spectra are near their minimum at 0.09-0.12 s and rise steeply beyond it,
-#   the identified period pinned the whole IDA to the flat part of the spectrum:
-#
-#     Sd(HU12) = 0.53 mm at 0.092 s ... 4.23 mm at 0.40 s
-#     Sd(FR76) = 1.30 mm at 0.092 s ... 28.78 mm at 0.40 s
-#
-#   GI_NORATCH therefore topped out at Sd_target = 6.77 mm, against ~37 mm in
-#   the calibration study and 61 mm of measured table displacement in the run
-#   that failed the specimen. The IDA never reached collapse intensity.
-#
-# THE FIX
-#   Look the spectrum up at the SECANT period instead, obtained by equivalent
-#   linearisation at the peak response of the preceding run:
-#
-#       k_sec = V_peak / d_peak                (kN/m, from that run's histories)
-#       T_sec = 2*pi*sqrt(M_EFF / k_sec)       (s)
-#
-#   M_EFF and the initial stiffness are the equivalent-SDOF values from the
-#   calibration study: 1.47 t and 6875 kN/m, which reproduce T1 = 0.092 s. This
-#   is standard equivalent linearisation, as used in displacement-based
-#   assessment, and it is the period the rocking wall actually responds at.
-#
-#   The ring-down period is still identified and logged as T_end. It remains a
-#   damage indicator. It no longer sets the intensity.
-USE_SECANT_PERIOD = False  # OFF. The V/d estimator is not sound -- see the
-                           # header. True restores it for comparison only.
-M_EFF_T           = 1.47   # tonnes, equivalent SDOF mass (calibration study)
-K_INIT_KNPM       = 6875.0 # kN/m, equivalent SDOF initial stiffness
-T_SEC_MAX         = 0.60   # s. Hard clamp on the lookup period.
-SECANT_MONOTONIC  = True   # never let the lookup period shorten. Damage is
-                           # irreversible; a smaller excursion in a low-intensity
-                           # run legitimately has a stiffer secant, but using it
-                           # would drop the demand and make the ladder oscillate.
-SD_GROWTH_CAP     = 3.0    # None to disable. Sd_target may not exceed this
-                           # multiple of the previous run's, so a bad period
-                           # estimate cannot reproduce the v7 runaway. Every
-                           # time it binds it is printed and logged.
-SCALE_MULT        = 1.0    # RETIRED in Strategy D. Was: multiplier on the
-                           # what primes the loop. Calibrated on the observed
-                           # stratC_results_SECANT response: the wall cracks
-                           # open at Sd_target ~ 7.8 mm, and with the ring-down
-                           # lookup nothing below 1.5 ever gets there (1.00 and
-                           # 1.25 both stall at T1 for all 25 runs, exactly as
-                           # stratC_results_GI_NORATCH did). 1.5 primes at
-                           # run 20, 2.0 at run 18 but overshoots from run 19.
-                           # Does NOT affect run folder names or the reported
-                           # 'scale' column; only Sd_target. See scale_eff.
+# >>> RETIRED : the Strategy C feedback controls. None is read here.
+USE_SECANT_PERIOD = False
+M_EFF_T           = 1.47
+K_INIT_KNPM       = 6875.0
+T_SEC_MAX         = 0.60
+SECANT_MONOTONIC  = True
+SD_GROWTH_CAP     = 3.0
+SCALE_MULT        = 1.0
 # <<< SECANT PERIOD
 
 # >>> GI VARIANT : joint property overrides applied after every model restore.
-# Set G_I_NEW to None to leave the properties exactly as the base save has them.
-G_I_NEW      = None      # None = leave the base save's properties alone.
-                         # Deliberately OFF here. G_I was raised to 20 in the
-                         # GI variant to suppress the NODAMP_v7 period runaway,
-                         # but that runaway is now understood as an artefact of
-                         # the intensity bug this driver fixes. Keeping G_I at
-                         # the base 13.2 makes this a ONE-VARIABLE change from
-                         # stratC_results_NODAMP_v7. Set 20.0 to re-test G_I on
-                         # top of the corrected intensity ladder.
-G_II_RATIO   = 10.0      # G_II = G_II_RATIO * G_I, as in ANALYSIS_PART_I_MASON.dat
-COH_RESIDUAL = 0.0       # Pa. Base model uses 0 -- cracked joints retain nothing.
-                         # This is very likely the bigger lever; change it ONLY
-                         # after seeing what G_I alone does, so the runs stay
-                         # interpretable one variable at a time.
+G_I_NEW      = None      # leave the base save's properties alone
+G_II_RATIO   = 10.0
+COH_RESIDUAL = 0.0
 # <<< GI VARIANT
-# <<< RATCHETING
 
 # =====================================================================
 # 2.  PROTOCOL (Table 2)
 # =====================================================================
-# Table 2: sequence of applied acceleration records (run, input, scale).
 PROTOCOL_TABLE2 = [
     ( 1, "HU12", 0.50), ( 2, "HU12", 0.75), ( 3, "EC40", 0.20), ( 4, "HU12", 1.00),
     ( 5, "HU12", 1.25), ( 6, "EC40", 0.30), ( 7, "HU12", 1.50), ( 8, "EC40", 0.40),
@@ -376,11 +199,9 @@ PROTOCOL_TABLE2 = [
 
 
 def read_table_duration(path):
-    """(duration_s, n_samples) of a 3DEC velocity table file (line 1 = name,
-    line 2 = 'N <tab> 0', then 'time <tab> velocity'). Duration = last time."""
     last_t, n = 0.0, 0
     with open(path) as f:
-        f.readline(); f.readline()                 # name line, count line
+        f.readline(); f.readline()
         for line in f:
             q = line.split()
             if len(q) >= 2:
@@ -392,8 +213,6 @@ def read_table_duration(path):
 
 
 def build_protocol():
-    """Table 2 restricted to [RUN_FROM, RUN_TO]; each run carries its record's
-    base-table name/file and solve duration (read from the table on disk)."""
     dur = {}
     for rec, (name, fname) in BASE_TABLES.items():
         pth = os.path.join(TABLE_DIR, fname)
@@ -414,7 +233,6 @@ def build_protocol():
 
 
 def import_base_tables():
-    """Import the three 100% base velocity tables into the model (once)."""
     for rec, (name, fname) in BASE_TABLES.items():
         pth = os.path.join(TABLE_DIR, fname)
         if os.path.isfile(pth):
@@ -426,9 +244,6 @@ def import_base_tables():
 
 PROTOCOL = build_protocol()
 
-# Reference only (the driver reads CSVs by filename, never by index).
-# Indices match instrument_history_new.dat + instrument_tilt_v2.dat, and are
-# exported by instrument_history_export_v2.dat.
 FISH_HISTORIES = {
     1: "Record_Disp", 2: "Bot_Quarter_Disp", 3: "Mid_Disp",
     4: "Top_Quarter_A_Disp", 5: "Top_Quarter_B_Disp", 6: "cstav",
@@ -441,20 +256,12 @@ FISH_HISTORIES = {
 # 3.  PATH HELPERS
 # =====================================================================
 def cmd_path(path):
-    # 3DEC accepts forward slashes on both Windows and Linux. Forcing
-    # backslashes corrupts paths on Linux (where '\' is a literal filename
-    # character) and was a cause of period-ID failures from CSVs that could
-    # not be located. Normalise and emit forward slashes for portability.
     return os.path.normpath(path).replace("\\", "/")
 
 def save_file_path(run_no):
     return os.path.join(OUT_DIR, "stratC_run_{:02d}.sav".format(run_no))
 
 def _find_channel_csv(folder, needle="channel_19"):
-    """First CSV in `folder` whose name contains `needle` (case-insensitive).
-    Locating the file by scanning the folder makes period identification
-    independent of the exact filename or path-separator style the FISH export
-    used, which is what previously broke period ID across OS conventions."""
     if not os.path.isdir(folder):
         return None
     hits = [os.path.join(folder, fn) for fn in os.listdir(folder)
@@ -462,13 +269,10 @@ def _find_channel_csv(folder, needle="channel_19"):
     return sorted(hits)[0] if hits else None
 
 def run_label(run_no, record, scale):
-    """The label the FISH export prefixes every channel file with."""
     return "Run{:02d}_{}_s{}".format(
         run_no, record, "{:.2f}".format(scale).replace(".", "p"))
 
 def run_dir(run_no, record=None, scale=None):
-    """Per-run output folder, with the same folder-scan fallback as
-    ch19_csv_path so a renamed folder does not break period identification."""
     if record is not None and scale is not None:
         d = os.path.join(OUT_DIR, run_label(run_no, record, scale))
         if os.path.isdir(d):
@@ -481,14 +285,12 @@ def run_dir(run_no, record=None, scale=None):
     return OUT_DIR
 
 def ch19_csv_path(run_no, record=None, scale=None):
-    # Primary: expected per-run folder, located by scan (robust to filename).
     if record is not None and scale is not None:
         scale_str = "{:.2f}".format(scale).replace(".", "p")
         run_folder = os.path.join(OUT_DIR, "Run{:02d}_{}_s{}".format(run_no, record, scale_str))
         hit = _find_channel_csv(run_folder)
         if hit:
             return hit
-    # Fallback: any folder starting with Run{nn}_ that holds a channel-19 CSV.
     prefix = "Run{:02d}_".format(run_no)
     if os.path.isdir(OUT_DIR):
         for d in sorted(os.listdir(OUT_DIR)):
@@ -496,7 +298,6 @@ def ch19_csv_path(run_no, record=None, scale=None):
                 hit = _find_channel_csv(os.path.join(OUT_DIR, d))
                 if hit:
                     return hit
-    # Last resort: flat path (the caller already handles a missing file).
     return os.path.join(OUT_DIR,
         "Channel_19_DispTopQRight_run{:02d}.csv".format(run_no))
 
@@ -507,7 +308,6 @@ def run_folder_path(run_no, record, scale):
 
 
 def _read_hist(path):
-    """3DEC history export: 2 header lines, whitespace separated."""
     try:
         a = np.genfromtxt(path, skip_header=2)
     except Exception:
@@ -520,44 +320,26 @@ def _read_hist(path):
 
 
 def secant_period(run_no, record, scale):
-    """Equivalent-linearised period from the run just completed.
-
-        k_sec = V_peak / d_peak,   T_sec = 2*pi*sqrt(M_EFF / k_sec)
-
-    V_peak comes from 'total_shear' (kN, base reaction plus both joist
-    reactions) and d_peak from 'rel_disp_top_mm' (mm, top centreline relative
-    to the table). Both are exported for every run.
-
-    Returns (T_sec, info) or (None, info) when the histories are unusable, in
-    which case the caller falls back to the ring-down period.
-    """
+    """Retired in Strategy F; kept for diff-ability with the pulse drivers."""
     info = {"V_peak_kN": None, "disp_peak_mm": None, "k_sec_kNpm": None}
     folder = run_folder_path(run_no, record, scale)
     fv = _find_channel_csv(folder, "total_shear")
     fd = _find_channel_csv(folder, "rel_disp_top_mm")
     if not (fv and fd):
-        print("  ! secant: total_shear / rel_disp_top_mm not found in {}"
-              .format(folder))
         return None, info
     av, ad = _read_hist(fv), _read_hist(fd)
     if av is None or ad is None:
-        print("  ! secant: history unreadable, falling back to ring-down period")
         return None, info
-
-    v = av[:, 1]
-    u = ad[:, 1]
-    V_peak = float(np.max(np.abs(v - v[0])))          # kN
-    d_peak = float(np.max(np.abs(u - u[0]))) / 1000.0  # mm -> m
+    v = av[:, 1]; u = ad[:, 1]
+    V_peak = float(np.max(np.abs(v - v[0])))
+    d_peak = float(np.max(np.abs(u - u[0]))) / 1000.0
     info["V_peak_kN"] = round(V_peak, 4)
     info["disp_peak_mm"] = round(d_peak * 1000.0, 4)
     if d_peak <= 0 or V_peak <= 0:
-        print("  ! secant: zero peak response, falling back to ring-down period")
         return None, info
-
-    k_sec = V_peak / d_peak                            # kN/m
+    k_sec = V_peak / d_peak
     info["k_sec_kNpm"] = round(k_sec, 2)
-    T_sec = 2.0 * math.pi * math.sqrt(M_EFF_T / k_sec)
-    return T_sec, info
+    return 2.0 * math.pi * math.sqrt(M_EFF_T / k_sec), info
 
 
 def state_file_path():
@@ -567,7 +349,9 @@ def state_file_path():
 # 4.  CHECKPOINT / RESUME
 # =====================================================================
 def save_checkpoint(run_no, T_current, summary):
-    state = {"last_completed_run": run_no, "T_current": T_current, "summary": summary}
+    state = {"last_completed_run": run_no, "T_current": T_current, "summary": summary,
+             "case": CASE_ID, "start_save": START_SAVE,
+             "large_strain": LARGE_STRAIN, "maxwell": MAXWELL_CMD}
     with open(state_file_path(), "w", newline="\n") as f:
         json.dump(state, f, indent=2)
 
@@ -577,12 +361,18 @@ def load_checkpoint():
         try:
             with open(sf, "r") as f:
                 state = json.load(f)
+            if state.get("case", CASE_ID) != CASE_ID or state.get("maxwell", MAXWELL_CMD) != MAXWELL_CMD \
+                    or state.get("large_strain", LARGE_STRAIN) != LARGE_STRAIN:
+                raise RuntimeError("checkpoint in {} belongs to a different case / damping / geometry; "
+                                   "use a new OUT_DIR".format(OUT_DIR))
             last = state["last_completed_run"]
             T_cur = state["T_current"]
             summary = state.get("summary", [])
             print("  Checkpoint JSON found: last completed = run {:02d}, "
                   "T_current = {:.4f} s".format(last, T_cur))
             return last + 1, T_cur, summary
+        except RuntimeError:
+            raise
         except Exception as e:
             print("  WARNING: checkpoint corrupt ({}), scanning save files...".format(e))
     last_found = 0
@@ -614,7 +404,7 @@ def check_run_complete(run_no):
     return (os.path.exists(save_file_path(run_no)) and os.path.exists(ch19_csv_path(run_no)))
 
 # =====================================================================
-# 5.  LOAD PRECOMPUTED Sd SPECTRA
+# 5.  LOAD PRECOMPUTED Sd SPECTRA  (unused in Strategy F; kept for diff-ability)
 # =====================================================================
 SPECTRA = {}
 def load_spectra():
@@ -629,7 +419,7 @@ def interpolate_sd(record, T):
     return float(np.interp(T, T_arr, Sd_arr))
 
 # =====================================================================
-# 6.  SINUSOID GENERATION  (original symmetric routines, kept for fallback)
+# 6.  SINUSOID GENERATION  (unused in Strategy F; kept for diff-ability)
 # =====================================================================
 def newmark_sd(a_g, dt, T, xi):
     if T <= 0:
@@ -660,11 +450,6 @@ def calibrate_amplitude(T, Sd_target):
     return (Sd_target / sd0) * A_trial
 
 def pulse_arrays(A, T):
-    """(t, v) for the cosine-acceleration pulse plus its ramped zero tail.
-
-    3DEC is given velocity, and v(0) = 0 exactly because the acceleration is a
-    cosine, so the model starts from rest. Factored out of build_velocity_file
-    so the PGD calibration integrates the same array that gets written."""
     w = 2.0 * math.pi / T
     n = int(round(n_cycles * T / delta_t)) + 1
     t = np.arange(n) * delta_t
@@ -684,27 +469,17 @@ def pulse_arrays(A, T):
     v_tail[:len(v_ramp)] = v_ramp
     return t, np.r_[v, v_tail]
 
-
 def table_displacement(t, v):
-    """Displacement the base will trace out, by trapezoidal integration."""
     return np.concatenate(([0.0],
                            np.cumsum(0.5 * (v[1:] + v[:-1]) * np.diff(t))))
 
-
 def calibrate_amplitude_pgd(T, PGD_target):
-    """Acceleration amplitude giving a table displacement of amplitude
-    PGD_target, defined as half the peak-to-peak.
-
-    Analytically A = PGD * w^2 for a pure sinusoid, but the ramped tail shifts
-    that slightly, so this calibrates on the actual array. One trial pass is
-    enough because the table scales linearly with A."""
     t, v = pulse_arrays(1.0, T)
     d = table_displacement(t, v)
     amp = 0.5 * (float(np.max(d)) - float(np.min(d)))
     if amp <= 0:
         raise RuntimeError("zero trial table displacement at T={:.4f}".format(T))
     return PGD_target / amp
-
 
 def build_velocity_file(A, T, run_no, out_dir):
     t, v = pulse_arrays(A, T)
@@ -720,28 +495,20 @@ def build_velocity_file(A, T, run_no, out_dir):
     v_peak = float(np.max(np.abs(v)))
     return fpath, duration, v_peak
 
-# >>> RATCHETING : asymmetric pulse generation (record-derived)
 def generate_pulse(record, T, Sd_target, run_no, out_dir):
-    """
-    Returns (vel_path, pulse_dur, v_peak, info_dict).
-    Symmetric when USE_RATCHETING is False; otherwise asymmetric with the
-    two-regime activation and the record's measured directional bias.
-    """
     if not USE_RATCHETING:
         A = calibrate_amplitude(T, Sd_target)
         vp, dur, vpk = build_velocity_file(A, T, run_no, out_dir)
         return vp, dur, vpk, {"A": A, "beta": 1.0, "s": 0}
-
     rec = RECORD_ASYM[record]
     s = rec["s"]
-    beta_target = rec["beta"] ** ASYM_K          # sharpen once
-    beta_now = beta_eff(T, T1_init, beta_target) # 1.0 until rocking onset
+    beta_target = rec["beta"] ** ASYM_K
+    beta_now = beta_eff(T, T1_init, beta_target)
     A, _ = calibrate_amplitude_asym(T, Sd_target, beta_now, s,
                                     n_cycles, delta_t, xi, k=1.0)
     vp, dur, vpk = build_velocity_asym(A, T, beta_now, s, run_no, out_dir,
                                        n_cycles, delta_t, tail_sec)
     return vp, dur, vpk, {"A": A, "beta": beta_now, "s": s}
-# <<< RATCHETING
 
 # =====================================================================
 # 7.  PERIOD IDENTIFICATION (segment + window + autocorrelation)
@@ -869,16 +636,15 @@ def export_all_histories(run_no, record, scale, out_dir):
 # =====================================================================
 # 9.  MODEL SETUP (fresh or resumed)
 # =====================================================================
-def setup_model_for_dynamic(save_file):
+def setup_model_for_dynamic(save_file, verify_build=False):
     it.command("model restore '{}'".format(cmd_path(save_file)))
     if str(LARGE_STRAIN).lower() in ("on", "true", "1"):
         it.command("model large-strain on")
         print("  GEOMETRY: large-strain ON (positions updated, contacts "
               "re-detected)")
         print("           NB contacts CREATED during the run inherit the "
-              "material-table default, not the mason assignment made at build "
-              "time. If Part I was built without that default, new toe "
-              "contacts are not governed by mason.")
+              "material-table default (tension 0, cohesion 0, friction), which "
+              "is the intended cracked-joint behaviour on this build.")
     else:
         it.command("model large-strain off")
         print("  GEOMETRY: small-strain (default)")
@@ -901,40 +667,66 @@ def setup_model_for_dynamic(save_file):
     if MAXWELL_CMD:
         it.command(MAXWELL_CMD)
         print("  Maxwell damping applied: {}".format(MAXWELL_CMD))
-    # >>> GI VARIANT : working damping branch. The base driver had the command
-    # commented out inside this branch with `pass` as the body, so setting
-    # DAMP_RATIO non-zero there silently produced an undamped run while
-    # preflight_checks() reported damping as active.
     if DAMP_RATIO > 0:
         cmd = "block mechanical damping rayleigh {ratio} {freq} {dtype}".format(
             ratio=DAMP_RATIO, freq=1.0 / T1_init, dtype=DAMP_TYPE).strip()
         it.command(cmd)
         print("  Rayleigh damping applied: {}".format(cmd))
-    else:
-        print("  (no Rayleigh damping applied; contact dissipation only)")
+    elif not MAXWELL_CMD:
+        print("  (no damping applied; contact dissipation only)")
 
-    # Joint property overrides. Applied after the restore so the base save can be
-    # shared between variants without rebuilding the model.
     if G_I_NEW is not None:
         it.command("block contact property G_I {:g} G_II {:g}".format(
             G_I_NEW, G_II_RATIO * G_I_NEW))
-        print("  G_I -> {:g} J/m2 , G_II -> {:g} J/m2 (base model computes 13.2)".format(
-            G_I_NEW, G_II_RATIO * G_I_NEW))
+        print("  G_I -> {:g} J/m2 , G_II -> {:g} J/m2".format(G_I_NEW, G_II_RATIO * G_I_NEW))
     if COH_RESIDUAL:
         it.command("block contact property cohesion-residual {:g}".format(COH_RESIDUAL))
         print("  cohesion-residual -> {:g} Pa".format(COH_RESIDUAL))
-    # <<< GI VARIANT
+
+    # Build guard: the control must not run on the bonded (f_t = 0.344) build.
+    if verify_build:
+        try:
+            _ft = float(it.fish.get("tension"))
+        except Exception as _e:
+            _ft = None
+            print("  WARNING: cannot read FISH 'tension' from the save ({}); "
+                  "build NOT verified.".format(_e))
+        if _ft is not None:
+            print("  joint tension in this save: {:.3f} MPa".format(_ft / 1e6))
+            if _ft > TENSION_MAX_PA:
+                raise RuntimeError(
+                    "save has joint tension {:.3f} MPa > {:.3f} MPa: this is the bonded "
+                    "build, not the f_t ~ 0 control build. Fix START_SAVE.".format(
+                        _ft / 1e6, TENSION_MAX_PA / 1e6))
+        try:
+            _fapp = 0.0
+            it.command("[global _fapp_tb = 0.0]")
+            it.command("""
+fish define _sum_fapp
+    _fapp_tb = 0.0
+    loop foreach local b block.list
+        if block.isgroup(b, 'T_B')
+            _fapp_tb = _fapp_tb + comp.y(block.force.app(b))
+        endif
+    endloop
+end
+[_sum_fapp]
+""")
+            _fapp = float(it.fish.get("_fapp_tb"))
+            print("  applied spring force on T_B: {:.0f} N (expected -10350)".format(_fapp))
+            if abs(_fapp + 10350.0) > 100.0:
+                raise RuntimeError("applied spring force on T_B is {:.0f} N, not -10350: "
+                                   "wrong build or force lost in the save.".format(_fapp))
+        except RuntimeError:
+            raise
+        except Exception as _e:
+            print("  WARNING: cannot read the applied force on T_B ({}).".format(_e))
     print("  Model setup complete (BCs + damping + joist contact groups applied).")
 
 # =====================================================================
 # 10.  EXECUTE ONE RUN
 # =====================================================================
 def execute_run(entry):
-    """Apply one Table-2 run: the record's 100% base velocity table, scaled by
-    the run's factor through the velocity-z multiplier (e.g. velocity-z 0.50
-    table 'vel_HU'). The base tables are imported once up front and reused;
-    nothing is synthesised, nothing adapts. T_end is logged as a damage measure
-    only."""
     run_no = entry["run"]
     record = entry["record"]
     scale  = entry["scale"]
@@ -961,10 +753,22 @@ def execute_run(entry):
     it.command("model save '{}'".format(cmd_path(save_file_path(run_no))))
     export_all_histories(run_no, record, scale, OUT_DIR)
 
-    # ---- period identification (damage measure only in this strategy) ----
-    # The record's velocity table returns to zero at t = dur, so `dur` IS the
-    # exact table-stop instant -- the equivalent of the experiment reading it
-    # off the shake-table displacement sensor. No threshold detection needed.
+    # ---- peak / residual displacement and like-for-like base shear ----
+    _folder = run_folder_path(run_no, record, scale)
+    _peak_mm = _res_mm = _vexp_kN = float("nan")
+    _fd = _find_channel_csv(_folder, "rel_disp_top_exp_mm")
+    _ad = _read_hist(_fd) if _fd else None
+    if _ad is not None:
+        _u = _ad[:, 1]
+        _peak_mm = float(np.max(np.abs(_u - _u[0])))
+        _n = max(1, int(0.02 * len(_u)))
+        _res_mm = float(np.mean(_u[-_n:]) - _u[0])
+    _fb = _find_channel_csv(_folder, "base_shear_exp_kn")
+    _ab = _read_hist(_fb) if _fb else None
+    if _ab is not None:
+        _vexp_kN = float(np.max(np.abs(_ab[:, 1] - _ab[0, 1])))
+
+    # ---- period identification (damage measure only) ----
     global _T_TRACK
     T_legacy = identify_Tend_from_csv(
         ch19_csv_path(run_no, record, scale), dur)
@@ -997,6 +801,8 @@ def execute_run(entry):
     else:
         T_end = T_legacy; _tid_src = "legacy"
 
+    print("  peak rel. OOP {:.3f} mm   residual {:+.3f} mm   peak sum(m a) {:.2f} kN".format(
+        _peak_mm, _res_mm, _vexp_kN))
     print("  T_end = {:.4f} s ({:.2f}x T1_init)   [damage measure, {}]".format(
         T_end, T_end / T1_init, _tid_src))
     if _HAVE_PERIOD_ID_EXP and np.isfinite(_exp["T"]):
@@ -1006,11 +812,15 @@ def execute_run(entry):
     # NB: do NOT delete the base table -- it is reused every run.
     it.command("history delete")
     it.command("call 'instrument_history_new.dat'")
+    it.command("call 'instrument_baseshear_exp.dat'")
 
     return {
         "run": run_no, "record": record, "scale": round(scale, 4),
         "table_file": entry["table_file"],
         "record_dur_s": round(dur, 4),
+        "peak_rel_OOP_mm": round(_peak_mm, 4) if np.isfinite(_peak_mm) else "",
+        "residual_OOP_mm": round(_res_mm, 4) if np.isfinite(_res_mm) else "",
+        "peak_baseshear_exp_kN": round(_vexp_kN, 3) if np.isfinite(_vexp_kN) else "",
         "T_end": round(T_end, 6),
         "T_end_over_Tinit": round(T_end / T1_init, 4),
         "T_legacy_disp": round(T_legacy, 6),
@@ -1025,16 +835,15 @@ def execute_run(entry):
 # 11.  MAIN DRIVER
 # =====================================================================
 SPECTRA_FILES = [os.path.join(TABLE_DIR, f) for (_n, f) in BASE_TABLES.values()]
-DAT_FILES     = ["instrument_history_new.dat", 
+DAT_FILES     = ["instrument_history_new.dat",
+                 "instrument_baseshear_exp.dat",
                  "instrument_history_export_v2.dat"]
 BASE_SAVE     = START_SAVE
 
 def preflight_checks():
-    """Fail loudly, before any solving, if inputs or config are not in order."""
     print("\n" + "=" * 70)
     print("  PRE-FLIGHT CHECKS  (working dir: {})".format(os.getcwd()))
     print("=" * 70)
-    # A fresh start needs the base save; a resume restores a stratC_run save.
     fresh = (not os.path.exists(state_file_path()) and
              not any(os.path.exists(save_file_path(r)) for r in range(1, len(PROTOCOL) + 1)))
     required = list(SPECTRA_FILES) + list(DAT_FILES) + ([BASE_SAVE] if fresh else [])
@@ -1044,26 +853,21 @@ def preflight_checks():
         if not ok:
             missing.append(f)
         print("   [{:^7}] {}".format("OK" if ok else "MISSING", f))
-    dtype = {"": "full Rayleigh (mass+stiffness)", "mass": "mass-proportional",
-             "stiffness": "stiffness-proportional"}.get(DAMP_TYPE.strip(), DAMP_TYPE)
     print("   start mode  : {}".format("FRESH" if fresh else "RESUME"))
     if MAXWELL_CMD:
-        print("   damping     : Maxwell  [{}]".format(MAXWELL_CMD))
+        print("   damping     : Maxwell  [{}]  (three units at 0.0085 = 1.5 % measured)".format(MAXWELL_CMD))
     if DAMP_RATIO > 0:
         print("   damping     : Rayleigh {:.1f}% at {:.2f} Hz  [{}]".format(
-            DAMP_RATIO * 100.0, 1.0 / T1_init, dtype))
+            DAMP_RATIO * 100.0, 1.0 / T1_init, DAMP_TYPE))
     if not MAXWELL_CMD and DAMP_RATIO <= 0:
         print("   damping     : NONE (contact dissipation only)")
     print("   geometry    : large-strain {}".format(LARGE_STRAIN))
-    if CASE_ID:
-        print("   case        : {}".format(CASE_ID))
-    print("   excitation  : {}   ASYM_K = {}".format(
-        "ASYMMETRIC (ratcheting)" if USE_RATCHETING else "symmetric (baseline)", ASYM_K))
+    print("   case        : {}".format(CASE_ID))
+    print("   T1_init     : {:.4f} s (period-ID windows only)".format(T1_init))
     print("   output dir  : {}".format(OUT_DIR))
     if missing:
         raise RuntimeError("Missing required input file(s) in the working "
-                           "directory: {}. Place them next to this script or "
-                           "fix the working directory.".format(", ".join(missing)))
+                           "directory: {}.".format(", ".join(missing)))
     print("   all required inputs found.")
     print("=" * 70)
 
@@ -1077,18 +881,13 @@ def run_strategy_C():
         print("Delete '{}' to restart.".format(state_file_path()))
         return summary
     _tot = sum(e["dur_s"] for e in PROTOCOL) + len(PROTOCOL) * TAIL_SEC_RECORD
-    print("\n  Strategy F: {} full records, {:.0f} s of model time total.".format(
+    print("\n  Strategy F: {} records, {:.0f} s of model time total.".format(
         len(PROTOCOL), _tot))
-    print("  This is the fidelity benchmark and it is SLOW. On a machine that "
-          "solves")
-    print("  at ~230 s wall per s model, that is roughly {:.0f} h. For the "
-          "decisive".format(_tot * 230.0 / 3600.0))
-    print("  'does the record reach the experimental displacement' test, set "
-          "START_SAVE")
-    print("  to a damaged state and RUN_FROM/RUN_TO to just the FR76 runs.")
+    print("  Large strain re-detects contacts every step; read the wall-clock of "
+          "run 1 before extrapolating (the old ~230 s wall per s model was small strain).")
     if resume_from == 1:
         print("\n--- Starting fresh from {} ---".format(START_SAVE))
-        setup_model_for_dynamic(START_SAVE)
+        setup_model_for_dynamic(START_SAVE, verify_build=True)
     else:
         last_done = resume_from - 1
         print("\n--- Resuming: restoring run {:02d}, will execute run {:02d} next ---".format(
@@ -1101,9 +900,12 @@ def run_strategy_C():
     log_path = os.path.join(OUT_DIR, "strategy_C_log.csv")
     log_is_new = (resume_from == 1) or not os.path.exists(log_path)
     log_f = open(log_path, "w" if log_is_new else "a", newline="\n")
-    LOG_COLS = ["run", "record", "scale", "table_file",
-                "record_dur_s", "T_end", "T_end_over_Tinit"]
+    LOG_COLS = ["run", "record", "scale", "table_file", "record_dur_s",
+                "peak_rel_OOP_mm", "residual_OOP_mm", "peak_baseshear_exp_kN",
+                "T_end", "T_end_over_Tinit"]
     if log_is_new:
+        log_f.write("# case {} | start {} | large-strain {} | {} | T1_init {}\n".format(
+            CASE_ID, START_SAVE, LARGE_STRAIN, MAXWELL_CMD or "undamped", T1_init))
         log_f.write(",".join(LOG_COLS) + "\n")
 
     for idx in range(resume_from - 1, len(PROTOCOL)):
@@ -1113,20 +915,18 @@ def run_strategy_C():
         s = run_summary
         log_f.write(",".join(str(s.get(c, "")) for c in LOG_COLS) + "\n")
         log_f.flush()
-        # stored only so a resume can report it; it drives nothing
         save_checkpoint(entry["run"], run_summary["T_end"], summary)
         print("  Checkpoint saved after run {:02d}.".format(entry["run"]))
     log_f.close()
 
     print("\n" + "=" * 70)
-    print("Strategy F (full records) complete: {} runs".format(len(PROTOCOL)))
+    print("Strategy F (full records) complete: {} runs   [{}]".format(len(PROTOCOL), CASE_ID))
     print("=" * 70)
-    print("\nRecords applied (100% base tables, scaled per Table 2):")
-    print("  {:>4} {:>6} {:>7} {:>9} {:>9}".format(
-        "run", "rec", "scale", "dur_s", "T_end_s"))
+    print("  {:>4} {:>6} {:>7} {:>9} {:>10} {:>9}".format(
+        "run", "rec", "scale", "dur_s", "peak_mm", "T_end_s"))
     for s in summary:
-        print("  {:>4} {:>6} {:>7.2f} {:>9.2f} {:>9.4f}".format(
-            s["run"], s["record"], s["scale"], s["record_dur_s"], s["T_end"]))
+        print("  {:>4} {:>6} {:>7.2f} {:>9.2f} {:>10} {:>9.4f}".format(
+            s["run"], s["record"], s["scale"], s["record_dur_s"], s["peak_rel_OOP_mm"], s["T_end"]))
 
     csv_path = os.path.join(OUT_DIR, "strategy_C_summary.csv")
     if summary:
