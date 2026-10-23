@@ -1,9 +1,9 @@
 # -*- coding: ascii -*-
 """
-batch_ft0p15_pipeline.py -- one 3DEC session, five stages, run back to back on a single licence.
+batch_ft0p15_pipeline.py -- one 3DEC session, six stages, run back to back on a single licence.
 
-    1. pushover, NEGATIVE, f_t = 0     (restores Part_I_MASON_v8_LargeStrain_springforce)          -> pairs with the
-                                                                                                     positive f_t = 0 run
+    0. pushover, POSITIVE, f_t = 0     (restores Part_I_MASON_v8_LargeStrain_springforce)
+    1. pushover, NEGATIVE, f_t = 0     (same save)
     2. pushover, POSITIVE, f_t = 0.15  (restores Part_I_MASON_v8_LargeStrain_springforce_ft_0p15)
     3. pushover, NEGATIVE, f_t = 0.15  (same save)
     4. bilinear_idealisation.py on the two f_t = 0.15 branches (report; optionally the periods for stage 5)
@@ -16,8 +16,10 @@ HOW IT WORKS
     silently run the default). No file on disk is edited. Every stage restores its own save, so the stages do not
     share model state.
 
-    Pushovers use TOP_JOINT = "mason" (the build's joint). Stages 2-3 also write snapshot saves at SNAP_MM on the
-    descending branch (for deformed_shape_3dec.py), inserted after the servo point is logged.
+    Pushovers use TOP_JOINT = "mason" (the build's joint). All four pushovers also write snapshot saves at SNAP_MM on
+    the descending branch (for deformed_shape_3dec.py), inserted after the servo point is logged.
+    Stage 0 writes into PO_DIR_FT0; if a pushover_pos.csv is already there it is renamed to
+    pushover_pos_prev_<time>.csv first, so an earlier positive f_t = 0 run is kept.
 
 RESTARTS
     <BATCH_DIR>/batch_state.json records the stages that finished. Run the file again and finished stages are
@@ -48,9 +50,9 @@ PUSHOVER_SCRIPT = "pushover_oop_3dec_v5.py"
 BILINEAR_SCRIPT = "bilinear_idealisation.py"
 R2TM_SCRIPT     = "route2_Tm_ihsan_full25_3dec.py"
 
-PO_DIR_FT0    = "pushover_results_v5_ft0_masonrypush_TopMason"     # same folder as your positive f_t = 0 run
+PO_DIR_FT0    = "pushover_results_v5_ft0_masonrypush_TopMason"     # stages 0 and 1 (positive and negative f_t = 0)
 PO_DIR_FT015  = "pushover_results_v5_ft0p15_masonrypush_TopMason"
-SNAP_MM       = (5, 10, 20, 40)    # snapshot saves on the f_t = 0.15 descending branches; () for none
+SNAP_MM       = (5, 10, 20, 40)    # snapshot saves on every pushover's descending branch; () for none
 
 BIL_DIR       = "bilinear_idealisation_ft0p15"
 BIL_M_EFF     = 1200.0             # kg, the measured effective mass r2tm uses (the bilinear script's default is 1635)
@@ -71,9 +73,12 @@ STOP_IF_FLAGGED = False            # True: stop before the 25 runs if the prefli
 # per-stage overrides (the NAME = value lines rewritten in each script)
 PO_COMMON = dict(TOP_JOINT="mason")
 STAGES = {
+    0: dict(kind="pushover", critical=False, title="pushover POS, f_t = 0",
+            over=dict(PO_COMMON, RESTORE_SAV=SAVE_FT0, OUT_DIR=PO_DIR_FT0, PUSH_DIR=+1, TENSION_MAX_PA=FT0_MAX_PA),
+            snaps=SNAP_MM),
     1: dict(kind="pushover", critical=False, title="pushover NEG, f_t = 0",
             over=dict(PO_COMMON, RESTORE_SAV=SAVE_FT0, OUT_DIR=PO_DIR_FT0, PUSH_DIR=-1, TENSION_MAX_PA=FT0_MAX_PA),
-            snaps=()),
+            snaps=SNAP_MM),
     2: dict(kind="pushover", critical=True, title="pushover POS, f_t = 0.15 MPa",
             over=dict(PO_COMMON, RESTORE_SAV=SAVE_FT015, OUT_DIR=PO_DIR_FT015, PUSH_DIR=+1, TENSION_MAX_PA=FT015_RANGE[1]),
             snaps=SNAP_MM),
@@ -244,6 +249,11 @@ def csv_summary(path):
 
 # ---------------- stages ----------------
 def stage_pushover(n, st):
+    csv_old = os.path.join(st["over"]["OUT_DIR"], "pushover_{}.csv".format("pos" if st["over"]["PUSH_DIR"] > 0 else "neg"))
+    if os.path.isfile(csv_old) and not DRY_RUN:
+        keep = csv_old.replace(".csv", "_prev_{}.csv".format(time.strftime("%Y%m%d_%H%M%S")))
+        os.rename(csv_old, keep)
+        log("  existing {} kept as {}".format(csv_old, keep))
     run_script(PUSHOVER_SCRIPT, st["over"], st["snaps"])
     if DRY_RUN:
         return {}
