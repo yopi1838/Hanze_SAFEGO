@@ -43,7 +43,7 @@ K_FRAC         = 0.5         # secant point on the rising branch
 DROP_FRAC      = 0.8         # ultimate: force fallen to this fraction of Vu
 SECANT_TO_DROP = True        # T_eff = T1 sqrt(mu / DROP_FRAC)  (False: T1 sqrt(mu))
 MODEL_D_CUT_MM = 90.0        # ignore the model curve beyond this (abrupt tail)
-DU_FALLBACK    = "error"     # "error": stop if the descending branch never reaches 0.8 Vu
+DU_FALLBACK    = "end"     # "error": stop if the descending branch never reaches 0.8 Vu
                              # "end"  : take the last point as du and FLAG it everywhere (json, csv, figure)
 FIG13_CSV      = "US1_fig13_digitised.csv"
 COL = {"model": "#5b7f74", "fig13": "#3b5fa8", "k1": "#b85042", "keff": "#d98c21"}

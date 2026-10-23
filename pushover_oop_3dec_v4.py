@@ -31,9 +31,9 @@ it.command("python-reset-state false")
 
 # ============================ CONFIG =================================
 RESTORE_SAV = "Part_I_MASON_v8_LargeStrain_springforce"   # tension = 0, c = 0.2, Gs = 100 build
-OUT_DIR     = "pushover_results_v5_ft0_masonrypush"
-PUSH_DIR    = -1          # +1 / -1 : run both, separate executions
-TOP_JOINT   = "elastic"   # "elastic" (v3 default), "mohr", or "mason" (leave the build's joint)
+OUT_DIR     = "pushover_results_v5_ft0_masonrypush_TopMason"
+PUSH_DIR    = +1          # +1 / -1 : run both, separate executions
+TOP_JOINT   = "mason"   # "elastic" (v3 default), "mohr", or "mason" (leave the build's joint)
 TOPJ_Y      = (2.57, 2.59)
 POCKET_EXIT_MM = 50.0     # a pocket contact opening beyond this = a joist has left its pocket -> abort
 TENSION_MAX_PA = 0.05e6   # abort if the save's joint tension is above this (bonded build by mistake)
