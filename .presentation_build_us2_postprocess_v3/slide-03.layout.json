@@ -1,0 +1,520 @@
+{
+  "schema": "openai.presentation.layout/v4",
+  "unit": "px",
+  "slide": {
+    "aid": "sl/en2r55",
+    "id": "en2r55",
+    "slide": 3,
+    "layoutId": "48f1e1b3-324d-45ee-8be1-543af5e38781",
+    "layoutName": "Title Slide",
+    "layoutType": "title",
+    "masterLayoutId": "2a1b724b-4d2e-45d1-97ea-0f1b923e0a68",
+    "masterLayoutName": "Master",
+    "backgroundColor": "#FFFFFF",
+    "frame": {
+      "left": 0,
+      "top": 0,
+      "width": 1280,
+      "height": 720
+    }
+  },
+  "theme": {
+    "colorSchemeName": "ChatGPT",
+    "colors": {
+      "accent1": "#156082",
+      "accent2": "#E97132",
+      "accent3": "#196B24",
+      "accent4": "#0F9ED5",
+      "accent5": "#A02B93",
+      "accent6": "#4EA72E",
+      "bg1": "#FFFFFF",
+      "bg2": "#000000",
+      "tx1": "#1F1F1F",
+      "tx2": "#FFFFFF",
+      "dk1": "#000000",
+      "lt1": "#FFFFFF",
+      "dk2": "#0E2841",
+      "lt2": "#E8E8E8",
+      "hlink": "#467886",
+      "folHlink": "#96607D"
+    },
+    "typefaces": [
+      "Calibri",
+      "Cambria"
+    ]
+  },
+  "inheritedLayers": [
+    {
+      "scope": "layout",
+      "id": "48f1e1b3-324d-45ee-8be1-543af5e38781",
+      "name": "Title Slide",
+      "type": "title",
+      "parentLayoutId": "2a1b724b-4d2e-45d1-97ea-0f1b923e0a68",
+      "elements": []
+    },
+    {
+      "scope": "master",
+      "id": "2a1b724b-4d2e-45d1-97ea-0f1b923e0a68",
+      "name": "Master",
+      "type": "master",
+      "elements": []
+    }
+  ],
+  "elements": [
+    {
+      "order": 1,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/hc32xofq",
+      "id": "1",
+      "name": "slide-number-circle-2",
+      "bbox": [
+        52,
+        37,
+        42,
+        42
+      ],
+      "geometry": "ellipse",
+      "fillColor": "#B7684B",
+      "lineWidth": 0
+    },
+    {
+      "order": 2,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/ups3m9wf",
+      "id": "2",
+      "name": "slide-number-2",
+      "bbox": [
+        52,
+        37,
+        42,
+        42
+      ],
+      "geometry": "rect",
+      "text": "2",
+      "textPreview": "2",
+      "resolvedFontSize": 21,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 21,
+        "typeface": "Calibri",
+        "color": "#FFFFFF",
+        "bold": true,
+        "alignment": "center",
+        "verticalAlignment": "middle",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "2"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "2",
+          "resolvedTextStyle": {
+            "fontSize": 21,
+            "typeface": "Calibri",
+            "color": "#FFFFFF",
+            "bold": true,
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "2",
+              "fontSize": 21,
+              "typeface": "Calibri",
+              "color": "#FFFFFF",
+              "bold": true,
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 3,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/fq1kvex0",
+      "id": "3",
+      "name": "slide-title-2",
+      "bbox": [
+        112,
+        30,
+        1110,
+        56
+      ],
+      "geometry": "rect",
+      "text": "Reading targets at fixed periods",
+      "textPreview": "Reading targets at fixed periods",
+      "resolvedFontSize": 36,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 36,
+        "typeface": "Cambria",
+        "color": "#272523",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Reading targets at fixed periods"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Reading targets at fixed periods",
+          "resolvedTextStyle": {
+            "fontSize": 36,
+            "typeface": "Cambria",
+            "color": "#272523",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Reading targets at fixed periods",
+              "fontSize": 36,
+              "typeface": "Cambria",
+              "color": "#272523",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 4,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/4fuls3eh",
+      "id": "4",
+      "name": "slide-subtitle-2",
+      "bbox": [
+        112,
+        88,
+        1100,
+        30
+      ],
+      "geometry": "rect",
+      "text": "T1 and Teff come from the wall idealisation; each run supplies a scaled record spectrum",
+      "textPreview": "T1 and Teff come from the wall idealisation; each run supplies a scaled record spectrum",
+      "resolvedFontSize": 18,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 18,
+        "typeface": "Calibri",
+        "color": "#716D69",
+        "italic": true,
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "T1 and Teff come from the wall idealisation; each run supplies a scaled record spectrum"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "T1 and Teff come from the wall idealisation; each run supplies a scaled record spectrum",
+          "resolvedTextStyle": {
+            "fontSize": 18,
+            "typeface": "Calibri",
+            "color": "#716D69",
+            "italic": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "T1 and Teff come from the wall idealisation; each run supplies a scaled record spectrum",
+              "fontSize": 18,
+              "typeface": "Calibri",
+              "color": "#716D69",
+              "italic": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 5,
+      "kind": "chart",
+      "scope": "slide",
+      "aid": "ch/tozmxkjy",
+      "id": "5",
+      "bbox": [
+        62,
+        148,
+        1156,
+        420
+      ],
+      "chartType": "scatter"
+    },
+    {
+      "order": 6,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/2dc3qtwb",
+      "id": "6",
+      "name": "spectrum-period-key",
+      "bbox": [
+        80,
+        570,
+        680,
+        28
+      ],
+      "geometry": "rect",
+      "text": "Guides: T1 = 0.112 s (dark)  ·  Teff = 0.241 s (terracotta)",
+      "textPreview": "Guides: T1 = 0.112 s (dark)  ·  Teff = 0.241 s (terracotta)",
+      "resolvedFontSize": 15,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 15,
+        "typeface": "Calibri",
+        "color": "#272523",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Guides: T1 = 0.112 s (dark)  ·  Teff = 0.241 s (terracotta)"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Guides: T1 = 0.112 s (dark)  ·  Teff = 0.241 s (terracotta)",
+          "resolvedTextStyle": {
+            "fontSize": 15,
+            "typeface": "Calibri",
+            "color": "#272523",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Guides: T1 = 0.112 s (dark)  ·  Teff = 0.241 s (terracotta)",
+              "fontSize": 15,
+              "typeface": "Calibri",
+              "color": "#272523",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 7,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/3elkzyxw",
+      "id": "7",
+      "name": "spectrum-record-key",
+      "bbox": [
+        80,
+        599,
+        1120,
+        25
+      ],
+      "geometry": "rect",
+      "text": "Curves: HU12 (blue, 21 runs)  ·  EC40 (green, 4 runs)  ·  FR76 (terracotta, 4 runs)",
+      "textPreview": "Curves: HU12 (blue, 21 runs)  ·  EC40 (green, 4 runs)  ·  FR76 (terracotta, 4 runs)",
+      "resolvedFontSize": 14,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 14,
+        "typeface": "Calibri",
+        "color": "#716D69",
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Curves: HU12 (blue, 21 runs)  ·  EC40 (green, 4 runs)  ·  FR76 (terracotta, 4 runs)"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Curves: HU12 (blue, 21 runs)  ·  EC40 (green, 4 runs)  ·  FR76 (terracotta, 4 runs)",
+          "resolvedTextStyle": {
+            "fontSize": 14,
+            "typeface": "Calibri",
+            "color": "#716D69",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Curves: HU12 (blue, 21 runs)  ·  EC40 (green, 4 runs)  ·  FR76 (terracotta, 4 runs)",
+              "fontSize": 14,
+              "typeface": "Calibri",
+              "color": "#716D69",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 8,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/cjulw3ed",
+      "id": "8",
+      "name": "spectrum-target-equations",
+      "bbox": [
+        80,
+        638,
+        1120,
+        33
+      ],
+      "geometry": "rect",
+      "text": "Wave A target = scale × Sd(T1)     ·     Method 1 Wave B target = scale × Sd(Teff)",
+      "textPreview": "Wave A target = scale × Sd(T1)     ·     Method 1 Wave B target = scale × Sd(Teff)",
+      "resolvedFontSize": 17,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 17,
+        "typeface": "Calibri",
+        "color": "#B7684B",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Wave A target = scale × Sd(T1)     ·     Method 1 Wave B target = scale × Sd(Teff)"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Wave A target = scale × Sd(T1)     ·     Method 1 Wave B target = scale × Sd(Teff)",
+          "resolvedTextStyle": {
+            "fontSize": 17,
+            "typeface": "Calibri",
+            "color": "#B7684B",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Wave A target = scale × Sd(T1)     ·     Method 1 Wave B target = scale × Sd(Teff)",
+              "fontSize": 17,
+              "typeface": "Calibri",
+              "color": "#B7684B",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    }
+  ],
+  "composeRuns": []
+}

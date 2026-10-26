@@ -1,0 +1,245 @@
+{"kind":"slide","id":"sl/yxzhza","slide":1,"title":"Adaptive sinusoidal spectral matching","textShapes":3}
+{"kind":"textbox","id":"sh/8zqhcvuh","slide":1,"textChars":68,"textLines":2}
+{"kind":"textbox","id":"sh/nehgjqdc","slide":1,"textChars":67,"textLines":1}
+{"kind":"textbox","id":"sh/mdozalcr","slide":1,"textChars":51,"textLines":1}
+{"kind":"shape","id":"sh/x4zypkve","slide":1,"name":"cover-terracotta-circle","bbox":[1075,454,205,205]}
+{"kind":"notes","id":"nt/yxzhza","slide":1,"text":"This update focuses on the four Route 2 carrier and target combinations. Each..."}
+{"kind":"slide","id":"sl/1eqdh4","slide":2,"title":"1","textShapes":24}
+{"kind":"shape","id":"sh/r61ovat4","slide":2,"name":"slide-number-circle-1","bbox":[52,37,42,42]}
+{"kind":"textbox","id":"sh/c7ap4fap","slide":2,"textChars":1,"textLines":1}
+{"kind":"textbox","id":"sh/d8j6xkba","slide":2,"textChars":20,"textLines":1}
+{"kind":"textbox","id":"sh/2h87y5sn","slide":2,"textChars":56,"textLines":1}
+{"kind":"shape","id":"sh/32horat8","slide":2,"name":"method-1-surface","bbox":[62,137,562,210]}
+{"kind":"shape","id":"sh/43qp0fat","slide":2,"name":"method-1-accent","bbox":[62,137,7,210]}
+{"kind":"textbox","id":"sh/p4z6t0be","slide":2,"textChars":8,"textLines":1}
+{"kind":"textbox","id":"sh/udonulsr","slide":2,"textChars":26,"textLines":1}
+{"kind":"textbox","id":"sh/fexonqtc","slide":2,"textChars":25,"textLines":1}
+{"kind":"shape","id":"sh/7e9k7u1g","slide":2,"name":"method-1-axis-a","bbox":[86,277,190,0]}
+{"kind":"shape","id":"sh/6d03ep0v","slide":2,"name":"method-1-axis-b","bbox":[396,277,190,0]}
+{"kind":"shape","id":"sh/tgr294jm","slide":2,"name":"method-1-wave-a","bbox":[86,260,190,34]}
+{"kind":"shape","id":"sh/sfilgzi1","slide":2,"name":"method-1-wave-b","bbox":[396,260,190,34]}
+{"kind":"textbox","id":"sh/fitkbe1c","slide":2,"textChars":21,"textLines":1}
+{"kind":"textbox","id":"sh/uh03i90r","slide":2,"textChars":28,"textLines":1}
+{"kind":"shape","id":"sh/hkb2doji","slide":2,"name":"method-2-surface","bbox":[656,137,562,210]}
+{"kind":"shape","id":"sh/gj2lkjix","slide":2,"name":"method-2-accent","bbox":[656,137,7,210]}
+{"kind":"textbox","id":"sh/vmpkza18","slide":2,"textChars":8,"textLines":1}
+{"kind":"textbox","id":"sh/algj65kn","slide":2,"textChars":26,"textLines":1}
+{"kind":"textbox","id":"sh/ydofuhon","slide":2,"textChars":30,"textLines":1}
+{"kind":"shape","id":"sh/zehw3mps","slide":2,"name":"method-2-axis-a","bbox":[680,277,190,0]}
+{"kind":"shape","id":"sh/kfqxwr6d","slide":2,"name":"method-2-axis-b","bbox":[990,277,190,0]}
+{"kind":"shape","id":"sh/lgze5w7y","slide":2,"name":"method-2-wave-a","bbox":[680,260,190,34]}
+{"kind":"shape","id":"sh/apovqx8b","slide":2,"name":"method-2-wave-b","bbox":[990,260,190,34]}
+{"kind":"textbox","id":"sh/bqxwz2pw","slide":2,"textChars":21,"textLines":1}
+{"kind":"textbox","id":"sh/cr6ds76h","slide":2,"textChars":28,"textLines":1}
+{"kind":"shape","id":"sh/xcfe1c72","slide":2,"name":"method-3-surface","bbox":[62,369,562,210]}
+{"kind":"shape","id":"sh/2l4vmx8f","slide":2,"name":"method-3-accent","bbox":[62,369,7,210]}
+{"kind":"textbox","id":"sh/nmdwv2p0","slide":2,"textChars":8,"textLines":1}
+{"kind":"textbox","id":"sh/5g3i10ri","slide":2,"textChars":31,"textLines":1}
+{"kind":"textbox","id":"sh/4fuhsvqx","slide":2,"textChars":23,"textLines":1}
+{"kind":"shape","id":"sh/jelgzq9c","slide":2,"name":"method-3-axis-a","bbox":[86,509,190,0]}
+{"kind":"shape","id":"sh/idczql8r","slide":2,"name":"method-3-axis-b","bbox":[396,509,190,0]}
+{"kind":"shape","id":"sh/hcjyxgr6","slide":2,"name":"method-3-wave-a","bbox":[86,492,190,34]}
+{"kind":"shape","id":"sh/wbahovql","slide":2,"name":"method-3-wave-b","bbox":[396,492,190,34]}
+{"kind":"textbox","id":"sh/va1gvq90","slide":2,"textChars":21,"textLines":1}
+{"kind":"textbox","id":"sh/u9szml8v","slide":2,"textChars":28,"textLines":1}
+{"kind":"shape","id":"sh/98jytgra","slide":2,"name":"method-4-surface","bbox":[656,369,562,210]}
+{"kind":"shape","id":"sh/87ahkbap","slide":2,"name":"method-4-accent","bbox":[656,369,7,210]}
+{"kind":"textbox","id":"sh/ozih4vm9","slide":2,"textChars":8,"textLines":1}
+{"kind":"textbox","id":"sh/90rydgnu","slide":2,"textChars":31,"textLines":1}
+{"kind":"textbox","id":"sh/md0z2l4j","slide":2,"textChars":30,"textLines":1}
+{"kind":"shape","id":"sh/ny9gbq54","slide":2,"name":"method-4-axis-a","bbox":[680,509,190,0]}
+{"kind":"shape","id":"sh/w32h8vml","slide":2,"name":"method-4-axis-b","bbox":[990,509,190,0]}
+{"kind":"shape","id":"sh/x4byh0n6","slide":2,"name":"method-4-wave-a","bbox":[680,492,190,34]}
+{"kind":"shape","id":"sh/a10z6l4f","slide":2,"name":"method-4-wave-b","bbox":[990,492,190,34]}
+{"kind":"textbox","id":"sh/b29gfq50","slide":2,"textChars":21,"textLines":1}
+{"kind":"textbox","id":"sh/c7yxwbmh","slide":2,"textChars":28,"textLines":1}
+{"kind":"shape","id":"sh/d87y5wnm","slide":2,"name":"methods-footer-rule","bbox":[62,600,1156,0]}
+{"kind":"textbox","id":"sh/fexsrytg","slide":2,"textChars":189,"textLines":1}
+{"kind":"notes","id":"nt/1eqdh4","slide":2,"text":"Wave A is common to all four methods and targets scale × Sd(T1), where T1 is ..."}
+{"kind":"slide","id":"sl/h87501","slide":3,"title":"2","textShapes":6}
+{"kind":"shape","id":"sh/nq1kbu1g","slide":3,"name":"slide-number-circle-2","bbox":[52,37,42,42]}
+{"kind":"textbox","id":"sh/orul4zi1","slide":3,"textChars":1,"textLines":1}
+{"kind":"textbox","id":"sh/9s3md4jm","slide":3,"textChars":32,"textLines":1}
+{"kind":"textbox","id":"sh/e1s3yp0z","slide":3,"textChars":87,"textLines":1}
+{"kind":"textbox","id":"sh/0nal0zip","slide":3,"textChars":59,"textLines":1}
+{"kind":"textbox","id":"sh/1oj294ja","slide":3,"textChars":83,"textLines":1}
+{"kind":"textbox","id":"sh/qx83up0n","slide":3,"textChars":82,"textLines":1}
+{"kind":"chart","id":"ch/3u5w3upc","slide":3,"name":"","chartType":"scatter","bbox":[62,148,1156,420]}
+{"kind":"notes","id":"nt/h87501","slide":3,"text":"All 25 lines are the 5%-damped displacement spectra for the run's ground-moti..."}
+{"kind":"slide","id":"sl/8865fc","slide":4,"title":"3","textShapes":17}
+{"kind":"shape","id":"sh/gv21srqh","slide":4,"name":"slide-number-circle-3","bbox":[52,37,42,42]}
+{"kind":"textbox","id":"sh/vut0jmpw","slide":4,"textChars":1,"textLines":1}
+{"kind":"textbox","id":"sh/utkjq18b","slide":4,"textChars":26,"textLines":1}
+{"kind":"textbox","id":"sh/5kv2pg7y","slide":4,"textChars":87,"textLines":1}
+{"kind":"textbox","id":"sh/4jm1wb6d","slide":4,"textChars":29,"textLines":1}
+{"kind":"textbox","id":"sh/3itkn6p8","slide":4,"textChars":42,"textLines":1}
+{"kind":"textbox","id":"sh/ixkju18n","slide":4,"textChars":18,"textLines":1}
+{"kind":"textbox","id":"sh/loridc7u","slide":4,"textChars":8,"textLines":1}
+{"kind":"textbox","id":"sh/kni1k7q9","slide":4,"textChars":26,"textLines":1}
+{"kind":"shape","id":"sh/mhcju9ov","slide":4,"name":"dstar-step-divider-0","bbox":[436,303,0,169]}
+{"kind":"textbox","id":"sh/nil03epg","slide":4,"textChars":15,"textLines":1}
+{"kind":"textbox","id":"sh/8ju1wz61","slide":4,"textChars":9,"textLines":1}
+{"kind":"textbox","id":"sh/9k3i5476","slide":4,"textChars":41,"textLines":1}
+{"kind":"shape","id":"sh/alwjy9or","slide":4,"name":"dstar-step-divider-1","bbox":[832,303,0,169]}
+{"kind":"textbox","id":"sh/vm507epc","slide":4,"textChars":17,"textLines":1}
+{"kind":"textbox","id":"sh/wne10j6x","slide":4,"textChars":10,"textLines":1}
+{"kind":"textbox","id":"sh/honi9o7i","slide":4,"textChars":25,"textLines":1}
+{"kind":"textbox","id":"sh/ipwj2to3","slide":4,"textChars":62,"textLines":1}
+{"kind":"shape","id":"sh/ja50bypo","slide":4,"name":"dstar-result-rule","bbox":[82,545,1116,0]}
+{"kind":"textbox","id":"sh/fep0jylg","slide":4,"textChars":94,"textLines":1}
+{"kind":"textbox","id":"sh/edgzqt4b","slide":4,"textChars":136,"textLines":1}
+{"kind":"notes","id":"nt/8865fc","slide":4,"text":"The value d*=3.423165 mm is read from Claude outputs/casm_step1_targets.csv f..."}
+{"kind":"slide","id":"sl/0bilyj","slide":5,"title":"4","textShapes":4}
+{"kind":"shape","id":"sh/698725s3","slide":5,"name":"slide-number-circle-4","bbox":[52,37,42,42]}
+{"kind":"textbox","id":"sh/twjqx0bu","slide":5,"textChars":1,"textLines":1}
+{"kind":"textbox","id":"sh/8bqp4va9","slide":5,"textChars":21,"textLines":1}
+{"kind":"textbox","id":"sh/j6h8rqts","slide":5,"textChars":87,"textLines":1}
+{"kind":"textbox","id":"sh/l8zqt0by","slide":5,"textChars":144,"textLines":1}
+{"kind":"chart","id":"ch/6tgb6psz","slide":5,"name":"","chartType":"scatter","bbox":[58,144,1162,452]}
+{"kind":"notes","id":"nt/0bilyj","slide":5,"text":"Each series is read from the corresponding Run22_FR76_s1p00_*_vel.txt table s..."}
+{"kind":"slide","id":"sl/w6eykt","slide":6,"title":"5","textShapes":8}
+{"kind":"shape","id":"sh/mto7it0z","slide":6,"name":"slide-number-circle-5","bbox":[52,37,42,42]}
+{"kind":"textbox","id":"sh/9wfqd8jq","slide":6,"textChars":1,"textLines":1}
+{"kind":"textbox","id":"sh/ov6pk3i5","slide":6,"textChars":38,"textLines":1}
+{"kind":"textbox","id":"sh/byh8fi1w","slide":6,"textChars":73,"textLines":1}
+{"kind":"textbox","id":"sh/xkzqhsjm","slide":6,"textChars":5,"textLines":1}
+{"kind":"textbox","id":"sh/wzqponih","slide":6,"textChars":23,"textLines":1}
+{"kind":"shape","id":"sh/r2do3e1c","slide":6,"name":"comparison-mid-rule","bbox":[640,541,0,77]}
+{"kind":"textbox","id":"sh/q147a907","slide":6,"textChars":4,"textLines":1}
+{"kind":"textbox","id":"sh/of2lkvm1","slide":6,"textChars":35,"textLines":1}
+{"kind":"textbox","id":"sh/pgbmdg3m","slide":6,"textChars":103,"textLines":1}
+{"kind":"image","id":"im/rips3ixc","slide":6,"name":"","alt":"Four-method comparison of peak relative out-of-plane displacement, peak base shear, and mean spectral target error. Legends read Method 1 through Method 4.","bbox":[49,130,1182,390]}
+{"kind":"notes","id":"nt/w6eykt","slide":6,"text":"Metrics use the three experimental comparisons available for US-1 Test 9, Run..."}
+{"kind":"slide","id":"sl/ubrnwt","slide":7,"title":"6","textShapes":5}
+{"kind":"shape","id":"sh/qxwrmtgf","slide":7,"name":"slide-number-circle-6","bbox":[52,37,42,42]}
+{"kind":"textbox","id":"sh/dknaxozq","slide":7,"textChars":1,"textLines":1}
+{"kind":"textbox","id":"sh/cze9ojy5","slide":7,"textChars":46,"textLines":1}
+{"kind":"textbox","id":"sh/zm5szyhw","slide":7,"textChars":69,"textLines":1}
+{"kind":"textbox","id":"sh/lona18z2","slide":7,"textChars":107,"textLines":1}
+{"kind":"textbox","id":"sh/0ne9s3yh","slide":7,"textChars":94,"textLines":1}
+{"kind":"image","id":"im/jit4jud0","slide":7,"name":"","alt":"The same peak displacement, experiment-equivalent base-shear, and spectral calibration data as the prior slide. Method 2 remains orange; Methods 1, 3, and 4 share a pale grey treatment; US-1 experimental points remain black.","bbox":[49,130,1182,408]}
+{"kind":"notes","id":"nt/ubrnwt","slide":7,"text":"This is a visual focus transition from the preceding all-method comparison. M..."}
+{"kind":"slide","id":"sl/6dl2bx","slide":8,"title":"7","textShapes":26}
+{"kind":"shape","id":"sh/ova1s365","slide":8,"name":"slide-number-circle-7","bbox":[52,37,42,42]}
+{"kind":"textbox","id":"sh/nu10ji5k","slide":8,"textChars":1,"textLines":1}
+{"kind":"textbox","id":"sh/mtsjqdoz","slide":8,"textChars":23,"textLines":1}
+{"kind":"textbox","id":"sh/1sjih8ne","slide":8,"textChars":79,"textLines":1}
+{"kind":"shape","id":"sh/0ra1o36t","slide":8,"name":"baseshear-definition-divider","bbox":[640,148,0,344]}
+{"kind":"textbox","id":"sh/zqh0fy5o","slide":8,"textChars":18,"textLines":1}
+{"kind":"textbox","id":"sh/ep8jmto3","slide":8,"textChars":5,"textLines":1}
+{"kind":"textbox","id":"sh/lo32tsny","slide":8,"textChars":41,"textLines":1}
+{"kind":"shape","id":"sh/knu10nmd","slide":8,"name":"cstav-divider","bbox":[82,316,488,0]}
+{"kind":"textbox","id":"sh/ixk36h4z","slide":8,"textChars":16,"textLines":1}
+{"kind":"textbox","id":"sh/jyt4zml4","slide":8,"textChars":95,"textLines":1}
+{"kind":"textbox","id":"sh/kz2l8rmp","slide":8,"textChars":103,"textLines":1}
+{"kind":"textbox","id":"sh/50bm1w3a","slide":8,"textChars":32,"textLines":1}
+{"kind":"textbox","id":"sh/a9032h4n","slide":8,"textChars":38,"textLines":1}
+{"kind":"textbox","id":"sh/va9kv2l8","slide":8,"textChars":50,"textLines":1}
+{"kind":"shape","id":"sh/wbil47mt","slide":8,"name":"sensor-wall-line","bbox":[715,285,0,159]}
+{"kind":"shape","id":"sh/xcr2xc3e","slide":8,"name":"sensor-wall-foot","bbox":[685,444,61,10]}
+{"kind":"shape","id":"sh/u543e147","slide":8,"name":"sensor-point-0","bbox":[707,292,17,17]}
+{"kind":"textbox","id":"sh/f6d476lc","slide":8,"textChars":19,"textLines":1}
+{"kind":"textbox","id":"sh/ba50zy14","slide":8,"textChars":15,"textLines":1}
+{"kind":"shape","id":"sh/q9wz6tkj","slide":8,"name":"sensor-point-1","bbox":[707,354,17,17]}
+{"kind":"textbox","id":"sh/dcni18ju","slide":8,"textChars":19,"textLines":1}
+{"kind":"textbox","id":"sh/cbe18329","slide":8,"textChars":15,"textLines":1}
+{"kind":"shape","id":"sh/zep03y10","slide":8,"name":"sensor-point-2","bbox":[707,416,17,17]}
+{"kind":"textbox","id":"sh/ydwjadkf","slide":8,"textChars":19,"textLines":1}
+{"kind":"textbox","id":"sh/lg7i58j6","slide":8,"textChars":15,"textLines":1}
+{"kind":"shape","id":"sh/0fy1c32l","slide":8,"name":"sensor-process-divider","bbox":[955,282,0,182]}
+{"kind":"textbox","id":"sh/nip07i1w","slide":8,"textChars":10,"textLines":1}
+{"kind":"textbox","id":"sh/mhgjedkr","slide":8,"textChars":83,"textLines":1}
+{"kind":"textbox","id":"sh/k7ih4nyp","slide":8,"textChars":10,"textLines":1}
+{"kind":"textbox","id":"sh/58rixsza","slide":8,"textChars":89,"textLines":1}
+{"kind":"shape","id":"sh/i50z2dgj","slide":8,"name":"baseshear-comparison-rule","bbox":[78,515,1126,0]}
+{"kind":"textbox","id":"sh/j690vih4","slide":8,"textChars":24,"textLines":1}
+{"kind":"textbox","id":"sh/wjyh0nit","slide":8,"textChars":191,"textLines":1}
+{"kind":"textbox","id":"sh/xk7it8ze","slide":8,"textChars":178,"textLines":1}
+{"kind":"textbox","id":"sh/ahgzyd0n","slide":8,"textChars":73,"textLines":1}
+{"kind":"notes","id":"nt/6dl2bx","slide":8,"text":"cstav is the direct model support reaction from the base and joist supports; ..."}
+{"kind":"slide","id":"sl/4tx2hc","slide":9,"title":"8","textShapes":8}
+{"kind":"shape","id":"sh/by1gjmp0","slide":9,"name":"slide-number-circle-8","bbox":[52,37,42,42]}
+{"kind":"textbox","id":"sh/czaxcrql","slide":9,"textChars":1,"textLines":1}
+{"kind":"textbox","id":"sh/xkjylw76","slide":9,"textChars":44,"textLines":1}
+{"kind":"textbox","id":"sh/2t8f6h8j","slide":9,"textChars":52,"textLines":1}
+{"kind":"textbox","id":"sh/ovqx8rq9","slide":9,"textChars":124,"textLines":1}
+{"kind":"textbox","id":"sh/pwzehc7u","slide":9,"textChars":21,"textLines":1}
+{"kind":"textbox","id":"sh/6pcfi18n","slide":9,"textChars":104,"textLines":1}
+{"kind":"shape","id":"sh/7qlgr6p8","slide":9,"name":"Method 1-mean-error-rule","bbox":[927,524,0,90]}
+{"kind":"textbox","id":"sh/fyx4nuxo","slide":9,"textChars":26,"textLines":1}
+{"kind":"textbox","id":"sh/exo3epw3","slide":9,"textChars":4,"textLines":1}
+{"kind":"image","id":"im/25cfm18r","slide":9,"name":"","alt":"Method 1 base-shear versus OOP displacement loops for FR76 Runs 22–25, including the source plot's US-1, US-2, and support series.","bbox":[45,135,1190,316]}
+{"kind":"notes","id":"nt/4tx2hc","slide":9,"text":"Method 1 uses the per-method plot generated from the project copy of Claude o..."}
+{"kind":"slide","id":"sl/qrdeb9","slide":10,"title":"9","textShapes":8}
+{"kind":"shape","id":"sh/xsz6hwve","slide":10,"name":"slide-number-circle-9","bbox":[52,37,42,42]}
+{"kind":"textbox","id":"sh/a5on6hwn","slide":10,"textChars":1,"textLines":1}
+{"kind":"textbox","id":"sh/vqxofmd8","slide":10,"textChars":44,"textLines":1}
+{"kind":"textbox","id":"sh/kvqpcrep","slide":10,"textChars":52,"textLines":1}
+{"kind":"textbox","id":"sh/it8nahwz","slide":10,"textChars":124,"textLines":1}
+{"kind":"textbox","id":"sh/juhojmd4","slide":10,"textChars":21,"textLines":1}
+{"kind":"textbox","id":"sh/0zm507el","slide":10,"textChars":104,"textLines":1}
+{"kind":"shape","id":"sh/l0v69sv6","slide":10,"name":"Method 2-mean-error-rule","bbox":[927,524,0,90]}
+{"kind":"textbox","id":"sh/lszm5onq","slide":10,"textChars":26,"textLines":1}
+{"kind":"textbox","id":"sh/07qlcjm5","slide":10,"textChars":5,"textLines":1}
+{"kind":"image","id":"im/8v61cfu9","slide":10,"name":"","alt":"Method 2 base-shear versus OOP displacement loops for FR76 Runs 22–25, including the source plot's US-1, US-2, and support series.","bbox":[45,135,1190,316]}
+{"kind":"notes","id":"nt/qrdeb9","slide":10,"text":"Method 2 uses the per-method plot generated from the project copy of Claude o..."}
+{"kind":"slide","id":"sl/zd9dvj","slide":11,"title":"10","textShapes":8}
+{"kind":"shape","id":"sh/3i1wfepg","slide":11,"name":"slide-number-circle-10","bbox":[52,37,42,42]}
+{"kind":"textbox","id":"sh/ojadojq1","slide":11,"textChars":2,"textLines":1}
+{"kind":"textbox","id":"sh/pkjeho7m","slide":11,"textChars":44,"textLines":1}
+{"kind":"textbox","id":"sh/qlsvq987","slide":11,"textChars":52,"textLines":1}
+{"kind":"textbox","id":"sh/cnadsjqx","slide":11,"textChars":124,"textLines":1}
+{"kind":"textbox","id":"sh/dojelo7i","slide":11,"textChars":21,"textLines":1}
+{"kind":"textbox","id":"sh/6povep8n","slide":11,"textChars":104,"textLines":1}
+{"kind":"shape","id":"sh/rqhc7up8","slide":11,"name":"Method 3-mean-error-rule","bbox":[927,524,0,90]}
+{"kind":"textbox","id":"sh/7610z2xk","slide":11,"textChars":26,"textLines":1}
+{"kind":"textbox","id":"sh/m5sjqxwz","slide":11,"textChars":5,"textLines":1}
+{"kind":"image","id":"im/uxwj290j","slide":11,"name":"","alt":"Method 3 base-shear versus OOP displacement loops for FR76 Runs 22–25, including the source plot's US-1, US-2, and support series.","bbox":[45,135,1190,316]}
+{"kind":"notes","id":"nt/zd9dvj","slide":11,"text":"Method 3 uses the per-method plot generated from the project copy of Claude o..."}
+{"kind":"slide","id":"sl/8ffc62","slide":12,"title":"11","textShapes":8}
+{"kind":"shape","id":"sh/1cze9ovu","slide":12,"name":"slide-number-circle-11","bbox":[52,37,42,42]}
+{"kind":"textbox","id":"sh/e9ovy9wj","slide":12,"textChars":2,"textLines":1}
+{"kind":"textbox","id":"sh/faxw7edo","slide":12,"textChars":44,"textLines":1}
+{"kind":"textbox","id":"sh/sn6dwzed","slide":12,"textChars":52,"textLines":1}
+{"kind":"textbox","id":"sh/qlovupw7","slide":12,"textChars":124,"textLines":1}
+{"kind":"textbox","id":"sh/rmxw3uds","slide":12,"textChars":21,"textLines":1}
+{"kind":"textbox","id":"sh/4jmdsze1","slide":12,"textChars":104,"textLines":1}
+{"kind":"shape","id":"sh/5kve14vm","slide":12,"name":"Method 4-mean-error-rule","bbox":[927,524,0,90]}
+{"kind":"textbox","id":"sh/hsnep0fe","slide":12,"textChars":26,"textLines":1}
+{"kind":"textbox","id":"sh/wredgfet","slide":12,"textChars":5,"textLines":1}
+{"kind":"image","id":"im/0rmxwfa9","slide":12,"name":"","alt":"Method 4 base-shear versus OOP displacement loops for FR76 Runs 22–25, including the source plot's US-1, US-2, and support series.","bbox":[45,135,1190,316]}
+{"kind":"notes","id":"nt/8ffc62","slide":12,"text":"Method 4 uses the per-method plot generated from the project copy of Claude o..."}
+{"kind":"slide","id":"sl/caj82m","slide":13,"title":"12","textShapes":7}
+{"kind":"shape","id":"sh/z6pgb2dw","slide":13,"name":"slide-number-circle-12","bbox":[52,37,42,42]}
+{"kind":"textbox","id":"sh/07yxk7eh","slide":13,"textChars":2,"textLines":1}
+{"kind":"textbox","id":"sh/l87ydcv2","slide":13,"textChars":32,"textLines":1}
+{"kind":"textbox","id":"sh/m9gfmhwn","slide":13,"textChars":83,"textLines":1}
+{"kind":"shape","id":"sh/8byxoret","slide":13,"name":"tilt-note-rule","bbox":[850,168,0,423]}
+{"kind":"textbox","id":"sh/9w7yhwve","slide":13,"textChars":7,"textLines":1}
+{"kind":"textbox","id":"sh/2dcfadwj","slide":13,"textChars":38,"textLines":1}
+{"kind":"textbox","id":"sh/3e5g3ixo","slide":13,"textChars":95,"textLines":1}
+{"kind":"textbox","id":"sh/ba10nmt0","slide":13,"textChars":103,"textLines":1}
+{"kind":"chart","id":"ch/r65on29s","slide":13,"name":"","chartType":"line","bbox":[64,150,750,440]}
+{"kind":"notes","id":"nt/caj82m","slide":13,"text":"Experimental points are read from Claude outputs/exp_Test9_incl_tilt.csv, col..."}
+{"kind":"slide","id":"sl/ib73k6","slide":14,"title":"13","textShapes":15}
+{"kind":"shape","id":"sh/qpo32tkv","slide":14,"name":"slide-number-circle-13","bbox":[52,37,42,42]}
+{"kind":"textbox","id":"sh/dsfmx83m","slide":14,"textChars":2,"textLines":1}
+{"kind":"textbox","id":"sh/sr6l4321","slide":14,"textChars":23,"textLines":1}
+{"kind":"textbox","id":"sh/3md4rel4","slide":14,"textChars":68,"textLines":1}
+{"kind":"textbox","id":"sh/il43yt4z","slide":14,"textChars":5,"textLines":1}
+{"kind":"textbox","id":"sh/5ofmto3a","slide":14,"textChars":8,"textLines":1}
+{"kind":"textbox","id":"sh/4n6l0jmp","slide":14,"textChars":34,"textLines":2}
+{"kind":"shape","id":"sh/nih43ilo","slide":14,"name":"summary-divider-0","bbox":[431,183,0,187]}
+{"kind":"textbox","id":"sh/2h8nadk3","slide":14,"textChars":4,"textLines":1}
+{"kind":"textbox","id":"sh/cjix0r65","slide":14,"textChars":8,"textLines":1}
+{"kind":"textbox","id":"sh/dkry9wnq","slide":14,"textChars":33,"textLines":2}
+{"kind":"shape","id":"sh/qx0fy1oz","slide":14,"name":"summary-divider-1","bbox":[814,183,0,187]}
+{"kind":"textbox","id":"sh/by9w765k","slide":14,"textChars":7,"textLines":1}
+{"kind":"textbox","id":"sh/ovyxwr6t","slide":14,"textChars":11,"textLines":1}
+{"kind":"textbox","id":"sh/pwre5wne","slide":14,"textChars":34,"textLines":2}
+{"kind":"shape","id":"sh/2tgfuho3","slide":14,"name":"summary-lower-rule","bbox":[87,414,1105,0]}
+{"kind":"textbox","id":"sh/3upw3m58","slide":14,"textChars":104,"textLines":1}
+{"kind":"textbox","id":"sh/gryxs76x","slide":14,"textChars":98,"textLines":1}
+{"kind":"textbox","id":"sh/1s7e1cni","slide":14,"textChars":97,"textLines":1}
+{"kind":"notes","id":"nt/ib73k6","slide":14,"text":"The mean error metrics compare Methods 1–4 against US-1 Test 9 for Runs 22–24..."}
+{"kind":"notice","message":"Truncated: omitted 0 lines. Increase maxChars or narrow target."}

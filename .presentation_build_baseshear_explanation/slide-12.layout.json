@@ -1,0 +1,625 @@
+{
+  "schema": "openai.presentation.layout/v4",
+  "unit": "px",
+  "slide": {
+    "aid": "sl/o8xglw",
+    "id": "o8xglw",
+    "slide": 12,
+    "layoutId": "9f33aa0a-b18a-4e76-9b51-03fe92b8b6cc",
+    "layoutName": "Title Slide",
+    "layoutType": "title",
+    "masterLayoutId": "cb9560a5-70a0-4735-8d8d-7b5abde57e3f",
+    "masterLayoutName": "Master",
+    "backgroundColor": "#FFFFFF",
+    "frame": {
+      "left": 0,
+      "top": 0,
+      "width": 1280,
+      "height": 720
+    }
+  },
+  "theme": {
+    "colorSchemeName": "ChatGPT",
+    "colors": {
+      "accent1": "#156082",
+      "accent2": "#E97132",
+      "accent3": "#196B24",
+      "accent4": "#0F9ED5",
+      "accent5": "#A02B93",
+      "accent6": "#4EA72E",
+      "bg1": "#FFFFFF",
+      "bg2": "#000000",
+      "tx1": "#1F1F1F",
+      "tx2": "#FFFFFF",
+      "dk1": "#000000",
+      "lt1": "#FFFFFF",
+      "dk2": "#0E2841",
+      "lt2": "#E8E8E8",
+      "hlink": "#467886",
+      "folHlink": "#96607D"
+    },
+    "typefaces": [
+      "Calibri",
+      "Cambria"
+    ]
+  },
+  "inheritedLayers": [
+    {
+      "scope": "layout",
+      "id": "9f33aa0a-b18a-4e76-9b51-03fe92b8b6cc",
+      "name": "Title Slide",
+      "type": "title",
+      "parentLayoutId": "cb9560a5-70a0-4735-8d8d-7b5abde57e3f",
+      "elements": []
+    },
+    {
+      "scope": "master",
+      "id": "cb9560a5-70a0-4735-8d8d-7b5abde57e3f",
+      "name": "Master",
+      "type": "master",
+      "elements": []
+    }
+  ],
+  "elements": [
+    {
+      "order": 1,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/ja1kfqds",
+      "id": "1",
+      "name": "slide-number-circle-11",
+      "bbox": [
+        52,
+        37,
+        42,
+        42
+      ],
+      "geometry": "ellipse",
+      "fillColor": "#B7684B",
+      "lineWidth": 0
+    },
+    {
+      "order": 2,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/kbaloved",
+      "id": "2",
+      "name": "slide-number-11",
+      "bbox": [
+        52,
+        37,
+        42,
+        42
+      ],
+      "geometry": "rect",
+      "text": "11",
+      "textPreview": "11",
+      "resolvedFontSize": 21,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 21,
+        "typeface": "Calibri",
+        "color": "#FFFFFF",
+        "bold": true,
+        "alignment": "center",
+        "verticalAlignment": "middle",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "11"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "11",
+          "resolvedTextStyle": {
+            "fontSize": 21,
+            "typeface": "Calibri",
+            "color": "#FFFFFF",
+            "bold": true,
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "11",
+              "fontSize": 21,
+              "typeface": "Calibri",
+              "color": "#FFFFFF",
+              "bold": true,
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 3,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/lcj2h0vy",
+      "id": "3",
+      "name": "slide-title-11",
+      "bbox": [
+        112,
+        30,
+        1110,
+        56
+      ],
+      "geometry": "rect",
+      "text": "Experimental tiltmeter residuals",
+      "textPreview": "Experimental tiltmeter residuals",
+      "resolvedFontSize": 36,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 36,
+        "typeface": "Cambria",
+        "color": "#272523",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Experimental tiltmeter residuals"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Experimental tiltmeter residuals",
+          "resolvedTextStyle": {
+            "fontSize": 36,
+            "typeface": "Cambria",
+            "color": "#272523",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Experimental tiltmeter residuals",
+              "fontSize": 36,
+              "typeface": "Cambria",
+              "color": "#272523",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 4,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/a5s3ilwb",
+      "id": "4",
+      "name": "slide-subtitle-11",
+      "bbox": [
+        112,
+        88,
+        1100,
+        30
+      ],
+      "geometry": "rect",
+      "text": "Settled Y-axis readings after each run; no experimental Run 25 reading is available",
+      "textPreview": "Settled Y-axis readings after each run; no experimental Run 25 reading is available",
+      "resolvedFontSize": 18,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 18,
+        "typeface": "Calibri",
+        "color": "#716D69",
+        "italic": true,
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Settled Y-axis readings after each run; no experimental Run 25 reading is available"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Settled Y-axis readings after each run; no experimental Run 25 reading is available",
+          "resolvedTextStyle": {
+            "fontSize": 18,
+            "typeface": "Calibri",
+            "color": "#716D69",
+            "italic": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Settled Y-axis readings after each run; no experimental Run 25 reading is available",
+              "fontSize": 18,
+              "typeface": "Calibri",
+              "color": "#716D69",
+              "italic": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 5,
+      "kind": "chart",
+      "scope": "slide",
+      "aid": "ch/76lwfapk",
+      "id": "5",
+      "bbox": [
+        64,
+        150,
+        750,
+        440
+      ],
+      "chartType": "line"
+    },
+    {
+      "order": 6,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/w7alkbe1",
+      "id": "6",
+      "name": "tilt-note-rule",
+      "bbox": [
+        850,
+        168,
+        0,
+        423
+      ],
+      "geometry": "line",
+      "lineColor": "#D4D0CC",
+      "lineWidth": 1
+    },
+    {
+      "order": 7,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/x8j2dgvm",
+      "id": "7",
+      "name": "tilt-run24-value",
+      "bbox": [
+        886,
+        183,
+        310,
+        65
+      ],
+      "geometry": "rect",
+      "text": "+3.279°",
+      "textPreview": "+3.279°",
+      "resolvedFontSize": 43,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 43,
+        "typeface": "Cambria",
+        "color": "#B7684B",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "+3.279°"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "+3.279°",
+          "resolvedTextStyle": {
+            "fontSize": 43,
+            "typeface": "Cambria",
+            "color": "#B7684B",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "+3.279°",
+              "fontSize": 43,
+              "typeface": "Cambria",
+              "color": "#B7684B",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 8,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/u1c3u5wf",
+      "id": "8",
+      "name": "tilt-run24-caption",
+      "bbox": [
+        889,
+        252,
+        300,
+        56
+      ],
+      "geometry": "rect",
+      "text": "Run 24 change from the Run 21 baseline",
+      "textPreview": "Run 24 change from the Run 21 baseline",
+      "resolvedFontSize": 19,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 19,
+        "typeface": "Calibri",
+        "color": "#272523",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Run 24 change from the Run 21"
+          },
+          {
+            "index": 2,
+            "text": "baseline"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Run 24 change from the Run 21 baseline",
+          "resolvedTextStyle": {
+            "fontSize": 19,
+            "typeface": "Calibri",
+            "color": "#272523",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Run 24 change from the Run 21 baseline",
+              "fontSize": 19,
+              "typeface": "Calibri",
+              "color": "#272523",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 9,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/f2l4nad0",
+      "id": "9",
+      "name": "tilt-clip-note",
+      "bbox": [
+        888,
+        346,
+        302,
+        85
+      ],
+      "geometry": "rect",
+      "text": "Within-shaking inclinometer peaks clip near ±25.75°, so this chart uses settled residuals only.",
+      "textPreview": "Within-shaking inclinometer peaks clip near ±25.75°, so this chart uses settled residuals only.",
+      "resolvedFontSize": 18,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 18,
+        "typeface": "Calibri",
+        "color": "#716D69",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 3,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Within-shaking inclinometer peaks clip"
+          },
+          {
+            "index": 2,
+            "text": "near ±25.75°, so this chart uses settled"
+          },
+          {
+            "index": 3,
+            "text": "residuals only."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Within-shaking inclinometer peaks clip near ±25.75°, so this chart uses settled residuals only.",
+          "resolvedTextStyle": {
+            "fontSize": 18,
+            "typeface": "Calibri",
+            "color": "#716D69",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Within-shaking inclinometer peaks clip near ±25.75°, so this chart uses settled residuals only.",
+              "fontSize": 18,
+              "typeface": "Calibri",
+              "color": "#716D69",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 10,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/329gn6tw",
+      "id": "10",
+      "name": "tilt-model-note",
+      "bbox": [
+        888,
+        459,
+        302,
+        92
+      ],
+      "geometry": "rect",
+      "text": "A model comparison needs the angle at the instrument location. The local chord-angle proxy is excluded.",
+      "textPreview": "A model comparison needs the angle at the instrument location. The local chord-angle proxy is excluded.",
+      "resolvedFontSize": 18,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 18,
+        "typeface": "Calibri",
+        "color": "#272523",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 3,
+        "lines": [
+          {
+            "index": 1,
+            "text": "A model comparison needs the angle at"
+          },
+          {
+            "index": 2,
+            "text": "the instrument location. The local"
+          },
+          {
+            "index": 3,
+            "text": "chord-angle proxy is excluded."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "A model comparison needs the angle at the instrument location. The local chord-angle proxy is excluded.",
+          "resolvedTextStyle": {
+            "fontSize": 18,
+            "typeface": "Calibri",
+            "color": "#272523",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "A model comparison needs the angle at the instrument location. The local chord-angle proxy is excluded.",
+              "fontSize": 18,
+              "typeface": "Calibri",
+              "color": "#272523",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    }
+  ],
+  "composeRuns": []
+}

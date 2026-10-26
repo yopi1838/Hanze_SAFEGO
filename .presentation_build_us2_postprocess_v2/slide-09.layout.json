@@ -1,0 +1,683 @@
+{
+  "schema": "openai.presentation.layout/v4",
+  "unit": "px",
+  "slide": {
+    "aid": "sl/ilebwc",
+    "id": "ilebwc",
+    "slide": 9,
+    "layoutId": "4dde5a5e-0ae6-4b1f-9fe2-235ca16cb4c6",
+    "layoutName": "Title Slide",
+    "layoutType": "title",
+    "masterLayoutId": "9d37c035-da36-4d4e-a4cf-edfddf03ace5",
+    "masterLayoutName": "Master",
+    "backgroundColor": "#FFFFFF",
+    "frame": {
+      "left": 0,
+      "top": 0,
+      "width": 1280,
+      "height": 720
+    }
+  },
+  "theme": {
+    "colorSchemeName": "ChatGPT",
+    "colors": {
+      "accent1": "#156082",
+      "accent2": "#E97132",
+      "accent3": "#196B24",
+      "accent4": "#0F9ED5",
+      "accent5": "#A02B93",
+      "accent6": "#4EA72E",
+      "bg1": "#FFFFFF",
+      "bg2": "#000000",
+      "tx1": "#1F1F1F",
+      "tx2": "#FFFFFF",
+      "dk1": "#000000",
+      "lt1": "#FFFFFF",
+      "dk2": "#0E2841",
+      "lt2": "#E8E8E8",
+      "hlink": "#467886",
+      "folHlink": "#96607D"
+    },
+    "typefaces": [
+      "Calibri",
+      "Cambria"
+    ]
+  },
+  "inheritedLayers": [
+    {
+      "scope": "layout",
+      "id": "4dde5a5e-0ae6-4b1f-9fe2-235ca16cb4c6",
+      "name": "Title Slide",
+      "type": "title",
+      "parentLayoutId": "9d37c035-da36-4d4e-a4cf-edfddf03ace5",
+      "elements": []
+    },
+    {
+      "scope": "master",
+      "id": "9d37c035-da36-4d4e-a4cf-edfddf03ace5",
+      "name": "Master",
+      "type": "master",
+      "elements": []
+    }
+  ],
+  "elements": [
+    {
+      "order": 1,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/6tgz6xkb",
+      "id": "1",
+      "name": "slide-number-circle-8",
+      "bbox": [
+        52,
+        37,
+        42,
+        42
+      ],
+      "geometry": "ellipse",
+      "fillColor": "#B7684B",
+      "lineWidth": 0
+    },
+    {
+      "order": 2,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/tg7y1cjm",
+      "id": "2",
+      "name": "slide-number-8",
+      "bbox": [
+        52,
+        37,
+        42,
+        42
+      ],
+      "geometry": "rect",
+      "text": "8",
+      "textPreview": "8",
+      "resolvedFontSize": 21,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 21,
+        "typeface": "Calibri",
+        "color": "#FFFFFF",
+        "bold": true,
+        "alignment": "center",
+        "verticalAlignment": "middle",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "8"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "8",
+          "resolvedTextStyle": {
+            "fontSize": 21,
+            "typeface": "Calibri",
+            "color": "#FFFFFF",
+            "bold": true,
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "8",
+              "fontSize": 21,
+              "typeface": "Calibri",
+              "color": "#FFFFFF",
+              "bold": true,
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 3,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/8vyh872h",
+      "id": "3",
+      "name": "slide-title-8",
+      "bbox": [
+        112,
+        30,
+        1110,
+        56
+      ],
+      "geometry": "rect",
+      "text": "Base shear versus OOP displacement: Method 1",
+      "textPreview": "Base shear versus OOP displacement: Method 1",
+      "resolvedFontSize": 36,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 36,
+        "typeface": "Cambria",
+        "color": "#272523",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Base shear versus OOP displacement: Method 1"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Base shear versus OOP displacement: Method 1",
+          "resolvedTextStyle": {
+            "fontSize": 36,
+            "typeface": "Cambria",
+            "color": "#272523",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Base shear versus OOP displacement: Method 1",
+              "fontSize": 36,
+              "typeface": "Cambria",
+              "color": "#272523",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 4,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/vipg321s",
+      "id": "4",
+      "name": "slide-subtitle-8",
+      "bbox": [
+        112,
+        88,
+        1100,
+        30
+      ],
+      "geometry": "rect",
+      "text": "Like-for-like loops from baseshear_exp_from_model.py",
+      "textPreview": "Like-for-like loops from baseshear_exp_from_model.py",
+      "resolvedFontSize": 18,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 18,
+        "typeface": "Calibri",
+        "color": "#716D69",
+        "italic": true,
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Like-for-like loops from baseshear_exp_from_model.py"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Like-for-like loops from baseshear_exp_from_model.py",
+          "resolvedTextStyle": {
+            "fontSize": 18,
+            "typeface": "Calibri",
+            "color": "#716D69",
+            "italic": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Like-for-like loops from baseshear_exp_from_model.py",
+              "fontSize": 18,
+              "typeface": "Calibri",
+              "color": "#716D69",
+              "italic": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 5,
+      "kind": "image",
+      "scope": "slide",
+      "aid": "im/bu5kfmpc",
+      "id": "5",
+      "bbox": [
+        45,
+        135,
+        1190,
+        316
+      ],
+      "alt": "Method 1 base-shear versus OOP displacement loops for FR76 Runs 22–25, including the source plot's US-1, US-2, and support series.",
+      "contentType": "image/png",
+      "imageFit": "contain",
+      "asset": {
+        "assetId": "0d87eaf5-cade-4abe-9a3a-13a2dbe74bef",
+        "contentType": "image/png",
+        "byteLength": 569413
+      }
+    },
+    {
+      "order": 6,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/hk7i5cjy",
+      "id": "6",
+      "name": "Method 1-loop-context",
+      "bbox": [
+        68,
+        472,
+        1140,
+        33
+      ],
+      "geometry": "rect",
+      "text": "US-1 Test 9 is the primary experimental comparator. US-2 Test 12 and the support series remain visible in the source figure.",
+      "textPreview": "US-1 Test 9 is the primary experimental comparator. US-2 Test 12 and the support series remain visible in the source figure.",
+      "resolvedFontSize": 16,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 16,
+        "typeface": "Calibri",
+        "color": "#716D69",
+        "italic": true,
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "US-1 Test 9 is the primary experimental comparator. US-2 Test 12 and the support series remain visible in the source figure."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "US-1 Test 9 is the primary experimental comparator. US-2 Test 12 and the support series remain visible in the source figure.",
+          "resolvedTextStyle": {
+            "fontSize": 16,
+            "typeface": "Calibri",
+            "color": "#716D69",
+            "italic": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "US-1 Test 9 is the primary experimental comparator. US-2 Test 12 and the support series remain visible in the source figure.",
+              "fontSize": 16,
+              "typeface": "Calibri",
+              "color": "#716D69",
+              "italic": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 7,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/gjyhc72d",
+      "id": "7",
+      "name": "Method 1-mass-formula-label",
+      "bbox": [
+        70,
+        530,
+        260,
+        30
+      ],
+      "geometry": "rect",
+      "text": "Base-shear mass basis",
+      "textPreview": "Base-shear mass basis",
+      "resolvedFontSize": 18,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 18,
+        "typeface": "Calibri",
+        "color": "#B7684B",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Base-shear mass basis"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Base-shear mass basis",
+          "resolvedTextStyle": {
+            "fontSize": 18,
+            "typeface": "Calibri",
+            "color": "#B7684B",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Base-shear mass basis",
+              "fontSize": 18,
+              "typeface": "Calibri",
+              "color": "#B7684B",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 8,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/3m907m14",
+      "id": "8",
+      "name": "Method 1-mass-formula",
+      "bbox": [
+        70,
+        561,
+        820,
+        52
+      ],
+      "geometry": "rect",
+      "text": "Tributary masses use ρ = 1,619 kg/m³; the ×2.317348 test factor is applied to both model and experiment.",
+      "textPreview": "Tributary masses use ρ = 1,619 kg/m³; the ×2.317348 test factor is applied to both model and experiment.",
+      "resolvedFontSize": 17,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 17,
+        "typeface": "Calibri",
+        "color": "#272523",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Tributary masses use ρ = 1,619 kg/m³; the ×2.317348 test factor is applied to both model and experiment."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Tributary masses use ρ = 1,619 kg/m³; the ×2.317348 test factor is applied to both model and experiment.",
+          "resolvedTextStyle": {
+            "fontSize": 17,
+            "typeface": "Calibri",
+            "color": "#272523",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Tributary masses use ρ = 1,619 kg/m³; the ×2.317348 test factor is applied to both model and experiment.",
+              "fontSize": 17,
+              "typeface": "Calibri",
+              "color": "#272523",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 9,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/il0zehkj",
+      "id": "9",
+      "name": "Method 1-mean-error-rule",
+      "bbox": [
+        927,
+        524,
+        0,
+        90
+      ],
+      "geometry": "line",
+      "lineColor": "#D4D0CC",
+      "lineWidth": 1
+    },
+    {
+      "order": 10,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/g3epwzmh",
+      "id": "10",
+      "name": "Method 1-mean-error-caption",
+      "bbox": [
+        956,
+        532,
+        270,
+        24
+      ],
+      "geometry": "rect",
+      "text": "US-1 mean base-shear peak error",
+      "textPreview": "US-1 mean base-shear peak error",
+      "resolvedFontSize": 15,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 15,
+        "typeface": "Calibri",
+        "color": "#716D69",
+        "alignment": "center",
+        "verticalAlignment": "top",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "US-1 mean base-shear peak error"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "US-1 mean base-shear peak error",
+          "resolvedTextStyle": {
+            "fontSize": 15,
+            "typeface": "Calibri",
+            "color": "#716D69",
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "US-1 mean base-shear peak error",
+              "fontSize": 15,
+              "typeface": "Calibri",
+              "color": "#716D69",
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 11,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/14n6p4n2",
+      "id": "11",
+      "name": "Method 1-mean-error",
+      "bbox": [
+        956,
+        558,
+        270,
+        54
+      ],
+      "geometry": "rect",
+      "text": "9.3%",
+      "textPreview": "9.3%",
+      "resolvedFontSize": 38,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 38,
+        "typeface": "Cambria",
+        "color": "#276B8E",
+        "bold": true,
+        "alignment": "center",
+        "verticalAlignment": "top",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "9.3%"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "9.3%",
+          "resolvedTextStyle": {
+            "fontSize": 38,
+            "typeface": "Cambria",
+            "color": "#276B8E",
+            "bold": true,
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "9.3%",
+              "fontSize": 38,
+              "typeface": "Cambria",
+              "color": "#276B8E",
+              "bold": true,
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    }
+  ],
+  "composeRuns": []
+}

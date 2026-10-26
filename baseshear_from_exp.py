@@ -30,11 +30,11 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-M = {"15": 408.52, "16": 320.66, "17": 404.13}      # kg, tributary wall masses (rho 1619, sensors 0.60/1.26/2.06)
-MASS_SCALE = 2.317348                               # the test's factor, applied to both sides
+M = {"15": 455.03, "16": 670.07, "17": 606.47}      # kg: wall 1/4-1/2-1/4 at 18.8 kN/m3 + slabs 120 kg at the quarter levels
+MASS_SCALE = 1.0                                   #     + loading beam 151.4 kg lumped into the top (group's sheet, 5 Oct 2026)
 LP_HZ = 50.0                                        # low-pass on the differentiated velocities
 DT = 0.0005                                         # resampling step for the model histories
-EXP_DIR = "EXP_DATA/processed_globalzero"         # folder with TestXXRunYY_processed_globalzero.xlsx
+EXP_DIR = os.environ.get("EXP_DIR", "EXPRAW")          # folder with TestXXRunYY_processed_globalzero.xlsx
 EXP = {"US-1 (Test 9)": "Test9", "US-2 (Test 12)": "Test12"}
 EXP_SHEAR_SIGN, MODEL_SHEAR_SIGN = -1.0, -1.0       # same conventions as postprocess_route2_full.py
 COL = {"US-1 (Test 9)": "#2b5f8a", "US-2 (Test 12)": "#f0a020", "model": "#b4491a", "cstav": "#8a8f97"}

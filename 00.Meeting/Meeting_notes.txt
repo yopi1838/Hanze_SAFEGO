@@ -1,0 +1,9 @@
+1. Go back to the original motivation
+2. A combination of pulses.
+3. Generate larger acceleration with lower strokes in Friuli.
+4. Do it systematically. You have two sinus amplitudes. 
+5. First sinus amplitudes could be smaller (elastic spectral displacement), then apply the sinus amplitudes matched based on the effective period. These sinusoidal motions can be applied sequentially.
+6. Fit it to the velocity signal instead of the spectral displacement.
+7. Fit the effective period through a bilinear curve.
+8. Try the Friuli signal. (FR76)
+9. Roberto Nascimbene, Rui Pinho, NAM Report that uses ELS 

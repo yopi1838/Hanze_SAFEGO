@@ -1,0 +1,323 @@
+{
+  "schema": "openai.presentation.layout/v4",
+  "unit": "px",
+  "slide": {
+    "aid": "sl/0p16h6",
+    "id": "0p16h6",
+    "slide": 1,
+    "layoutId": "1328ebb9-454f-4959-8999-5b3d46f3245a",
+    "layoutName": "Title Slide",
+    "layoutType": "title",
+    "masterLayoutId": "c82bbfb3-8ae3-4195-85fa-2f9fe6f91fcb",
+    "masterLayoutName": "Master",
+    "backgroundColor": "#2C2927",
+    "frame": {
+      "left": 0,
+      "top": 0,
+      "width": 1280,
+      "height": 720
+    }
+  },
+  "theme": {
+    "colorSchemeName": "ChatGPT",
+    "colors": {
+      "accent1": "#156082",
+      "accent2": "#E97132",
+      "accent3": "#196B24",
+      "accent4": "#0F9ED5",
+      "accent5": "#A02B93",
+      "accent6": "#4EA72E",
+      "bg1": "#FFFFFF",
+      "bg2": "#000000",
+      "tx1": "#1F1F1F",
+      "tx2": "#FFFFFF",
+      "dk1": "#000000",
+      "lt1": "#FFFFFF",
+      "dk2": "#0E2841",
+      "lt2": "#E8E8E8",
+      "hlink": "#467886",
+      "folHlink": "#96607D"
+    },
+    "typefaces": [
+      "Calibri",
+      "Cambria"
+    ]
+  },
+  "inheritedLayers": [
+    {
+      "scope": "layout",
+      "id": "1328ebb9-454f-4959-8999-5b3d46f3245a",
+      "name": "Title Slide",
+      "type": "title",
+      "parentLayoutId": "c82bbfb3-8ae3-4195-85fa-2f9fe6f91fcb",
+      "elements": []
+    },
+    {
+      "scope": "master",
+      "id": "c82bbfb3-8ae3-4195-85fa-2f9fe6f91fcb",
+      "name": "Master",
+      "type": "master",
+      "elements": []
+    }
+  ],
+  "elements": [
+    {
+      "order": 1,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/t4zyh8r6",
+      "id": "1",
+      "name": "cover-title",
+      "bbox": [
+        84,
+        177,
+        1030,
+        174
+      ],
+      "geometry": "rect",
+      "text": "Adaptive sinusoidal spectral matching\nfor out-of-plane masonry walls",
+      "textPreview": "Adaptive sinusoidal spectral matching | for out-of-plane masonry walls",
+      "resolvedFontSize": 50,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 50,
+        "typeface": "Cambria",
+        "color": "#FFFFFF",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Adaptive sinusoidal spectral matching"
+          },
+          {
+            "index": 2,
+            "text": "for out-of-plane masonry walls"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Adaptive sinusoidal spectral matching",
+          "lineSpacingPercent": 95000,
+          "resolvedTextStyle": {
+            "fontSize": 50,
+            "typeface": "Cambria",
+            "color": "#FFFFFF",
+            "bold": true,
+            "alignment": "left",
+            "lineSpacing": 0.95
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Adaptive sinusoidal spectral matching",
+              "fontSize": 50,
+              "typeface": "Cambria",
+              "color": "#FFFFFF",
+              "bold": true,
+              "alignment": "left",
+              "lineSpacing": 0.95
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 2,
+          "text": "for out-of-plane masonry walls",
+          "lineSpacingPercent": 95000,
+          "resolvedTextStyle": {
+            "fontSize": 50,
+            "typeface": "Cambria",
+            "color": "#FFFFFF",
+            "bold": true,
+            "alignment": "left",
+            "lineSpacing": 0.95
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "for out-of-plane masonry walls",
+              "fontSize": 50,
+              "typeface": "Cambria",
+              "color": "#FFFFFF",
+              "bold": true,
+              "alignment": "left",
+              "lineSpacing": 0.95
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 2,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/6h8f6tsf",
+      "id": "2",
+      "name": "cover-subtitle",
+      "bbox": [
+        88,
+        366,
+        1000,
+        60
+      ],
+      "geometry": "rect",
+      "text": "Four Route 2 methods tested from the common Strategy F Run 21 state",
+      "textPreview": "Four Route 2 methods tested from the common Strategy F Run 21 state",
+      "resolvedFontSize": 25,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 25,
+        "typeface": "Calibri",
+        "color": "#D7D2CE",
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Four Route 2 methods tested from the common Strategy F Run 21 state"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Four Route 2 methods tested from the common Strategy F Run 21 state",
+          "resolvedTextStyle": {
+            "fontSize": 25,
+            "typeface": "Calibri",
+            "color": "#D7D2CE",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Four Route 2 methods tested from the common Strategy F Run 21 state",
+              "fontSize": 25,
+              "typeface": "Calibri",
+              "color": "#D7D2CE",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 3,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/72hwfyt0",
+      "id": "3",
+      "name": "cover-meta",
+      "bbox": [
+        88,
+        538,
+        900,
+        42
+      ],
+      "geometry": "rect",
+      "text": "Progress meeting, Hanze SAFEGo US-1, 5 October 2026",
+      "textPreview": "Progress meeting, Hanze SAFEGo US-1, 5 October 2026",
+      "resolvedFontSize": 18,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 18,
+        "typeface": "Calibri",
+        "color": "#C4BFBB",
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Progress meeting, Hanze SAFEGo US-1, 5 October 2026"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Progress meeting, Hanze SAFEGo US-1, 5 October 2026",
+          "resolvedTextStyle": {
+            "fontSize": 18,
+            "typeface": "Calibri",
+            "color": "#C4BFBB",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Progress meeting, Hanze SAFEGo US-1, 5 October 2026",
+              "fontSize": 18,
+              "typeface": "Calibri",
+              "color": "#C4BFBB",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 4,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/kf6x4jap",
+      "id": "4",
+      "name": "cover-terracotta-circle",
+      "bbox": [
+        1075,
+        454,
+        205,
+        205
+      ],
+      "geometry": "ellipse",
+      "fillColor": "#B7684B",
+      "lineWidth": 0
+    }
+  ],
+  "composeRuns": []
+}

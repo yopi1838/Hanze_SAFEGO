@@ -1,0 +1,5 @@
+method,method_label,runs_compared_US2,mean_absolute_OOP_error_pct_US2,mean_absolute_base_shear_error_pct_US2
+1_fixed_wall,Method 1,4,181.1647,7.6817
+2_fixed_record,Method 2,4,124.3516,14.7437
+3_adaptive_wall,Method 3,4,32.9199,20.7241
+4_adaptive_record,Method 4,4,73.9924,13.4781

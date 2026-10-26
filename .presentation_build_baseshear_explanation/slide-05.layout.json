@@ -1,0 +1,381 @@
+{
+  "schema": "openai.presentation.layout/v4",
+  "unit": "px",
+  "slide": {
+    "aid": "sl/tmv6m0",
+    "id": "tmv6m0",
+    "slide": 5,
+    "layoutId": "9f33aa0a-b18a-4e76-9b51-03fe92b8b6cc",
+    "layoutName": "Title Slide",
+    "layoutType": "title",
+    "masterLayoutId": "cb9560a5-70a0-4735-8d8d-7b5abde57e3f",
+    "masterLayoutName": "Master",
+    "backgroundColor": "#FFFFFF",
+    "frame": {
+      "left": 0,
+      "top": 0,
+      "width": 1280,
+      "height": 720
+    }
+  },
+  "theme": {
+    "colorSchemeName": "ChatGPT",
+    "colors": {
+      "accent1": "#156082",
+      "accent2": "#E97132",
+      "accent3": "#196B24",
+      "accent4": "#0F9ED5",
+      "accent5": "#A02B93",
+      "accent6": "#4EA72E",
+      "bg1": "#FFFFFF",
+      "bg2": "#000000",
+      "tx1": "#1F1F1F",
+      "tx2": "#FFFFFF",
+      "dk1": "#000000",
+      "lt1": "#FFFFFF",
+      "dk2": "#0E2841",
+      "lt2": "#E8E8E8",
+      "hlink": "#467886",
+      "folHlink": "#96607D"
+    },
+    "typefaces": [
+      "Calibri",
+      "Cambria"
+    ]
+  },
+  "inheritedLayers": [
+    {
+      "scope": "layout",
+      "id": "9f33aa0a-b18a-4e76-9b51-03fe92b8b6cc",
+      "name": "Title Slide",
+      "type": "title",
+      "parentLayoutId": "cb9560a5-70a0-4735-8d8d-7b5abde57e3f",
+      "elements": []
+    },
+    {
+      "scope": "master",
+      "id": "cb9560a5-70a0-4735-8d8d-7b5abde57e3f",
+      "name": "Master",
+      "type": "master",
+      "elements": []
+    }
+  ],
+  "elements": [
+    {
+      "order": 1,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/wjmtgny5",
+      "id": "1",
+      "name": "slide-number-circle-4",
+      "bbox": [
+        52,
+        37,
+        42,
+        42
+      ],
+      "geometry": "ellipse",
+      "fillColor": "#B7684B",
+      "lineWidth": 0
+    },
+    {
+      "order": 2,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/bids72xk",
+      "id": "2",
+      "name": "slide-number-4",
+      "bbox": [
+        52,
+        37,
+        42,
+        42
+      ],
+      "geometry": "rect",
+      "text": "4",
+      "textPreview": "4",
+      "resolvedFontSize": 21,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 21,
+        "typeface": "Calibri",
+        "color": "#FFFFFF",
+        "bold": true,
+        "alignment": "center",
+        "verticalAlignment": "middle",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "4"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "4",
+          "resolvedTextStyle": {
+            "fontSize": 21,
+            "typeface": "Calibri",
+            "color": "#FFFFFF",
+            "bold": true,
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "4",
+              "fontSize": 21,
+              "typeface": "Calibri",
+              "color": "#FFFFFF",
+              "bold": true,
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 3,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/axkbexgz",
+      "id": "3",
+      "name": "slide-title-4",
+      "bbox": [
+        112,
+        30,
+        1110,
+        56
+      ],
+      "geometry": "rect",
+      "text": "Run 22 input velocity",
+      "textPreview": "Run 22 input velocity",
+      "resolvedFontSize": 36,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 36,
+        "typeface": "Cambria",
+        "color": "#272523",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Run 22 input velocity"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Run 22 input velocity",
+          "resolvedTextStyle": {
+            "fontSize": 36,
+            "typeface": "Cambria",
+            "color": "#272523",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Run 22 input velocity",
+              "fontSize": 36,
+              "typeface": "Cambria",
+              "color": "#272523",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 4,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/lovadcfm",
+      "id": "4",
+      "name": "slide-subtitle-4",
+      "bbox": [
+        112,
+        88,
+        1100,
+        30
+      ],
+      "geometry": "rect",
+      "text": "Actual FR76 × 1.00 velocity tables imported into 3DEC · Wave A is common to all methods",
+      "textPreview": "Actual FR76 × 1.00 velocity tables imported into 3DEC · Wave A is common to all methods",
+      "resolvedFontSize": 18,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 18,
+        "typeface": "Calibri",
+        "color": "#716D69",
+        "italic": true,
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Actual FR76 × 1.00 velocity tables imported into 3DEC · Wave A is common to all methods"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Actual FR76 × 1.00 velocity tables imported into 3DEC · Wave A is common to all methods",
+          "resolvedTextStyle": {
+            "fontSize": 18,
+            "typeface": "Calibri",
+            "color": "#716D69",
+            "italic": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Actual FR76 × 1.00 velocity tables imported into 3DEC · Wave A is common to all methods",
+              "fontSize": 18,
+              "typeface": "Calibri",
+              "color": "#716D69",
+              "italic": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 5,
+      "kind": "chart",
+      "scope": "slide",
+      "aid": "ch/cjyhoja9",
+      "id": "5",
+      "bbox": [
+        58,
+        144,
+        1162,
+        452
+      ],
+      "chartType": "scatter"
+    },
+    {
+      "order": 6,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/jmdsb2xg",
+      "id": "6",
+      "name": "input-velocity-note",
+      "bbox": [
+        78,
+        611,
+        1125,
+        55
+      ],
+      "geometry": "rect",
+      "text": "Wave A carrier = 0.110 s in every method. The fitting routine changes the Wave A/B velocity amplitudes; the selected carrier periods stay fixed.",
+      "textPreview": "Wave A carrier = 0.110 s in every method. The fitting routine changes the Wave A/B velocity amplitudes; the selected carrier periods stay...",
+      "resolvedFontSize": 16,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 16,
+        "typeface": "Calibri",
+        "color": "#716D69",
+        "italic": true,
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Wave A carrier = 0.110 s in every method. The fitting routine changes the Wave A/B velocity amplitudes; the selected carrier periods stay fixed."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Wave A carrier = 0.110 s in every method. The fitting routine changes the Wave A/B velocity amplitudes; the selected carrier periods stay fixed.",
+          "resolvedTextStyle": {
+            "fontSize": 16,
+            "typeface": "Calibri",
+            "color": "#716D69",
+            "italic": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Wave A carrier = 0.110 s in every method. The fitting routine changes the Wave A/B velocity amplitudes; the selected carrier periods stay fixed.",
+              "fontSize": 16,
+              "typeface": "Calibri",
+              "color": "#716D69",
+              "italic": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    }
+  ],
+  "composeRuns": []
+}

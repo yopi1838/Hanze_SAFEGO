@@ -1,0 +1,41 @@
+specimen,source,mass_set,L_eff_kg,K_el_kN_mm,T1_L_s,T1_table5_s,T1_ratio,Fy_kN,dy_mm,du_mm,Ty_L_s,Teff_L_s,Teff_table5_s
+US1,Fig. 13 digitised,v2 sheet (1732 kg),1202.0,3.212,0.1216,0.091,1.336,12.8486,13.1091,27.6227,0.2200,0.3194,0.2391
+US1,Fig. 13 digitised,old files / 2.317 (1133 kg),758.6,3.212,0.0966,0.091,1.061,12.8486,13.1091,27.6227,0.1748,0.2537,0.2391
+US1,"peaks per sign (non-simult.), global-zero d, runs 1-24",v2 sheet (1732 kg),1202.0,4.611,0.1014,0.091,1.115,12.9038,23.5188,27.4214,0.2941,0.3176,0.2849
+US1,"peaks per sign (non-simult.), global-zero d, runs 1-24",old files / 2.317 (1133 kg),758.6,4.611,0.0806,0.091,0.886,12.9038,23.5188,27.4214,0.2336,0.2523,0.2849
+US1,"peaks per sign (non-simult.), run-rel. d, runs 1-24",v2 sheet (1732 kg),1202.0,4.442,0.1034,0.091,1.136,12.9038,22.8326,27.4214,0.2898,0.3176,0.2796
+US1,"peaks per sign (non-simult.), run-rel. d, runs 1-24",old files / 2.317 (1133 kg),758.6,4.442,0.0821,0.091,0.902,12.9038,22.8326,27.4214,0.2302,0.2523,0.2796
+US1,"F at d_max (simultaneous), global-zero d, runs 1-24",v2 sheet (1732 kg),1202.0,4.002,0.1089,0.091,1.197,8.1974,6.6632,27.4214,0.1964,0.3984,0.3329
+US1,"F at d_max (simultaneous), global-zero d, runs 1-24",old files / 2.317 (1133 kg),758.6,4.002,0.0865,0.091,0.951,8.1974,6.6632,27.4214,0.1560,0.3165,0.3329
+US1,"F at d_max (simultaneous), run-rel. d, runs 1-24",v2 sheet (1732 kg),1202.0,3.738,0.1127,0.091,1.238,8.1974,6.8078,27.4214,0.1985,0.3984,0.3218
+US1,"F at d_max (simultaneous), run-rel. d, runs 1-24",old files / 2.317 (1133 kg),758.6,3.738,0.0895,0.091,0.984,8.1974,6.8078,27.4214,0.1577,0.3165,0.3218
+US1,"both simultaneous pairs (F_max,d) + (d_max,F), global-zero d, runs 1-24",v2 sheet (1732 kg),1202.0,4.560,0.1020,0.091,1.121,12.9038,6.271,27.4214,0.1519,0.3176,0.2833
+US1,"both simultaneous pairs (F_max,d) + (d_max,F), global-zero d, runs 1-24",old files / 2.317 (1133 kg),758.6,4.560,0.0810,0.091,0.891,12.9038,6.271,27.4214,0.1206,0.2523,0.2833
+US1,"both simultaneous pairs (F_max,d) + (d_max,F), run-rel. d, runs 1-24",v2 sheet (1732 kg),1202.0,4.237,0.1058,0.091,1.163,12.9038,5.5848,27.4214,0.1433,0.3176,0.2731
+US1,"both simultaneous pairs (F_max,d) + (d_max,F), run-rel. d, runs 1-24",old files / 2.317 (1133 kg),758.6,4.237,0.0841,0.091,0.924,12.9038,5.5848,27.4214,0.1139,0.2523,0.2731
+US2,Fig. 13 digitised,v2 sheet (1732 kg),1195.5,4.751,0.0997,0.087,1.146,12.6006,7.2924,8.8065,0.1653,0.1816,0.1585
+US2,Fig. 13 digitised,old files / 2.317 (1133 kg),749.9,4.751,0.0789,0.087,0.907,12.6006,7.2924,8.8065,0.1309,0.1438,0.1585
+US2,"peaks per sign (non-simult.), global-zero d, runs 1-24",v2 sheet (1732 kg),1195.5,5.344,0.0940,0.087,1.080,14.3078,9.0539,9.0539,0.1728,0.1728,0.1600
+US2,"peaks per sign (non-simult.), global-zero d, runs 1-24",old files / 2.317 (1133 kg),749.9,5.344,0.0744,0.087,0.856,14.3078,9.0539,9.0539,0.1369,0.1369,0.1600
+US2,"peaks per sign (non-simult.), run-rel. d, runs 1-24",v2 sheet (1732 kg),1195.5,5.361,0.0938,0.087,1.078,14.3078,8.8921,8.8921,0.1713,0.1713,0.1588
+US2,"peaks per sign (non-simult.), run-rel. d, runs 1-24",old files / 2.317 (1133 kg),749.9,5.361,0.0743,0.087,0.854,14.3078,8.8921,8.8921,0.1356,0.1356,0.1588
+US2,"F at d_max (simultaneous), global-zero d, runs 1-24",v2 sheet (1732 kg),1195.5,4.289,0.1049,0.087,1.206,10.0861,4.4338,9.0539,0.1440,0.2058,0.1707
+US2,"F at d_max (simultaneous), global-zero d, runs 1-24",old files / 2.317 (1133 kg),749.9,4.289,0.0831,0.087,0.955,10.0861,4.4338,9.0539,0.1141,0.1630,0.1707
+US2,"F at d_max (simultaneous), run-rel. d, runs 1-24",v2 sheet (1732 kg),1195.5,4.566,0.1017,0.087,1.169,10.0861,4.5949,8.8921,0.1466,0.2040,0.1745
+US2,"F at d_max (simultaneous), run-rel. d, runs 1-24",old files / 2.317 (1133 kg),749.9,4.566,0.0805,0.087,0.926,10.0861,4.5949,8.8921,0.1161,0.1616,0.1745
+US2,"both simultaneous pairs (F_max,d) + (d_max,F), global-zero d, runs 1-24",v2 sheet (1732 kg),1195.5,5.245,0.0949,0.087,1.090,14.3078,5.5366,9.0539,0.1351,0.1728,0.1585
+US2,"both simultaneous pairs (F_max,d) + (d_max,F), global-zero d, runs 1-24",old files / 2.317 (1133 kg),749.9,5.245,0.0751,0.087,0.864,14.3078,5.5366,9.0539,0.1070,0.1369,0.1585
+US2,"both simultaneous pairs (F_max,d) + (d_max,F), run-rel. d, runs 1-24",v2 sheet (1732 kg),1195.5,5.101,0.0962,0.087,1.106,14.3078,5.3749,8.8921,0.1332,0.1713,0.1549
+US2,"both simultaneous pairs (F_max,d) + (d_max,F), run-rel. d, runs 1-24",old files / 2.317 (1133 kg),749.9,5.101,0.0762,0.087,0.876,14.3078,5.3749,8.8921,0.1055,0.1356,0.1549
+US2,"peaks per sign (non-simult.), global-zero d, runs 1-25",v2 sheet (1732 kg),1195.5,5.344,0.0940,0.087,1.080,14.9233,25.7159,25.7159,0.2852,0.2852,0.2640
+US2,"peaks per sign (non-simult.), global-zero d, runs 1-25",old files / 2.317 (1133 kg),749.9,5.344,0.0744,0.087,0.856,14.9233,25.7159,25.7159,0.2259,0.2259,0.2640
+US2,"peaks per sign (non-simult.), run-rel. d, runs 1-25",v2 sheet (1732 kg),1195.5,5.361,0.0938,0.087,1.078,14.9233,25.7159,25.7159,0.2852,0.2852,0.2644
+US2,"peaks per sign (non-simult.), run-rel. d, runs 1-25",old files / 2.317 (1133 kg),749.9,5.361,0.0743,0.087,0.854,14.9233,25.7159,25.7159,0.2259,0.2259,0.2644
+US2,"F at d_max (simultaneous), global-zero d, runs 1-25",v2 sheet (1732 kg),1195.5,4.289,0.1049,0.087,1.206,10.0861,4.4338,25.7159,0.1440,0.3469,0.2877
+US2,"F at d_max (simultaneous), global-zero d, runs 1-25",old files / 2.317 (1133 kg),749.9,4.289,0.0831,0.087,0.955,10.0861,4.4338,25.7159,0.1141,0.2747,0.2877
+US2,"F at d_max (simultaneous), run-rel. d, runs 1-25",v2 sheet (1732 kg),1195.5,4.566,0.1017,0.087,1.169,10.0861,4.5949,25.7159,0.1466,0.3469,0.2968
+US2,"F at d_max (simultaneous), run-rel. d, runs 1-25",old files / 2.317 (1133 kg),749.9,4.566,0.0805,0.087,0.926,10.0861,4.5949,25.7159,0.1161,0.2747,0.2968
+US2,"both simultaneous pairs (F_max,d) + (d_max,F), global-zero d, runs 1-25",v2 sheet (1732 kg),1195.5,5.245,0.0949,0.087,1.090,14.9233,7.7566,25.7159,0.1566,0.2852,0.2616
+US2,"both simultaneous pairs (F_max,d) + (d_max,F), global-zero d, runs 1-25",old files / 2.317 (1133 kg),749.9,5.245,0.0751,0.087,0.864,14.9233,7.7566,25.7159,0.1241,0.2259,0.2616
+US2,"both simultaneous pairs (F_max,d) + (d_max,F), run-rel. d, runs 1-25",v2 sheet (1732 kg),1195.5,5.101,0.0962,0.087,1.106,14.9233,7.7566,25.7159,0.1566,0.2852,0.2579
+US2,"both simultaneous pairs (F_max,d) + (d_max,F), run-rel. d, runs 1-25",old files / 2.317 (1133 kg),749.9,5.101,0.0762,0.087,0.876,14.9233,7.7566,25.7159,0.1241,0.2259,0.2579

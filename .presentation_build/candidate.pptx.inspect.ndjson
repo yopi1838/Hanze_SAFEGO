@@ -1,0 +1,159 @@
+{"kind":"deck","id":"pr/sfwxpv","name":"Deck"}
+{"kind":"layout","layoutId":"c82bbfb3-8ae3-4195-85fa-2f9fe6f91fcb","name":"Master","type":"master"}
+{"kind":"layout","layoutId":"1328ebb9-454f-4959-8999-5b3d46f3245a","name":"Title Slide","type":"title"}
+{"kind":"slide","id":"sl/0p16h6","slide":1,"title":"Adaptive sinusoidal spectral matching","textShapes":3}
+{"kind":"textbox","id":"sh/t4zyh8r6","slide":1,"name":"cover-title","text":"Adaptive sinusoidal spectral matching\nfor out-of-plane masonry walls","textPreview":"Adaptive sinusoidal spectral matching | for out-of-plane masonry walls","textChars":68,"textLines":2,"bbox":[84,177,1030,174]}
+{"kind":"textbox","id":"sh/6h8f6tsf","slide":1,"name":"cover-subtitle","text":"Four Route 2 methods tested from the common Strategy F Run 21 state","textPreview":"Four Route 2 methods tested from the common Strategy F Run 21 state","textChars":67,"textLines":1,"bbox":[88,366,1000,60]}
+{"kind":"textbox","id":"sh/72hwfyt0","slide":1,"name":"cover-meta","text":"Progress meeting, Hanze SAFEGo US-1, 5 October 2026","textPreview":"Progress meeting, Hanze SAFEGo US-1, 5 October 2026","textChars":51,"textLines":1,"bbox":[88,538,900,42]}
+{"kind":"shape","id":"sh/kf6x4jap","slide":1,"name":"cover-terracotta-circle","bbox":[1075,454,205,205]}
+{"kind":"notes","id":"nt/0p16h6","slide":1,"text":"This update focuses on the four Route 2 carrier and target combinations. Each sequence starts from the same Strategy F Run 21 save and carries the damage state forward through FR76 Runs 22–25."}
+{"kind":"slide","id":"sl/4h6bd0","slide":2,"title":"1","textShapes":24}
+{"kind":"shape","id":"sh/yl8fadoj","slide":2,"name":"slide-number-circle-1","bbox":[52,37,42,42]}
+{"kind":"textbox","id":"sh/lozelsna","slide":2,"name":"slide-number-1","text":"1","textPreview":"1","textChars":1,"textLines":1,"bbox":[52,37,42,42]}
+{"kind":"textbox","id":"sh/0nqxcn6p","slide":2,"name":"slide-title-1","text":"Four Route 2 methods","textPreview":"Four Route 2 methods","textChars":20,"textLines":1,"bbox":[112,30,1110,56]}
+{"kind":"textbox","id":"sh/nq1wn25g","slide":2,"name":"slide-subtitle-1","text":"Two target rules crossed with two Wave B carrier periods","textPreview":"Two target rules crossed with two Wave B carrier periods","textChars":56,"textLines":1,"bbox":[112,88,1100,30]}
+{"kind":"shape","id":"sh/mpsfex4v","slide":2,"name":"method-1-surface","bbox":[62,137,562,210]}
+{"kind":"shape","id":"sh/9sjepsn6","slide":2,"name":"method-1-accent","bbox":[62,137,7,210]}
+{"kind":"textbox","id":"sh/8raxg7m1","slide":2,"name":"method-1-title","text":"Method 1","textPreview":"Method 1","textChars":8,"textLines":1,"bbox":[86,149,165,34]}
+{"kind":"textbox","id":"sh/ve1wr25c","slide":2,"name":"method-1-target","text":"B target: scale × Sd(Teff)","textPreview":"B target: scale × Sd(Teff)","textChars":26,"textLines":1,"bbox":[264,150,336,30]}
+{"kind":"textbox","id":"sh/adsfix4r","slide":2,"name":"method-1-carrier","text":"B carrier: Teff = 0.241 s","textPreview":"B carrier: Teff = 0.241 s","textChars":25,"textLines":1,"bbox":[264,181,336,28]}
+{"kind":"shape","id":"sh/4zmxoz2d","slide":2,"name":"method-1-axis-a","bbox":[86,277,190,0]}
+{"kind":"shape","id":"sh/p0veh4jy","slide":2,"name":"method-1-axis-b","bbox":[396,277,190,0]}
+{"kind":"shape","id":"sh/2dkfm9k7","slide":2,"name":"method-1-wave-a","bbox":[86,260,190,34]}
+{"kind":"shape","id":"sh/3ytwfe1s","slide":2,"name":"method-1-wave-b","bbox":[396,260,190,34]}
+{"kind":"textbox","id":"sh/c3mxsji9","slide":2,"name":"method-1-wave-a-label","text":"Wave A · T1 = 0.112 s","textPreview":"Wave A · T1 = 0.112 s","textChars":21,"textLines":1,"bbox":[86,295,210,26]}
+{"kind":"textbox","id":"sh/d4vyloju","slide":2,"name":"method-1-wave-b-label","text":"Wave B · carrier shown above","textPreview":"Wave B · carrier shown above","textChars":28,"textLines":1,"bbox":[396,295,214,26]}
+{"kind":"shape","id":"sh/q14fq9kj","slide":2,"name":"method-2-surface","bbox":[656,137,562,210]}
+{"kind":"shape","id":"sh/r2dwje14","slide":2,"name":"method-2-accent","bbox":[656,137,7,210]}
+{"kind":"textbox","id":"sh/076xwjil","slide":2,"name":"method-2-title","text":"Method 2","textPreview":"Method 2","textChars":8,"textLines":1,"bbox":[680,149,165,34]}
+{"kind":"textbox","id":"sh/18fypoj6","slide":2,"name":"method-2-target","text":"B target: scale × Sd(Teff)","textPreview":"B target: scale × Sd(Teff)","textChars":26,"textLines":1,"bbox":[858,150,336,30]}
+{"kind":"textbox","id":"sh/9obe9oba","slide":2,"name":"method-2-carrier","text":"B carrier: record Tp = 0.260 s","textPreview":"B carrier: record Tp = 0.260 s","textChars":30,"textLines":1,"bbox":[858,181,336,28]}
+{"kind":"shape","id":"sh/8n2xgjap","slide":2,"name":"method-2-axis-a","bbox":[680,277,190,0]}
+{"kind":"shape","id":"sh/nmtw7et4","slide":2,"name":"method-2-axis-b","bbox":[990,277,190,0]}
+{"kind":"shape","id":"sh/mlkfe9sj","slide":2,"name":"method-2-wave-a","bbox":[680,260,190,34]}
+{"kind":"shape","id":"sh/xsbed8b6","slide":2,"name":"method-2-wave-b","bbox":[990,260,190,34]}
+{"kind":"textbox","id":"sh/wr2xk3al","slide":2,"name":"method-2-wave-a-label","text":"Wave A · T1 = 0.112 s","textPreview":"Wave A · T1 = 0.112 s","textChars":21,"textLines":1,"bbox":[680,295,210,26]}
+{"kind":"textbox","id":"sh/vqtwbytg","slide":2,"name":"method-2-wave-b-label","text":"Wave B · carrier shown above","textPreview":"Wave B · carrier shown above","textChars":28,"textLines":1,"bbox":[990,295,214,26]}
+{"kind":"shape","id":"sh/apkfitsv","slide":2,"name":"method-3-surface","bbox":[62,369,562,210]}
+{"kind":"shape","id":"sh/dwre14b2","slide":2,"name":"method-3-accent","bbox":[62,369,7,210]}
+{"kind":"textbox","id":"sh/cvix8zuh","slide":2,"name":"method-3-title","text":"Method 3","textPreview":"Method 3","textChars":8,"textLines":1,"bbox":[86,381,165,34]}
+{"kind":"textbox","id":"sh/21wbi58f","slide":2,"name":"method-3-target","text":"B target: (T*, d*) by intensity","textPreview":"B target: (T*, d*) by intensity","textChars":31,"textLines":1,"bbox":[264,382,336,30]}
+{"kind":"textbox","id":"sh/32pcba90","slide":2,"name":"method-3-carrier","text":"B carrier: T* = 0.134 s","textPreview":"B carrier: T* = 0.134 s","textChars":23,"textLines":1,"bbox":[264,413,336,28]}
+{"kind":"shape","id":"sh/o3ytkfq5","slide":2,"name":"method-3-axis-a","bbox":[86,509,190,0]}
+{"kind":"shape","id":"sh/p47udkrq","slide":2,"name":"method-3-axis-b","bbox":[396,509,190,0]}
+{"kind":"shape","id":"sh/qpgbmp8b","slide":2,"name":"method-3-wave-a","bbox":[86,492,190,34]}
+{"kind":"shape","id":"sh/bqpcfa9w","slide":2,"name":"method-3-wave-b","bbox":[396,492,190,34]}
+{"kind":"textbox","id":"sh/crydofqh","slide":2,"name":"method-3-wave-a-label","text":"Wave A · T1 = 0.112 s","textPreview":"Wave A · T1 = 0.112 s","textChars":21,"textLines":1,"bbox":[86,527,210,26]}
+{"kind":"textbox","id":"sh/ds7uhkr2","slide":2,"name":"method-3-wave-b-label","text":"Wave B · carrier shown above","textPreview":"Wave B · carrier shown above","textChars":28,"textLines":1,"bbox":[396,527,214,26]}
+{"kind":"shape","id":"sh/6tcbals7","slide":2,"name":"method-4-surface","bbox":[656,369,562,210]}
+{"kind":"shape","id":"sh/rulc3q9s","slide":2,"name":"method-4-accent","bbox":[656,369,7,210]}
+{"kind":"textbox","id":"sh/ned0rix4","slide":2,"name":"method-4-title","text":"Method 4","textPreview":"Method 4","textChars":8,"textLines":1,"bbox":[680,381,165,34]}
+{"kind":"textbox","id":"sh/md4jidgj","slide":2,"name":"method-4-target","text":"B target: (T*, d*) by intensity","textPreview":"B target: (T*, d*) by intensity","textChars":31,"textLines":1,"bbox":[858,382,336,30]}
+{"kind":"textbox","id":"sh/9gvitsfa","slide":2,"name":"method-4-carrier","text":"B carrier: record Tp = 0.260 s","textPreview":"B carrier: record Tp = 0.260 s","textChars":30,"textLines":1,"bbox":[858,413,336,28]}
+{"kind":"shape","id":"sh/8fm1knyp","slide":2,"name":"method-4-axis-a","bbox":[680,509,190,0]}
+{"kind":"shape","id":"sh/vid0v2xg","slide":2,"name":"method-4-axis-b","bbox":[990,509,190,0]}
+{"kind":"shape","id":"sh/ah4jmxgv","slide":2,"name":"method-4-wave-a","bbox":[680,492,190,34]}
+{"kind":"shape","id":"sh/hkvixsf6","slide":2,"name":"method-4-wave-b","bbox":[990,492,190,34]}
+{"kind":"textbox","id":"sh/wjm1ony1","slide":2,"name":"method-4-wave-a-label","text":"Wave A · T1 = 0.112 s","textPreview":"Wave A · T1 = 0.112 s","textChars":21,"textLines":1,"bbox":[680,527,210,26]}
+{"kind":"textbox","id":"sh/j6x0z2xc","slide":2,"name":"method-4-wave-b-label","text":"Wave B · carrier shown above","textPreview":"Wave B · carrier shown above","textChars":28,"textLines":1,"bbox":[990,527,214,26]}
+{"kind":"shape","id":"sh/ilojqxgr","slide":2,"name":"methods-footer-rule","bbox":[62,600,1156,0]}
+{"kind":"textbox","id":"sh/gb6hg7u5","slide":2,"name":"methods-footer-note","text":"Methods 3–4 use precomputed capacity-proxy targets that vary with intensity. The schedule is independent of the preceding 3DEC response.","textPreview":"Methods 3–4 use precomputed capacity-proxy targets that vary with intensity. The schedule is independent of the preceding 3DEC response.","textChars":136,"textLines":1,"bbox":[64,612,1150,58]}
+{"kind":"notes","id":"nt/4h6bd0","slide":2,"text":"Wave A is common to all four methods and targets scale × Sd(T1), where T1 is about 0.1119 s. Methods 1 and 2 use fixed target points at T1 and Teff, with Teff about 0.2414 s. Methods 3 and 4 use the precomputed capacity-proxy target d* and T* for each intensity. Method 1 carries Wave B at Teff; Method 2 uses the FR76 predominant period Tp = 0.260 s; Method 3 carries Wave B at T*; Method 4 uses Tp. The adaptive schedule is precomputed and independent of the preceding 3DEC response."}
+{"kind":"slide","id":"sl/bli2ua","slide":3,"title":"2","textShapes":8}
+{"kind":"shape","id":"sh/jepove94","slide":3,"name":"slide-number-circle-2","bbox":[52,37,42,42]}
+{"kind":"textbox","id":"sh/4fyp4jqp","slide":3,"name":"slide-number-2","text":"2","textPreview":"2","textChars":1,"textLines":1,"bbox":[52,37,42,42]}
+{"kind":"textbox","id":"sh/5g76x4ra","slide":3,"name":"slide-title-2","text":"Peak response and spectral calibration","textPreview":"Peak response and spectral calibration","textChars":38,"textLines":1,"bbox":[112,30,1110,56]}
+{"kind":"textbox","id":"sh/apw7yp8n","slide":3,"name":"slide-subtitle-2","text":"Runs 22–24 compare with US-1 Test 9; Run 25 has no matching specimen test","textPreview":"Runs 22–24 compare with US-1 Test 9; Run 25 has no matching specimen test","textChars":73,"textLines":1,"bbox":[112,88,1100,30]}
+{"kind":"textbox","id":"sh/wrep0zqt","slide":3,"name":"best-displacement-value","text":"17.1%","textPreview":"17.1%","textChars":5,"textLines":1,"bbox":[95,540,235,48]}
+{"kind":"textbox","id":"sh/xsn6t4ry","slide":3,"name":"best-displacement-label","text":"Method 2 mean OOP error","textPreview":"Method 2 mean OOP error","textChars":23,"textLines":1,"bbox":[98,587,310,30]}
+{"kind":"shape","id":"sh/mlcnup8b","slide":3,"name":"comparison-mid-rule","bbox":[640,541,0,77]}
+{"kind":"textbox","id":"sh/nm5onu9w","slide":3,"name":"best-baseshear-value","text":"9.3%","textPreview":"9.3%","textChars":4,"textLines":1,"bbox":[700,540,200,48]}
+{"kind":"textbox","id":"sh/nmlova1w","slide":3,"name":"best-baseshear-label","text":"Method 1 mean base-shear peak error","textPreview":"Method 1 mean base-shear peak error","textChars":35,"textLines":1,"bbox":[704,587,485,30]}
+{"kind":"textbox","id":"sh/mlcn250b","slide":3,"name":"fit-provisional-note","text":"All 16 spectral fits missed the 2% convergence tolerance. Treat these response rankings as provisional.","textPreview":"All 16 spectral fits missed the 2% convergence tolerance. Treat these response rankings as provisional.","textChars":103,"textLines":1,"bbox":[74,642,1130,35]}
+{"kind":"image","id":"im/at0ry5gf","slide":3,"name":"","alt":"Four-method comparison of peak relative out-of-plane displacement, peak base shear, and mean spectral target error. Legends read Method 1 through Method 4.","bbox":[49,130,1182,390]}
+{"kind":"notes","id":"nt/bli2ua","slide":3,"text":"Metrics use the three experimental comparisons available for US-1 Test 9, Runs 22–24. Method 2 has the lowest mean absolute percentage error in peak relative OOP displacement at 17.1%. Method 1 has the lowest mean absolute percentage error in peak base shear at 9.3%. Run 25 is shown for the model sequence only because no US-1 Test 9 experiment exists for that run. The four methods used the common Strategy F Run 21 starting state. All 16 signal fits report fit_converged=False at the 2% tolerance, so the method ranking is preliminary."}
+{"kind":"slide","id":"sl/8cp2gk","slide":4,"title":"3","textShapes":8}
+{"kind":"shape","id":"sh/9s7etcnu","slide":4,"name":"slide-number-circle-3","bbox":[52,37,42,42]}
+{"kind":"textbox","id":"sh/m5wfyxo3","slide":4,"name":"slide-number-3","text":"3","textPreview":"3","textChars":1,"textLines":1,"bbox":[52,37,42,42]}
+{"kind":"textbox","id":"sh/n65wr25o","slide":4,"name":"slide-title-3","text":"Base shear versus OOP displacement: Method 1","textPreview":"Base shear versus OOP displacement: Method 1","textChars":44,"textLines":1,"bbox":[112,30,1110,56]}
+{"kind":"textbox","id":"sh/wvyx476l","slide":4,"name":"slide-subtitle-3","text":"Like-for-like loops from baseshear_exp_from_model.py","textPreview":"Like-for-like loops from baseshear_exp_from_model.py","textChars":52,"textLines":1,"bbox":[112,88,1100,30]}
+{"kind":"textbox","id":"sh/atgf2xof","slide":4,"name":"Method 1-loop-context","text":"US-1 Test 9 is the primary experimental comparator. US-2 Test 12 and the support series remain visible in the source figure.","textPreview":"US-1 Test 9 is the primary experimental comparator. US-2 Test 12 and the support series remain visible in the source figure.","textChars":124,"textLines":1,"bbox":[68,472,1140,33]}
+{"kind":"textbox","id":"sh/bupwv250","slide":4,"name":"Method 1-mass-formula-label","text":"Base-shear mass basis","textPreview":"Base-shear mass basis","textChars":21,"textLines":1,"bbox":[70,530,260,30]}
+{"kind":"textbox","id":"sh/czuxsn61","slide":4,"name":"Method 1-mass-formula","text":"Tributary masses use ρ = 1,619 kg/m³; the ×2.317348 test factor is applied to both model and experiment.","textPreview":"Tributary masses use ρ = 1,619 kg/m³; the ×2.317348 test factor is applied to both model and experiment.","textChars":104,"textLines":1,"bbox":[70,561,820,52]}
+{"kind":"shape","id":"sh/d03els7m","slide":4,"name":"Method 1-mean-error-rule","bbox":[927,524,0,90]}
+{"kind":"textbox","id":"sh/9oj2d4v6","slide":4,"name":"Method 1-mean-error-caption","text":"Mean base-shear peak error","textPreview":"Mean base-shear peak error","textChars":26,"textLines":1,"bbox":[956,532,270,24]}
+{"kind":"textbox","id":"sh/8na14zul","slide":4,"name":"Method 1-mean-error","text":"9.3%","textPreview":"9.3%","textChars":4,"textLines":1,"bbox":[956,558,270,54]}
+{"kind":"image","id":"im/k36d4n2h","slide":4,"name":"","alt":"Method 1 base-shear versus OOP displacement loops for FR76 Runs 22–25, including the source plot's US-1, US-2, and support series.","bbox":[45,135,1190,316]}
+{"kind":"notes","id":"nt/8cp2gk","slide":4,"text":"Method 1 uses the per-method plot generated from the project copy of Claude outputs/baseshear_exp_from_model.py. The script sums tributary masses at sensors 15–17 using ρ = 1,619 kg/m³ and applies MASS_SCALE = 2.317348 to both the model and experimental sides. The source figure also retains US-2 Test 12 and the support reaction traces. The reported mean base-shear peak error is the mean absolute percentage error over the three available US-1 Test 9 comparisons, Runs 22–24."}
+{"kind":"slide","id":"sl/y8a0qc","slide":5,"title":"4","textShapes":8}
+{"kind":"shape","id":"sh/61sfahk3","slide":5,"name":"slide-number-circle-4","bbox":[52,37,42,42]}
+{"kind":"textbox","id":"sh/tojy5wje","slide":5,"name":"slide-number-4","text":"4","textPreview":"4","textChars":1,"textLines":1,"bbox":[52,37,42,42]}
+{"kind":"textbox","id":"sh/s3axcr29","slide":5,"name":"slide-title-4","text":"Base shear versus OOP displacement: Method 2","textPreview":"Base shear versus OOP displacement: Method 2","textChars":44,"textLines":1,"bbox":[112,30,1110,56]}
+{"kind":"textbox","id":"sh/fq1g761k","slide":5,"name":"slide-subtitle-4","text":"Like-for-like loops from baseshear_exp_from_model.py","textPreview":"Like-for-like loops from baseshear_exp_from_model.py","textChars":52,"textLines":1,"bbox":[112,88,1100,30]}
+{"kind":"textbox","id":"sh/hs3y9gjq","slide":5,"name":"Method 2-loop-context","text":"US-1 Test 9 is the primary experimental comparator. US-2 Test 12 and the support series remain visible in the source figure.","textPreview":"US-1 Test 9 is the primary experimental comparator. US-2 Test 12 and the support series remain visible in the source figure.","textChars":124,"textLines":1,"bbox":[68,472,1140,33]}
+{"kind":"textbox","id":"sh/gruxgb25","slide":5,"name":"Method 2-mass-formula-label","text":"Base-shear mass basis","textPreview":"Base-shear mass basis","textChars":21,"textLines":1,"bbox":[70,530,260,30]}
+{"kind":"textbox","id":"sh/3ulgb61w","slide":5,"name":"Method 2-mass-formula","text":"Tributary masses use ρ = 1,619 kg/m³; the ×2.317348 test factor is applied to both model and experiment.","textPreview":"Tributary masses use ρ = 1,619 kg/m³; the ×2.317348 test factor is applied to both model and experiment.","textChars":104,"textLines":1,"bbox":[70,561,820,52]}
+{"kind":"shape","id":"sh/2tcfi1kb","slide":5,"name":"Method 2-mean-error-rule","bbox":[927,524,0,90]}
+{"kind":"textbox","id":"sh/cz2hsrad","slide":5,"name":"Method 2-mean-error-caption","text":"Mean base-shear peak error","textPreview":"Mean base-shear peak error","textChars":26,"textLines":1,"bbox":[956,532,270,24]}
+{"kind":"textbox","id":"sh/x0bylwby","slide":5,"name":"Method 2-mean-error","text":"13.3%","textPreview":"13.3%","textChars":5,"textLines":1,"bbox":[956,558,270,54]}
+{"kind":"image","id":"im/vu18na98","slide":5,"name":"","alt":"Method 2 base-shear versus OOP displacement loops for FR76 Runs 22–25, including the source plot's US-1, US-2, and support series.","bbox":[45,135,1190,316]}
+{"kind":"notes","id":"nt/y8a0qc","slide":5,"text":"Method 2 uses the per-method plot generated from the project copy of Claude outputs/baseshear_exp_from_model.py. The script sums tributary masses at sensors 15–17 using ρ = 1,619 kg/m³ and applies MASS_SCALE = 2.317348 to both the model and experimental sides. The source figure also retains US-2 Test 12 and the support reaction traces. The reported mean base-shear peak error is the mean absolute percentage error over the three available US-1 Test 9 comparisons, Runs 22–24."}
+{"kind":"slide","id":"sl/23yfl2","slide":6,"title":"5","textShapes":8}
+{"kind":"shape","id":"sh/sz2h036t","slide":6,"name":"slide-number-circle-5","bbox":[52,37,42,42]}
+{"kind":"textbox","id":"sh/ryt0ry58","slide":6,"name":"slide-number-5","text":"5","textPreview":"5","textChars":1,"textLines":1,"bbox":[52,37,42,42]}
+{"kind":"textbox","id":"sh/qxkzyton","slide":6,"name":"slide-title-5","text":"Base shear versus OOP displacement: Method 3","textPreview":"Base shear versus OOP displacement: Method 3","textChars":44,"textLines":1,"bbox":[112,30,1110,56]}
+{"kind":"textbox","id":"sh/1ovix8na","slide":6,"name":"slide-subtitle-5","text":"Like-for-like loops from baseshear_exp_from_model.py","textPreview":"Like-for-like loops from baseshear_exp_from_model.py","textChars":52,"textLines":1,"bbox":[112,88,1100,30]}
+{"kind":"textbox","id":"sh/fmd0vy54","slide":6,"name":"Method 3-loop-context","text":"US-1 Test 9 is the primary experimental comparator. US-2 Test 12 and the support series remain visible in the source figure.","textPreview":"US-1 Test 9 is the primary experimental comparator. US-2 Test 12 and the support series remain visible in the source figure.","textChars":124,"textLines":1,"bbox":[68,472,1140,33]}
+{"kind":"textbox","id":"sh/el4z2toz","slide":6,"name":"Method 3-mass-formula-label","text":"Base-shear mass basis","textPreview":"Base-shear mass basis","textChars":21,"textLines":1,"bbox":[70,530,260,30]}
+{"kind":"textbox","id":"sh/hsrilon6","slide":6,"name":"Method 3-mass-formula","text":"Tributary masses use ρ = 1,619 kg/m³; the ×2.317348 test factor is applied to both model and experiment.","textPreview":"Tributary masses use ρ = 1,619 kg/m³; the ×2.317348 test factor is applied to both model and experiment.","textChars":104,"textLines":1,"bbox":[70,561,820,52]}
+{"kind":"shape","id":"sh/grihsj6l","slide":6,"name":"Method 3-mean-error-rule","bbox":[927,524,0,90]}
+{"kind":"textbox","id":"sh/21orm10j","slide":6,"name":"Method 3-mean-error-caption","text":"Mean base-shear peak error","textPreview":"Mean base-shear peak error","textChars":26,"textLines":1,"bbox":[956,532,270,24]}
+{"kind":"textbox","id":"sh/32x8f614","slide":6,"name":"Method 3-mean-error","text":"14.7%","textPreview":"14.7%","textChars":5,"textLines":1,"bbox":[956,558,270,54]}
+{"kind":"image","id":"im/dcz6dsjm","slide":6,"name":"","alt":"Method 3 base-shear versus OOP displacement loops for FR76 Runs 22–25, including the source plot's US-1, US-2, and support series.","bbox":[45,135,1190,316]}
+{"kind":"notes","id":"nt/23yfl2","slide":6,"text":"Method 3 uses the per-method plot generated from the project copy of Claude outputs/baseshear_exp_from_model.py. The script sums tributary masses at sensors 15–17 using ρ = 1,619 kg/m³ and applies MASS_SCALE = 2.317348 to both the model and experimental sides. The source figure also retains US-2 Test 12 and the support reaction traces. The reported mean base-shear peak error is the mean absolute percentage error over the three available US-1 Test 9 comparisons, Runs 22–24."}
+{"kind":"slide","id":"sl/lb1h42","slide":7,"title":"6","textShapes":8}
+{"kind":"shape","id":"sh/9kb2hovq","slide":7,"name":"slide-number-circle-6","bbox":[52,37,42,42]}
+{"kind":"textbox","id":"sh/mh036twf","slide":7,"name":"slide-number-6","text":"6","textPreview":"6","textChars":1,"textLines":1,"bbox":[52,37,42,42]}
+{"kind":"textbox","id":"sh/ni9kfydk","slide":7,"name":"slide-title-6","text":"Base shear versus OOP displacement: Method 4","textPreview":"Base shear versus OOP displacement: Method 4","textChars":44,"textLines":1,"bbox":[112,30,1110,56]}
+{"kind":"textbox","id":"sh/wn2lc3eh","slide":7,"name":"slide-subtitle-6","text":"Like-for-like loops from baseshear_exp_from_model.py","textPreview":"Like-for-like loops from baseshear_exp_from_model.py","textChars":52,"textLines":1,"bbox":[112,88,1100,30]}
+{"kind":"textbox","id":"sh/alk3atwb","slide":7,"name":"Method 4-loop-context","text":"US-1 Test 9 is the primary experimental comparator. US-2 Test 12 and the support series remain visible in the source figure.","textPreview":"US-1 Test 9 is the primary experimental comparator. US-2 Test 12 and the support series remain visible in the source figure.","textChars":124,"textLines":1,"bbox":[68,472,1140,33]}
+{"kind":"textbox","id":"sh/vmtkjydw","slide":7,"name":"Method 4-mass-formula-label","text":"Base-shear mass basis","textPreview":"Base-shear mass basis","textChars":21,"textLines":1,"bbox":[70,530,260,30]}
+{"kind":"textbox","id":"sh/kbmlgned","slide":7,"name":"Method 4-mass-formula","text":"Tributary masses use ρ = 1,619 kg/m³; the ×2.317348 test factor is applied to both model and experiment.","textPreview":"Tributary masses use ρ = 1,619 kg/m³; the ×2.317348 test factor is applied to both model and experiment.","textChars":104,"textLines":1,"bbox":[70,561,820,52]}
+{"kind":"shape","id":"sh/5cvmp8vy","slide":7,"name":"Method 4-mean-error-rule","bbox":[927,524,0,90]}
+{"kind":"textbox","id":"sh/54rqp4fi","slide":7,"name":"Method 4-mean-error-caption","text":"Mean base-shear peak error","textPreview":"Mean base-shear peak error","textChars":26,"textLines":1,"bbox":[956,532,270,24]}
+{"kind":"textbox","id":"sh/k3ipgzyx","slide":7,"name":"Method 4-mean-error","text":"17.1%","textPreview":"17.1%","textChars":5,"textLines":1,"bbox":[956,558,270,54]}
+{"kind":"image","id":"im/gz2t0ru1","slide":7,"name":"","alt":"Method 4 base-shear versus OOP displacement loops for FR76 Runs 22–25, including the source plot's US-1, US-2, and support series.","bbox":[45,135,1190,316]}
+{"kind":"notes","id":"nt/lb1h42","slide":7,"text":"Method 4 uses the per-method plot generated from the project copy of Claude outputs/baseshear_exp_from_model.py. The script sums tributary masses at sensors 15–17 using ρ = 1,619 kg/m³ and applies MASS_SCALE = 2.317348 to both the model and experimental sides. The source figure also retains US-2 Test 12 and the support reaction traces. The reported mean base-shear peak error is the mean absolute percentage error over the three available US-1 Test 9 comparisons, Runs 22–24."}
+{"kind":"slide","id":"sl/90zhj6","slide":8,"title":"7","textShapes":7}
+{"kind":"shape","id":"sh/b6hk3qhs","slide":8,"name":"slide-number-circle-7","bbox":[52,37,42,42]}
+{"kind":"textbox","id":"sh/w7qlwvix","slide":8,"name":"slide-number-7","text":"7","textPreview":"7","textChars":1,"textLines":1,"bbox":[52,37,42,42]}
+{"kind":"textbox","id":"sh/x8z250zi","slide":8,"name":"slide-title-7","text":"Experimental tiltmeter residuals","textPreview":"Experimental tiltmeter residuals","textChars":32,"textLines":1,"bbox":[112,30,1110,56]}
+{"kind":"textbox","id":"sh/y983y503","slide":8,"name":"slide-subtitle-7","text":"Settled Y-axis readings after each run; no experimental Run 25 reading is available","textPreview":"Settled Y-axis readings after each run; no experimental Run 25 reading is available","textChars":83,"textLines":1,"bbox":[112,88,1100,30]}
+{"kind":"shape","id":"sh/kbal0vi9","slide":8,"name":"tilt-note-rule","bbox":[850,168,0,423]}
+{"kind":"textbox","id":"sh/lcj290zu","slide":8,"name":"tilt-run24-value","text":"+3.279°","textPreview":"+3.279°","textChars":7,"textLines":1,"bbox":[886,183,310,65]}
+{"kind":"textbox","id":"sh/edojm10z","slide":8,"name":"tilt-run24-caption","text":"Run 24 change from the Run 21 baseline","textPreview":"Run 24 change from the Run 21 baseline","textChars":38,"textLines":1,"bbox":[889,252,300,56]}
+{"kind":"textbox","id":"sh/fexkv61k","slide":8,"name":"tilt-clip-note","text":"Within-shaking inclinometer peaks clip near ±25.75°, so this chart uses settled residuals only.","textPreview":"Within-shaking inclinometer peaks clip near ±25.75°, so this chart uses settled residuals only.","textChars":95,"textLines":1,"bbox":[888,346,302,85]}
+{"kind":"textbox","id":"sh/fat8ve5s","slide":8,"name":"tilt-model-note","text":"A model comparison needs the angle at the instrument location. The local chord-angle proxy is excluded.","textPreview":"A model comparison needs the angle at the instrument location. The local chord-angle proxy is excluded.","textChars":103,"textLines":1,"bbox":[888,459,302,92]}
+{"kind":"chart","id":"ch/zu54nepg","slide":8,"name":"","chartType":"line","bbox":[64,150,750,440]}
+{"kind":"notes","id":"nt/90zhj6","slide":8,"text":"Experimental points are read from Claude outputs/exp_Test9_incl_tilt.csv, column resid_tilt_y_deg: Run 21 = 2.756°, Run 22 = 2.529°, Run 23 = 2.3965°, and Run 24 = 6.035°. Run 24 is +3.279° relative to Run 21. The within-shaking inclinometers clip near ±25.75°; this figure therefore uses settled residuals. No matched model instrument-point tilt series is presented. The current local chord-angle proxy is deliberately excluded from this experimental comparison."}
+{"kind":"slide","id":"sl/lmaboh","slide":9,"title":"8","textShapes":15}
+{"kind":"shape","id":"sh/va1czmho","slide":9,"name":"slide-number-circle-8","bbox":[52,37,42,42]}
+{"kind":"textbox","id":"sh/wbadsry9","slide":9,"name":"slide-number-8","text":"8","textPreview":"8","textChars":1,"textLines":1,"bbox":[52,37,42,42]}
+{"kind":"textbox","id":"sh/hcju1wzu","slide":9,"name":"slide-title-8","text":"What these runs support","textPreview":"What these runs support","textChars":23,"textLines":1,"bbox":[112,30,1110,56]}
+{"kind":"textbox","id":"sh/ml8bmxg7","slide":9,"name":"slide-subtitle-8","text":"Four methods, one common starting state, and three matched US-1 runs","textPreview":"Four methods, one common starting state, and three matched US-1 runs","textChars":68,"textLines":1,"bbox":[112,88,1100,30]}
+{"kind":"textbox","id":"sh/7mhcv2hs","slide":9,"name":"summary-value-0","text":"17.1%","textPreview":"17.1%","textChars":5,"textLines":1,"bbox":[94,176,300,76]}
+{"kind":"textbox","id":"sh/87qdo7yd","slide":9,"name":"summary-method-0","text":"Method 2","textPreview":"Method 2","textChars":8,"textLines":1,"bbox":[94,264,300,31]}
+{"kind":"textbox","id":"sh/98zuxczi","slide":9,"name":"summary-label-0","text":"Lowest mean OOP\ndisplacement error","textPreview":"Lowest mean OOP | displacement error","textChars":34,"textLines":2,"bbox":[94,303,300,67]}
+{"kind":"shape","id":"sh/yhobixgv","slide":9,"name":"summary-divider-0","bbox":[431,183,0,187]}
+{"kind":"textbox","id":"sh/zihcr2hg","slide":9,"name":"summary-value-1","text":"9.3%","textPreview":"9.3%","textChars":4,"textLines":1,"bbox":[477,176,300,76]}
+{"kind":"textbox","id":"sh/76dcfu1o","slide":9,"name":"summary-method-1","text":"Method 1","textPreview":"Method 1","textChars":8,"textLines":1,"bbox":[477,264,300,31]}
+{"kind":"textbox","id":"sh/m54bmpk3","slide":9,"name":"summary-label-1","text":"Lowest mean base-shear\npeak error","textPreview":"Lowest mean base-shear | peak error","textChars":33,"textLines":2,"bbox":[477,303,300,67]}
+{"kind":"shape","id":"sh/98vuh4ju","slide":9,"name":"summary-divider-1","bbox":[814,183,0,187]}
+{"kind":"textbox","id":"sh/87mtoz29","slide":9,"name":"summary-value-2","text":"16 / 16","textPreview":"16 / 16","textChars":7,"textLines":1,"bbox":[860,176,300,76]}
+{"kind":"textbox","id":"sh/vadcju1k","slide":9,"name":"summary-method-2","text":"All methods","textPreview":"All methods","textChars":11,"textLines":1,"bbox":[860,264,300,31]}
+{"kind":"textbox","id":"sh/u94bq9kf","slide":9,"name":"summary-label-2","text":"Spectral fits outside\n2% tolerance","textPreview":"Spectral fits outside | 2% tolerance","textChars":34,"textLines":2,"bbox":[860,303,300,67]}
+{"kind":"shape","id":"sh/hcful4jq","slide":9,"name":"summary-lower-rule","bbox":[87,414,1105,0]}
+{"kind":"textbox","id":"sh/wbmdcz25","slide":9,"name":"summary-reading","text":"Method 2 leads on displacement, while Method 1 leads on base-shear peak. No single method leads on both.","textPreview":"Method 2 leads on displacement, while Method 1 leads on base-shear peak. No single method leads on both.","textChars":104,"textLines":1,"bbox":[94,438,1090,62]}
+{"kind":"textbox","id":"sh/betc7alg","slide":9,"name":"summary-next-step","text":"Next: improve the joint two-wave spectral fit, then compare model tilt at the instrument location.","textPreview":"Next: improve the joint two-wave spectral fit, then compare model tilt at the instrument location.","textChars":98,"textLines":1,"bbox":[94,541,1088,50]}
+{"kind":"textbox","id":"sh/adkbe5kv","slide":9,"name":"summary-scope-note","text":"Runs 22–24 have US-1 comparisons. Run 25 is model-only. All methods start from Strategy F Run 21.","textPreview":"Runs 22–24 have US-1 comparisons. Run 25 is model-only. All methods start from Strategy F Run 21.","textChars":97,"textLines":1,"bbox":[94,633,1090,34]}
+{"kind":"notes","id":"nt/lmaboh","slide":9,"text":"The mean error metrics compare Methods 1–4 against US-1 Test 9 for Runs 22–24. Method 2 gives the lowest mean absolute OOP displacement error at 17.1%; Method 1 gives the lowest mean absolute base-shear peak error at 9.3%. These four runs do not identify one overall winner. All spectral calibration fits missed the 2% convergence tolerance, so first improve the joint two-wave fit. Then generate a model tilt measure at the actual inclinometer location and compare settled residuals before selecting a method."}

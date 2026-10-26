@@ -61,6 +61,8 @@ def args_():
     p.add_argument("--exp-dir", default="EXP_DATA/processed_globalzero")
     p.add_argument("--pushover-pos", default="pushover_results_v5_ft0_masonrypush/pushover_pos.csv")
     p.add_argument("--pushover-neg", default="pushover_results_v5_ft0_masonrypush/pushover_neg.csv")
+    p.add_argument("--pushover-force", choices=("applied", "reaction"), default="applied",
+                   help="pushover force: |a| x m_tot (default) or F_tot_kN as logged")
     p.add_argument("--mass-set", default="old", choices=sorted(MASS_SETS))
     p.add_argument("--loop-runs", default="10,15,18,21,23,24", help="runs for the hysteresis comparison")
     p.add_argument("--hist-runs", default="", help="runs for the history figure (default: the loop runs)")
@@ -295,12 +297,28 @@ def test_metrics(runs):
     return runs
 
 
+PUSHOVER_FORCE = "applied"
+
+
 def backbone(path):
+    """pushover backbone. PUSHOVER_FORCE "applied": |a| x m_tot (m_tot from the CSV's '#' line) -- the horizontal
+    force the wall carries at a settled servo point; "reaction": F_tot_kN as logged, which misses |N| sin(tilt) of the
+    top-joint normal force once the top beam rotates (deformed_shape_3dec.py, 23 Oct)."""
+    m_tot = None
+    try:
+        head = open(path).readline()
+        m_tot = float(head.split("m_tot")[1].split("kg")[0])
+    except Exception:
+        pass
     d, F = [], []
     for r in read_csv(path):
         if r.get("converged", "1") == "0":
             continue
-        dd, ff = fnum(r.get("d_ctrl_mm")), fnum(r.get("F_tot_kN"))
+        dd = fnum(r.get("d_ctrl_mm"))
+        if PUSHOVER_FORCE == "applied" and m_tot and "a_mps2" in r:
+            ff = abs(fnum(r.get("a_mps2"))) * m_tot / 1e3
+        else:
+            ff = fnum(r.get("F_tot_kN"))
         if math.isfinite(dd) and math.isfinite(ff):
             d.append(dd); F.append(ff)
     d, F = np.array(d), np.array(F)
@@ -546,6 +564,8 @@ def main():
     # ---- figures ----
     loop_runs = [int(s) for s in a.loop_runs.split(",") if s.strip()]
     hist_runs = [int(s) for s in a.hist_runs.split(",") if s.strip()] or loop_runs
+    global PUSHOVER_FORCE
+    PUSHOVER_FORCE = a.pushover_force
     bb = (backbone(a.pushover_pos), backbone(a.pushover_neg))
     paths = dict(seq="fig_r2tm_full25_sequence.png", peak="fig_r2tm_full25_peak_comparison.png",
                  loops="fig_r2tm_full25_loops.png", inp="fig_r2tm_full25_input_fit.png", hist="fig_r2tm_full25_histories.png")

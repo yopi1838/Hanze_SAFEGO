@@ -49,49 +49,58 @@ top beam: dy +17.74 mm, dz +0.00 mm (should be ~0: velocity-z fixed)
    2.491    -26.71  [-26.71 -26.71]    20.33     193.53       0.15
    2.549    -15.36  [-15.36 -15.36]    19.23     193.68        nan
 
-  joint       y (m)   max open (mm)  open frac  opens on        N (kN)   [normals: yes]
-  base        0.001        3.467       0.83    +z  trailing    -28.17  <- HINGE
-  bed         0.060        0.238       0.32    +z  trailing    -28.00
-  bed         0.119        0.226       0.33    +z  trailing    -27.72
-  bed         0.178        0.276       0.32    +z  trailing    -27.41
-  bed         0.236        0.401       0.46    +z  trailing    -27.12
-  bed         0.295        2.726       0.77    +z  trailing    -21.00  <- HINGE
-  bed         0.354        2.818       0.64    +z  trailing    -21.32  <- HINGE
-  bed         0.413        0.167       0.46    +z  trailing    -21.04
-  bed         0.472        0.772       0.51    +z  trailing    -20.68  <- HINGE
-  bed         0.531        0.155       0.25    +z  trailing    -23.93
-  bed         0.589        0.072       0.15    +z  trailing    -23.61
-  bed         0.648        0.070       0.10    +z  trailing    -23.30
-  bed         0.706        0.013       0.00    +z  trailing    -23.04
-  bed         0.765        0.031       0.02    +z  trailing    -22.74
-  bed         0.823       -0.008       0.00                    -22.44
-  bed         0.882        0.015       0.01    +z  trailing    -22.13
-  bed         0.940       -0.007       0.00                    -21.82
-  bed         0.999        0.006       0.00                    -21.52
-  bed         1.057        0.001       0.00                    -21.21
-  bed         1.116        0.002       0.00                    -20.91
-  bed         1.174        0.014       0.00    -z  leading     -20.60
-  bed         1.233       -0.007       0.00                    -20.30
-  pocket      1.288       19.607       0.60    -z  leading     -15.65
-  bed         1.291        0.027       0.00    -z  leading     -19.99
-  bed         1.350        0.023       0.00    +z  trailing    -19.68
-  bed         1.408        0.031       0.09    -z  leading     -19.38
-  bed         1.467        0.035       0.21    -z  leading     -19.07
-  bed         1.526        0.047       0.23    -z  leading     -18.77
-  bed         1.584        0.064       0.24    -z  leading     -18.46
-  bed         1.643        0.065       0.26    -z  leading     -18.16
-  bed         1.702        0.093       0.26    -z  leading     -17.86
-  bed         1.760        0.094       0.26    -z  leading     -17.56
-  bed         1.819        0.115       0.26    -z  leading     -17.26
-  bed         1.877        0.102       0.26    -z  leading     -16.96
-  bed         1.936        0.130       0.25    -z  leading     -16.66
-  bed         1.994        0.163       0.53    -z  leading     -16.36
-  bed         2.053        4.111       0.45    +z  trailing    -13.67  <- HINGE
-  bed         2.114        8.702       0.61    -z  leading     -13.42  <- HINGE
-  bed         2.174        0.203       0.53    -z  leading     -12.46
-  bed         2.400       38.845       0.25    -z  leading     -82.86  <- HINGE
-  top_joint   2.597        0.005       0.00                    -13.51
-  head joints: 7740 subcontacts, 128 open > 0.5 mm (largest 2.38 mm at y 2.11 m)
+  joint       y0 (m)  max open (mm)  open frac  opens on        N (kN)   [normals: yes]
+  base         -0.001      3.467       0.83    +z  trailing    -28.17  <- HINGE
+  bed           0.059      0.238       0.32    +z  trailing    -28.00
+  bed           0.117      0.226       0.33    +z  trailing    -27.72
+  bed           0.176      0.276       0.32    +z  trailing    -27.41
+  bed           0.234      0.269       0.49    +z  trailing     -8.43
+  bed           0.293      2.726       0.67    +z  trailing    -34.72  <- HINGE
+  bed           0.352      2.818       0.61    +z  trailing    -26.29  <- HINGE
+  pocket_lower  0.375      7.212       0.66    -z  leading     -10.15
+  bed           0.410      0.772       0.45    +z  trailing    -24.75  <- HINGE
+  bed           0.469      0.653       0.50    +z  trailing    -32.57  <- HINGE
+  bed           0.527      0.138       0.09    +z  trailing     -8.32
+  bed           0.586      0.072       0.15    +z  trailing    -23.61
+  bed           0.645      0.070       0.10    +z  trailing    -23.30
+  bed           0.703      0.013       0.00    +z  trailing    -23.04
+  bed           0.762      0.031       0.02    +z  trailing    -22.74
+  bed           0.820     -0.008       0.00                    -22.44
+  bed           0.879      0.015       0.01    +z  trailing    -22.13
+  bed           0.938     -0.007       0.00                    -21.82
+  bed           0.996      0.006       0.00                    -21.52
+  bed           1.055      0.001       0.00                    -21.21
+  bed           1.113      0.002       0.00                    -20.91
+  bed           1.172      0.014       0.00    -z  leading     -20.60
+  bed           1.231     -0.007       0.00                    -20.30
+  bed           1.289      0.027       0.00    -z  leading     -19.99
+  bed           1.348      0.023       0.00    +z  trailing    -19.68
+  bed           1.406      0.031       0.09    -z  leading     -19.38
+  bed           1.465      0.035       0.21    -z  leading     -19.07
+  bed           1.524      0.047       0.23    -z  leading     -18.77
+  bed           1.582      0.064       0.24    -z  leading     -18.46
+  bed           1.641      0.065       0.26    -z  leading     -18.16
+  bed           1.699      0.093       0.26    -z  leading     -17.86
+  bed           1.758      0.094       0.26    -z  leading     -17.56
+  bed           1.817      0.115       0.26    -z  leading     -17.26
+  bed           1.875      0.102       0.26    -z  leading     -16.96
+  bed           1.934      0.130       0.25    -z  leading     -16.66
+  bed           1.993      0.096       0.53    -z  leading      -3.67
+  bed           2.051      4.111       0.48    +z  trailing    -25.07  <- HINGE
+  bed           2.110      8.702       0.60    -z  leading     -14.71  <- HINGE
+  pocket_upper  2.140     19.607       0.55    -z  leading      -5.49
+  bed           2.168     38.843       0.52    -z  leading     -13.47  <- HINGE
+  bed           2.227     38.845       0.67    -z  leading     -20.37  <- HINGE
+  bed           2.286      0.165       0.44    -z  leading      -4.99
+  bed           2.344      0.063       0.22    -z  leading     -14.50
+  bed           2.403      0.048       0.24    -z  leading     -14.24
+  bed           2.461      0.006       0.00                    -14.00
+  bed           2.520      0.013       0.00    -z  leading     -13.75
+  top_joint     2.579      0.005       0.00                    -13.51
+  head joints: 7740 subcontacts, 128 open > 0.5 mm (largest 2.38 mm at y0 2.11 m)
+  top joint tilt -194.4 mrad (the top beam rotates with it if the joint stays closed); |N| sin(tilt) = 2.61 kN
+    -> the pushover's F_top sums the subcontact SHEAR z-components only; the tilted normal force adds
+       this much horizontal force that F_tot leaves out. On the descending branch compare |a| x m_tot.
 
-HINGES (bed joints opening > 0.5 mm): 0.00 m (trailing, 3.5 mm), 0.29 m (trailing, 2.7 mm), 0.35 m (trailing, 2.8 mm), 0.47 m (trailing, 0.8 mm), 2.05 m (trailing, 4.1 mm), 2.11 m (leading, 8.7 mm), 2.40 m (leading, 38.8 mm)
+HINGES (bed joints opening > 0.5 mm): -0.00 m (trailing, 3.5 mm), 0.29 m (trailing, 2.7 mm), 0.35 m (trailing, 2.8 mm), 0.41 m (trailing, 0.8 mm), 0.47 m (trailing, 0.7 mm), 2.05 m (trailing, 4.1 mm), 2.11 m (leading, 8.7 mm), 2.17 m (leading, 38.8 mm), 2.23 m (leading, 38.8 mm)
 three-hinge reading: base & top hinges open on the trailing face, the mid-span hinge on the leading face.

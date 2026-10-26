@@ -1,0 +1,2176 @@
+{
+  "schema": "openai.presentation.layout/v4",
+  "unit": "px",
+  "slide": {
+    "aid": "sl/ut44p8",
+    "id": "ut44p8",
+    "slide": 2,
+    "layoutId": "4dde5a5e-0ae6-4b1f-9fe2-235ca16cb4c6",
+    "layoutName": "Title Slide",
+    "layoutType": "title",
+    "masterLayoutId": "9d37c035-da36-4d4e-a4cf-edfddf03ace5",
+    "masterLayoutName": "Master",
+    "backgroundColor": "#FFFFFF",
+    "frame": {
+      "left": 0,
+      "top": 0,
+      "width": 1280,
+      "height": 720
+    }
+  },
+  "theme": {
+    "colorSchemeName": "ChatGPT",
+    "colors": {
+      "accent1": "#156082",
+      "accent2": "#E97132",
+      "accent3": "#196B24",
+      "accent4": "#0F9ED5",
+      "accent5": "#A02B93",
+      "accent6": "#4EA72E",
+      "bg1": "#FFFFFF",
+      "bg2": "#000000",
+      "tx1": "#1F1F1F",
+      "tx2": "#FFFFFF",
+      "dk1": "#000000",
+      "lt1": "#FFFFFF",
+      "dk2": "#0E2841",
+      "lt2": "#E8E8E8",
+      "hlink": "#467886",
+      "folHlink": "#96607D"
+    },
+    "typefaces": [
+      "Calibri",
+      "Cambria"
+    ]
+  },
+  "inheritedLayers": [
+    {
+      "scope": "layout",
+      "id": "4dde5a5e-0ae6-4b1f-9fe2-235ca16cb4c6",
+      "name": "Title Slide",
+      "type": "title",
+      "parentLayoutId": "9d37c035-da36-4d4e-a4cf-edfddf03ace5",
+      "elements": []
+    },
+    {
+      "scope": "master",
+      "id": "9d37c035-da36-4d4e-a4cf-edfddf03ace5",
+      "name": "Master",
+      "type": "master",
+      "elements": []
+    }
+  ],
+  "elements": [
+    {
+      "order": 1,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/tg7eh4z6",
+      "id": "1",
+      "name": "slide-number-circle-1",
+      "bbox": [
+        52,
+        37,
+        42,
+        42
+      ],
+      "geometry": "ellipse",
+      "fillColor": "#B7684B",
+      "lineWidth": 0
+    },
+    {
+      "order": 2,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/6dgfm90f",
+      "id": "2",
+      "name": "slide-number-1",
+      "bbox": [
+        52,
+        37,
+        42,
+        42
+      ],
+      "geometry": "rect",
+      "text": "1",
+      "textPreview": "1",
+      "resolvedFontSize": 21,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 21,
+        "typeface": "Calibri",
+        "color": "#FFFFFF",
+        "bold": true,
+        "alignment": "center",
+        "verticalAlignment": "middle",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "1"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "1",
+          "resolvedTextStyle": {
+            "fontSize": 21,
+            "typeface": "Calibri",
+            "color": "#FFFFFF",
+            "bold": true,
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "1",
+              "fontSize": 21,
+              "typeface": "Calibri",
+              "color": "#FFFFFF",
+              "bold": true,
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 3,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/repwfeh0",
+      "id": "3",
+      "name": "slide-title-1",
+      "bbox": [
+        112,
+        30,
+        1110,
+        56
+      ],
+      "geometry": "rect",
+      "text": "Four Route 2 methods",
+      "textPreview": "Four Route 2 methods",
+      "resolvedFontSize": 36,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 36,
+        "typeface": "Cambria",
+        "color": "#272523",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Four Route 2 methods"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Four Route 2 methods",
+          "resolvedTextStyle": {
+            "fontSize": 36,
+            "typeface": "Cambria",
+            "color": "#272523",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Four Route 2 methods",
+              "fontSize": 36,
+              "typeface": "Cambria",
+              "color": "#272523",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 4,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/4bydkzi9",
+      "id": "4",
+      "name": "slide-subtitle-1",
+      "bbox": [
+        112,
+        88,
+        1100,
+        30
+      ],
+      "geometry": "rect",
+      "text": "Two target rules crossed with two Wave B carrier periods",
+      "textPreview": "Two target rules crossed with two Wave B carrier periods",
+      "resolvedFontSize": 18,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 18,
+        "typeface": "Calibri",
+        "color": "#716D69",
+        "italic": true,
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Two target rules crossed with two Wave B carrier periods"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Two target rules crossed with two Wave B carrier periods",
+          "resolvedTextStyle": {
+            "fontSize": 18,
+            "typeface": "Calibri",
+            "color": "#716D69",
+            "italic": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Two target rules crossed with two Wave B carrier periods",
+              "fontSize": 18,
+              "typeface": "Calibri",
+              "color": "#716D69",
+              "italic": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 5,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/5c7ed4zu",
+      "id": "5",
+      "name": "method-1-surface",
+      "bbox": [
+        62,
+        137,
+        562,
+        210
+      ],
+      "geometry": "rect",
+      "fillColor": "#F1EFEC",
+      "lineWidth": 0
+    },
+    {
+      "order": 6,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/i9wvip0j",
+      "id": "6",
+      "name": "method-1-accent",
+      "bbox": [
+        62,
+        137,
+        7,
+        210
+      ],
+      "geometry": "rect",
+      "fillColor": "#276B8E",
+      "lineWidth": 0
+    },
+    {
+      "order": 7,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/japwbu1o",
+      "id": "7",
+      "name": "method-1-title",
+      "bbox": [
+        86,
+        149,
+        165,
+        34
+      ],
+      "geometry": "rect",
+      "text": "Method 1",
+      "textPreview": "Method 1",
+      "resolvedFontSize": 26,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 26,
+        "typeface": "Cambria",
+        "color": "#276B8E",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Method 1"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Method 1",
+          "resolvedTextStyle": {
+            "fontSize": 26,
+            "typeface": "Cambria",
+            "color": "#276B8E",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Method 1",
+              "fontSize": 26,
+              "typeface": "Cambria",
+              "color": "#276B8E",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 8,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/o7ixw3it",
+      "id": "8",
+      "name": "method-1-target",
+      "bbox": [
+        264,
+        150,
+        336,
+        30
+      ],
+      "geometry": "rect",
+      "text": "B target: scale × Sd(Teff)",
+      "textPreview": "B target: scale × Sd(Teff)",
+      "resolvedFontSize": 17,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 17,
+        "typeface": "Calibri",
+        "color": "#272523",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "B target: scale × Sd(Teff)"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "B target: scale × Sd(Teff)",
+          "resolvedTextStyle": {
+            "fontSize": 17,
+            "typeface": "Calibri",
+            "color": "#272523",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "B target: scale × Sd(Teff)",
+              "fontSize": 17,
+              "typeface": "Calibri",
+              "color": "#272523",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 9,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/p8repozy",
+      "id": "9",
+      "name": "method-1-carrier",
+      "bbox": [
+        264,
+        181,
+        336,
+        28
+      ],
+      "geometry": "rect",
+      "text": "B carrier: Teff = 0.241 s",
+      "textPreview": "B carrier: Teff = 0.241 s",
+      "resolvedFontSize": 16,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 16,
+        "typeface": "Calibri",
+        "color": "#716D69",
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "B carrier: Teff = 0.241 s"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "B carrier: Teff = 0.241 s",
+          "resolvedTextStyle": {
+            "fontSize": 16,
+            "typeface": "Calibri",
+            "color": "#716D69",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "B carrier: Teff = 0.241 s",
+              "fontSize": 16,
+              "typeface": "Calibri",
+              "color": "#716D69",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 10,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/d0zexszq",
+      "id": "10",
+      "name": "method-1-axis-a",
+      "bbox": [
+        86,
+        277,
+        190,
+        0
+      ],
+      "geometry": "line",
+      "lineColor": "#AAA49E",
+      "lineWidth": 1
+    },
+    {
+      "order": 11,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/szqdoni5",
+      "id": "11",
+      "name": "method-1-axis-b",
+      "bbox": [
+        396,
+        277,
+        190,
+        0
+      ],
+      "geometry": "line",
+      "lineColor": "#AAA49E",
+      "lineWidth": 1
+    },
+    {
+      "order": 12,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/ryhcv2hk",
+      "id": "12",
+      "name": "method-1-wave-a",
+      "bbox": [
+        86,
+        260,
+        190,
+        34
+      ],
+      "geometry": "custom",
+      "lineColor": "#B7684B",
+      "lineWidth": 2.4
+    },
+    {
+      "order": 13,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/qx8vmx0z",
+      "id": "13",
+      "name": "method-1-wave-b",
+      "bbox": [
+        396,
+        260,
+        190,
+        34
+      ],
+      "geometry": "custom",
+      "lineColor": "#276B8E",
+      "lineWidth": 2.4
+    },
+    {
+      "order": 14,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/5wzutsze",
+      "id": "14",
+      "name": "method-1-wave-a-label",
+      "bbox": [
+        86,
+        295,
+        210,
+        26
+      ],
+      "geometry": "rect",
+      "text": "Wave A · T1 = 0.112 s",
+      "textPreview": "Wave A · T1 = 0.112 s",
+      "resolvedFontSize": 15,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 15,
+        "typeface": "Calibri",
+        "color": "#272523",
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Wave A · T1 = 0.112 s"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Wave A · T1 = 0.112 s",
+          "resolvedTextStyle": {
+            "fontSize": 15,
+            "typeface": "Calibri",
+            "color": "#272523",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Wave A · T1 = 0.112 s",
+              "fontSize": 15,
+              "typeface": "Calibri",
+              "color": "#272523",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 15,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/4vqdkni9",
+      "id": "15",
+      "name": "method-1-wave-b-label",
+      "bbox": [
+        396,
+        295,
+        214,
+        26
+      ],
+      "geometry": "rect",
+      "text": "Wave B · carrier shown above",
+      "textPreview": "Wave B · carrier shown above",
+      "resolvedFontSize": 15,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 15,
+        "typeface": "Calibri",
+        "color": "#272523",
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Wave B · carrier shown above"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Wave B · carrier shown above",
+          "resolvedTextStyle": {
+            "fontSize": 15,
+            "typeface": "Calibri",
+            "color": "#272523",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Wave B · carrier shown above",
+              "fontSize": 15,
+              "typeface": "Calibri",
+              "color": "#272523",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 16,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/3uhcriho",
+      "id": "16",
+      "name": "method-2-surface",
+      "bbox": [
+        656,
+        137,
+        562,
+        210
+      ],
+      "geometry": "rect",
+      "fillColor": "#F1EFEC",
+      "lineWidth": 0
+    },
+    {
+      "order": 17,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/i98vid03",
+      "id": "17",
+      "name": "method-2-accent",
+      "bbox": [
+        656,
+        137,
+        7,
+        210
+      ],
+      "geometry": "rect",
+      "fillColor": "#E07A2D",
+      "lineWidth": 0
+    },
+    {
+      "order": 18,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/ps3e5czy",
+      "id": "18",
+      "name": "method-2-title",
+      "bbox": [
+        680,
+        149,
+        165,
+        34
+      ],
+      "geometry": "rect",
+      "text": "Method 2",
+      "textPreview": "Method 2",
+      "resolvedFontSize": 26,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 26,
+        "typeface": "Cambria",
+        "color": "#E07A2D",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Method 2"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Method 2",
+          "resolvedTextStyle": {
+            "fontSize": 26,
+            "typeface": "Cambria",
+            "color": "#E07A2D",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Method 2",
+              "fontSize": 26,
+              "typeface": "Cambria",
+              "color": "#E07A2D",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 19,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/oradw7id",
+      "id": "19",
+      "name": "method-2-target",
+      "bbox": [
+        858,
+        150,
+        336,
+        30
+      ],
+      "geometry": "rect",
+      "text": "B target: scale × Sd(Teff)",
+      "textPreview": "B target: scale × Sd(Teff)",
+      "resolvedFontSize": 17,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 17,
+        "typeface": "Calibri",
+        "color": "#272523",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "B target: scale × Sd(Teff)"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "B target: scale × Sd(Teff)",
+          "resolvedTextStyle": {
+            "fontSize": 17,
+            "typeface": "Calibri",
+            "color": "#272523",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "B target: scale × Sd(Teff)",
+              "fontSize": 17,
+              "typeface": "Calibri",
+              "color": "#272523",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 20,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/8bix8v6p",
+      "id": "20",
+      "name": "method-2-carrier",
+      "bbox": [
+        858,
+        181,
+        336,
+        28
+      ],
+      "geometry": "rect",
+      "text": "B carrier: record Tp = 0.260 s",
+      "textPreview": "B carrier: record Tp = 0.260 s",
+      "resolvedFontSize": 16,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 16,
+        "typeface": "Calibri",
+        "color": "#716D69",
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "B carrier: record Tp = 0.260 s"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "B carrier: record Tp = 0.260 s",
+          "resolvedTextStyle": {
+            "fontSize": 16,
+            "typeface": "Calibri",
+            "color": "#716D69",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "B carrier: record Tp = 0.260 s",
+              "fontSize": 16,
+              "typeface": "Calibri",
+              "color": "#716D69",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 21,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/9wby107u",
+      "id": "21",
+      "name": "method-2-axis-a",
+      "bbox": [
+        680,
+        277,
+        190,
+        0
+      ],
+      "geometry": "line",
+      "lineColor": "#AAA49E",
+      "lineWidth": 1
+    },
+    {
+      "order": 22,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/m90f6loj",
+      "id": "22",
+      "name": "method-2-axis-b",
+      "bbox": [
+        990,
+        277,
+        190,
+        0
+      ],
+      "geometry": "line",
+      "lineColor": "#AAA49E",
+      "lineWidth": 1
+    },
+    {
+      "order": 23,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/7a9gzqp4",
+      "id": "23",
+      "name": "method-2-wave-a",
+      "bbox": [
+        680,
+        260,
+        190,
+        34
+      ],
+      "geometry": "custom",
+      "lineColor": "#B7684B",
+      "lineWidth": 2.4
+    },
+    {
+      "order": 24,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/k7ix4b6d",
+      "id": "24",
+      "name": "method-2-wave-b",
+      "bbox": [
+        990,
+        260,
+        190,
+        34
+      ],
+      "geometry": "custom",
+      "lineColor": "#E07A2D",
+      "lineWidth": 2.4
+    },
+    {
+      "order": 25,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/l8ryxg7y",
+      "id": "25",
+      "name": "method-2-wave-a-label",
+      "bbox": [
+        680,
+        295,
+        210,
+        26
+      ],
+      "geometry": "rect",
+      "text": "Wave A · T1 = 0.112 s",
+      "textPreview": "Wave A · T1 = 0.112 s",
+      "resolvedFontSize": 15,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 15,
+        "typeface": "Calibri",
+        "color": "#272523",
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Wave A · T1 = 0.112 s"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Wave A · T1 = 0.112 s",
+          "resolvedTextStyle": {
+            "fontSize": 15,
+            "typeface": "Calibri",
+            "color": "#272523",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Wave A · T1 = 0.112 s",
+              "fontSize": 15,
+              "typeface": "Calibri",
+              "color": "#272523",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 26,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/y50f21o7",
+      "id": "26",
+      "name": "method-2-wave-b-label",
+      "bbox": [
+        990,
+        295,
+        214,
+        26
+      ],
+      "geometry": "rect",
+      "text": "Wave B · carrier shown above",
+      "textPreview": "Wave B · carrier shown above",
+      "resolvedFontSize": 15,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 15,
+        "typeface": "Calibri",
+        "color": "#272523",
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Wave B · carrier shown above"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Wave B · carrier shown above",
+          "resolvedTextStyle": {
+            "fontSize": 15,
+            "typeface": "Calibri",
+            "color": "#272523",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Wave B · carrier shown above",
+              "fontSize": 15,
+              "typeface": "Calibri",
+              "color": "#272523",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 27,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/z69gv6ps",
+      "id": "27",
+      "name": "method-3-surface",
+      "bbox": [
+        62,
+        369,
+        562,
+        210
+      ],
+      "geometry": "rect",
+      "fillColor": "#F1EFEC",
+      "lineWidth": 0
+    },
+    {
+      "order": 28,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/c3yx0b6h",
+      "id": "28",
+      "name": "method-3-accent",
+      "bbox": [
+        62,
+        369,
+        7,
+        210
+      ],
+      "geometry": "rect",
+      "fillColor": "#3E8C61",
+      "lineWidth": 0
+    },
+    {
+      "order": 29,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/d47etg7m",
+      "id": "29",
+      "name": "method-3-title",
+      "bbox": [
+        86,
+        381,
+        165,
+        34
+      ],
+      "geometry": "rect",
+      "text": "Method 3",
+      "textPreview": "Method 3",
+      "resolvedFontSize": 26,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 26,
+        "typeface": "Cambria",
+        "color": "#3E8C61",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Method 3"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Method 3",
+          "resolvedTextStyle": {
+            "fontSize": 26,
+            "typeface": "Cambria",
+            "color": "#3E8C61",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Method 3",
+              "fontSize": 26,
+              "typeface": "Cambria",
+              "color": "#3E8C61",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 30,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/fepg369o",
+      "id": "30",
+      "name": "method-3-target",
+      "bbox": [
+        264,
+        382,
+        336,
+        30
+      ],
+      "geometry": "rect",
+      "text": "B target: (T*, d*) by intensity",
+      "textPreview": "B target: (T*, d*) by intensity",
+      "resolvedFontSize": 17,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 17,
+        "typeface": "Calibri",
+        "color": "#272523",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "B target: (T*, d*) by intensity"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "B target: (T*, d*) by intensity",
+          "resolvedTextStyle": {
+            "fontSize": 17,
+            "typeface": "Calibri",
+            "color": "#272523",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "B target: (T*, d*) by intensity",
+              "fontSize": 17,
+              "typeface": "Calibri",
+              "color": "#272523",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 31,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/edwza1s3",
+      "id": "31",
+      "name": "method-3-carrier",
+      "bbox": [
+        264,
+        413,
+        336,
+        28
+      ],
+      "geometry": "rect",
+      "text": "B carrier: T* = 0.134 s",
+      "textPreview": "B carrier: T* = 0.134 s",
+      "resolvedFontSize": 16,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 16,
+        "typeface": "Calibri",
+        "color": "#716D69",
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "B carrier: T* = 0.134 s"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "B carrier: T* = 0.134 s",
+          "resolvedTextStyle": {
+            "fontSize": 16,
+            "typeface": "Calibri",
+            "color": "#716D69",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "B carrier: T* = 0.134 s",
+              "fontSize": 16,
+              "typeface": "Calibri",
+              "color": "#716D69",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 32,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/107y5wru",
+      "id": "32",
+      "name": "method-3-axis-a",
+      "bbox": [
+        86,
+        509,
+        190,
+        0
+      ],
+      "geometry": "line",
+      "lineColor": "#AAA49E",
+      "lineWidth": 1
+    },
+    {
+      "order": 33,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/gzyhcba9",
+      "id": "33",
+      "name": "method-3-axis-b",
+      "bbox": [
+        396,
+        509,
+        190,
+        0
+      ],
+      "geometry": "line",
+      "lineColor": "#AAA49E",
+      "lineWidth": 1
+    },
+    {
+      "order": 34,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/32pg769k",
+      "id": "34",
+      "name": "method-3-wave-a",
+      "bbox": [
+        86,
+        492,
+        190,
+        34
+      ],
+      "geometry": "custom",
+      "lineColor": "#B7684B",
+      "lineWidth": 2.4
+    },
+    {
+      "order": 35,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/21gze1sf",
+      "id": "35",
+      "name": "method-3-wave-b",
+      "bbox": [
+        396,
+        492,
+        190,
+        34
+      ],
+      "geometry": "custom",
+      "lineColor": "#3E8C61",
+      "lineWidth": 2.4
+    },
+    {
+      "order": 36,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/p47y9grq",
+      "id": "36",
+      "name": "method-3-wave-a-label",
+      "bbox": [
+        86,
+        527,
+        210,
+        26
+      ],
+      "geometry": "rect",
+      "text": "Wave A · T1 = 0.112 s",
+      "textPreview": "Wave A · T1 = 0.112 s",
+      "resolvedFontSize": 15,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 15,
+        "typeface": "Calibri",
+        "color": "#272523",
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Wave A · T1 = 0.112 s"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Wave A · T1 = 0.112 s",
+          "resolvedTextStyle": {
+            "fontSize": 15,
+            "typeface": "Calibri",
+            "color": "#272523",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Wave A · T1 = 0.112 s",
+              "fontSize": 15,
+              "typeface": "Calibri",
+              "color": "#272523",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 37,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/o3yhgba5",
+      "id": "37",
+      "name": "method-3-wave-b-label",
+      "bbox": [
+        396,
+        527,
+        214,
+        26
+      ],
+      "geometry": "rect",
+      "text": "Wave B · carrier shown above",
+      "textPreview": "Wave B · carrier shown above",
+      "resolvedFontSize": 15,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 15,
+        "typeface": "Calibri",
+        "color": "#272523",
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Wave B · carrier shown above"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Wave B · carrier shown above",
+          "resolvedTextStyle": {
+            "fontSize": 15,
+            "typeface": "Calibri",
+            "color": "#272523",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Wave B · carrier shown above",
+              "fontSize": 15,
+              "typeface": "Calibri",
+              "color": "#272523",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 38,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/b69gbq9w",
+      "id": "38",
+      "name": "method-4-surface",
+      "bbox": [
+        656,
+        369,
+        562,
+        210
+      ],
+      "geometry": "rect",
+      "fillColor": "#F1EFEC",
+      "lineWidth": 0
+    },
+    {
+      "order": 39,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/q50zilsb",
+      "id": "39",
+      "name": "method-4-accent",
+      "bbox": [
+        656,
+        369,
+        7,
+        210
+      ],
+      "geometry": "rect",
+      "fillColor": "#A14D8D",
+      "lineWidth": 0
+    },
+    {
+      "order": 40,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/ul8rutkj",
+      "id": "40",
+      "name": "method-4-title",
+      "bbox": [
+        680,
+        381,
+        165,
+        34
+      ],
+      "geometry": "rect",
+      "text": "Method 4",
+      "textPreview": "Method 4",
+      "resolvedFontSize": 26,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 26,
+        "typeface": "Cambria",
+        "color": "#A14D8D",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Method 4"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Method 4",
+          "resolvedTextStyle": {
+            "fontSize": 26,
+            "typeface": "Cambria",
+            "color": "#A14D8D",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Method 4",
+              "fontSize": 26,
+              "typeface": "Cambria",
+              "color": "#A14D8D",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 41,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/vm1s3yl4",
+      "id": "41",
+      "name": "method-4-target",
+      "bbox": [
+        858,
+        382,
+        336,
+        30
+      ],
+      "geometry": "rect",
+      "text": "B target: (T*, d*) by intensity",
+      "textPreview": "B target: (T*, d*) by intensity",
+      "resolvedFontSize": 17,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 17,
+        "typeface": "Calibri",
+        "color": "#272523",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "B target: (T*, d*) by intensity"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "B target: (T*, d*) by intensity",
+          "resolvedTextStyle": {
+            "fontSize": 17,
+            "typeface": "Calibri",
+            "color": "#272523",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "B target: (T*, d*) by intensity",
+              "fontSize": 17,
+              "typeface": "Calibri",
+              "color": "#272523",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 42,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/wna9wj2p",
+      "id": "42",
+      "name": "method-4-carrier",
+      "bbox": [
+        858,
+        413,
+        336,
+        28
+      ],
+      "geometry": "rect",
+      "text": "B carrier: record Tp = 0.260 s",
+      "textPreview": "B carrier: record Tp = 0.260 s",
+      "resolvedFontSize": 16,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 16,
+        "typeface": "Calibri",
+        "color": "#716D69",
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "B carrier: record Tp = 0.260 s"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "B carrier: record Tp = 0.260 s",
+          "resolvedTextStyle": {
+            "fontSize": 16,
+            "typeface": "Calibri",
+            "color": "#716D69",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "B carrier: record Tp = 0.260 s",
+              "fontSize": 16,
+              "typeface": "Calibri",
+              "color": "#716D69",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 43,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/hoja5o3a",
+      "id": "43",
+      "name": "method-4-axis-a",
+      "bbox": [
+        680,
+        509,
+        190,
+        0
+      ],
+      "geometry": "line",
+      "lineColor": "#AAA49E",
+      "lineWidth": 1
+    },
+    {
+      "order": 44,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/ipsrytkv",
+      "id": "44",
+      "name": "method-4-axis-b",
+      "bbox": [
+        990,
+        509,
+        190,
+        0
+      ],
+      "geometry": "line",
+      "lineColor": "#AAA49E",
+      "lineWidth": 1
+    },
+    {
+      "order": 45,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/jq1s7ylg",
+      "id": "45",
+      "name": "method-4-wave-a",
+      "bbox": [
+        680,
+        492,
+        190,
+        34
+      ],
+      "geometry": "custom",
+      "lineColor": "#B7684B",
+      "lineWidth": 2.4
+    },
+    {
+      "order": 46,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/4ra90321",
+      "id": "46",
+      "name": "method-4-wave-b",
+      "bbox": [
+        990,
+        492,
+        190,
+        34
+      ],
+      "geometry": "custom",
+      "lineColor": "#A14D8D",
+      "lineWidth": 2.4
+    },
+    {
+      "order": 47,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/5sja9836",
+      "id": "47",
+      "name": "method-4-wave-a-label",
+      "bbox": [
+        680,
+        527,
+        210,
+        26
+      ],
+      "geometry": "rect",
+      "text": "Wave A · T1 = 0.112 s",
+      "textPreview": "Wave A · T1 = 0.112 s",
+      "resolvedFontSize": 15,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 15,
+        "typeface": "Calibri",
+        "color": "#272523",
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Wave A · T1 = 0.112 s"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Wave A · T1 = 0.112 s",
+          "resolvedTextStyle": {
+            "fontSize": 15,
+            "typeface": "Calibri",
+            "color": "#272523",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Wave A · T1 = 0.112 s",
+              "fontSize": 15,
+              "typeface": "Calibri",
+              "color": "#272523",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 48,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/ytorm94r",
+      "id": "48",
+      "name": "method-4-wave-b-label",
+      "bbox": [
+        990,
+        527,
+        214,
+        26
+      ],
+      "geometry": "rect",
+      "text": "Wave B · carrier shown above",
+      "textPreview": "Wave B · carrier shown above",
+      "resolvedFontSize": 15,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 15,
+        "typeface": "Calibri",
+        "color": "#272523",
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Wave B · carrier shown above"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Wave B · carrier shown above",
+          "resolvedTextStyle": {
+            "fontSize": 15,
+            "typeface": "Calibri",
+            "color": "#272523",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Wave B · carrier shown above",
+              "fontSize": 15,
+              "typeface": "Calibri",
+              "color": "#272523",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 49,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/zux8vulw",
+      "id": "49",
+      "name": "methods-footer-rule",
+      "bbox": [
+        62,
+        600,
+        1156,
+        0
+      ],
+      "geometry": "line",
+      "lineColor": "#D4D0CC",
+      "lineWidth": 1
+    },
+    {
+      "order": 50,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/18nu1cne",
+      "id": "50",
+      "name": "methods-footer-note",
+      "bbox": [
+        64,
+        612,
+        1150,
+        58
+      ],
+      "geometry": "rect",
+      "text": "Target = desired spectral displacement at an oscillator period. Carrier = input sine period. The fit adjusts wave velocities with carrier periods fixed; Methods 3–4 use precomputed targets.",
+      "textPreview": "Target = desired spectral displacement at an oscillator period. Carrier = input sine period. The fit adjusts wave velocities with carrier...",
+      "resolvedFontSize": 15,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 15,
+        "typeface": "Calibri",
+        "color": "#716D69",
+        "italic": true,
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Target = desired spectral displacement at an oscillator period. Carrier = input sine period. The fit adjusts wave velocities with carrier periods fixed; Methods 3–4 use precomputed targets."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Target = desired spectral displacement at an oscillator period. Carrier = input sine period. The fit adjusts wave velocities with carrier periods fixed; Methods 3–4 use precomputed targets.",
+          "resolvedTextStyle": {
+            "fontSize": 15,
+            "typeface": "Calibri",
+            "color": "#716D69",
+            "italic": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Target = desired spectral displacement at an oscillator period. Carrier = input sine period. The fit adjusts wave velocities with carrier periods fixed; Methods 3–4 use precomputed targets.",
+              "fontSize": 15,
+              "typeface": "Calibri",
+              "color": "#716D69",
+              "italic": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    }
+  ],
+  "composeRuns": []
+}

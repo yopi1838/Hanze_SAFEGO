@@ -1,206 +1,505 @@
 # -*- coding: ascii -*-
 """
-postprocess_pushover.py -- OOP pushover curves of the US-1 model vs the test.
+postprocess_pushover_oop.py -- OOP pushover curves of the US-1 model after batch_ft0p15_pipeline.py.
 
-Reads any of the pushover driver outputs (format detected from the header):
-    v1        : lam_g, d_ctrl_mm, F_base_kN
-    v2.x / v3 : phase, a_mps2, d_ctrl_mm, F_base_kN[, F_top_kN, F_tot_kN], conv,
-                converged, m_part_kg[, a_pred_mps2, settle_chunks]
-    disp-ctrl : d_ctrl_mm, F_base_kN, F_appl_kN, KE_frac, maxvel_mms
-and overlays the digitised Fig 13 envelope of US-1 (US1_fig13_digitised.csv,
-positive and negative branches drawn on |d|, |F|) and the Table 4 peaks as
-read from that file (largest |F| on each branch) -- nothing typed in.
+WHAT IT READS (run from the 3DEC working folder; every path is relative to BASE_DIR)
+    CASES        the pushover output folders of the batch (pushover_pos.csv / pushover_neg.csv in each):
+                   f_t = 0,    mason top   pushover_results_v5_ft0_masonrypush_TopMason     (batch stages 0, 1)
+                   f_t = 0.15, mason top   pushover_results_v5_ft0p15_masonrypush_TopMason  (batch stages 2, 3)
+                   f_t = 0,    elastic top pushover_results_v5_ft0_masonrypush              (22 Oct reference)
+                 A case or a branch that is missing is reported and skipped. pushover_*_prev_*.csv (kept by the
+                 batch when it re-ran a branch) are ignored.
+    BILINEAR_JSON  bilinear_idealisation_ft0p15/bilinear_periods.json (batch stage 4), drawn on the f_t = 0.15 curves
+    BATCH_DIR      batch_ft0p15/batch_state.json: which stages finished (printed)
+    ENVELOPE_CSV   us1_fig13_digitised.csv (test envelope, Fig 13), divided by FIG13_MASS_SCALE = 2.317, the
+                   mass scale the processed test data remove (Fig 13 as printed peaks at ~30 kN, i.e. 2.3 x sum m a)
+    TEST_PEAKS     exp_envelope_peaks/envelope_peaks_US1/US2.csv: peak force per run (sum m a) at its displacement
 
-Force column: F_tot_kN when present (base + joists + top joint = the whole
-lateral reaction, comparable to Fig 13), else F_base_kN (base + joists only,
-~55% of the total on this wall -- stated in the legend). Sign: plotted as
-|F| against |d| so both push directions and the test share one quadrant.
+FORCE
+    The v5 driver logs F_tot = base shear + top-joint SHEAR z-components. Once the top beam tilts, the top-joint
+    normal force has a horizontal component |N| sin(tilt) that F_tot leaves out (deformed_shape_3dec.py, 23 Oct:
+    +1.8 / +2.6 kN at 80 mm on the elastic-top runs). The force the wall carries is the applied push |a| x m_tot
+    at a settled servo point (m_tot from the CSV's '#' line). FORCE = "applied" (default) plots and measures that;
+    F_tot as logged is drawn dotted for reference (SHOW_REACTION). Rows with converged = 0 (the runaway step that
+    ends the force-controlled ascent) are not equilibria: drawn hollow, left out of every metric.
 
-Per curve it reports: peak |F| and the displacement there, initial stiffness
-K1 (least-squares slope through the origin over d <= D_LINEAR_MM), secant
-stiffness and force at D_SEC_MM if reached, and the periods
-T = 2 pi sqrt(M_EFF / K) for both -- same law as capacity_law.py.
+METRICS per branch (pushover_metrics.csv)
+    peak F and d there; K_el = least-squares slope through the origin over K_EL_RANGE_MM -> T1 = 2 pi sqrt(L / K_el);
+    T_eff = 2 pi sqrt(L d_u / F_y) with d_u = D_U_MM and F_y = peak (the Route 2 driver's law, L = M_EFF);
+    secant at D_SEC_MM; force at the last point; largest joint / pocket opening; joist support load range;
+    F_tot - |a| m_tot at the last point.
+    Per case with both branches, the Route 2 "mean" combination (K_el pooled over both branches, F_y = mean of
+    the two peaks): the T1 / T_eff route2_Tm_ihsan_full25_3dec.py computes from the same files (periods row).
 
-Outputs (OUT_DIR):
-    fig_pushover_curves.png   : |F| vs |d|, all curves + envelope + Table 4 peaks
-    fig_pushover_control.png  : control variable and quality per curve
-                                (a vs d with unconverged points hollow; or
-                                F_appl/F_base and KE_frac for disp-control)
-    pushover_summary.csv
-Usage: python postprocess_pushover.py
+MECHANICAL MODEL (MECH = True; needs mechanical_model_US1/rigid_two_block_vw.py, MECHANICAL_MODEL_US1.md Appendix D)
+    Rigid two-block strip, large-displacement virtual work, with the DEM's loads: masonry m_tot of the CSV, springs
+    10.35 kN + the 213 kg top beam at the top pivot, joists pinned with their bearing load in the pockets.
+      mid-height hinge   h1 = 1.51 m (intact-wall optimum), wall rocks on the top-beam corner
+      adjusted hinge     h1 = 2.09 m (pos) / 2.20 m (neg), the joint the DEM and the test open:
+                           band  = top pivot at the top-beam centroid (elastic top: the beam turns with the wall),
+                                   lower pivot between the base and 0.30 m (kink at the lower floor)
+                           dash-dot = rocking on the top-beam corner (what the mason top allows once the top joint opens)
+      F_cr               Graziotti cracking force for f_w = 0.15 MPa (onur_single_leaf.full_height), drawn when the
+                         f_t = 0.15 case is present
+    Values at 20 / 40 / 80 mm and the zero-force displacement -> pushover_mech.csv, next to the DEM at the same d.
+
+OUTPUT (OUT_DIR)
+    fig_pushover_curves.png       (a, b) both directions, all cases, test envelope, bilinear idealisation;
+                                  (c, d) the first ZOOM_MM with the K_el fits
+    fig_pushover_diagnostics.png  applied acceleration, joint / pocket opening, joist support load vs d
+    pushover_metrics.csv, pushover_periods.csv
+    and, printed, the snapshot saves found in each folder as a SAVES list for deformed_shape_3dec.py
+Usage: python postprocess_pushover_oop.py [BASE_DIR]
 """
-import os, csv
+import os, sys, csv, io, glob, json
 import numpy as np
 import matplotlib; matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 # ============================ CONFIG =================================
-CURVES = [   # (label, csv path, colour)
-    ("force control (tilted gravity)",        "pushover_results/pushover_pos.csv",      "#b85042"),
-    ("displacement control (top beam driven)", "pushover_results/pushover_disp_pos.csv", "#3f6fb5"),
-    # ("force control, negative",             "pushover_results/pushover_neg.csv",      "#d98c21"),
+BASE_DIR = sys.argv[1] if len(sys.argv) > 1 else "."
+CASES = [   # (key, label, folder, colour, line style)
+    ("ft0_mason",   "f_t = 0, mason top",          "pushover_results_v5_ft0_masonrypush_TopMason",    "#2B5F8A", "-"),
+    ("ft015_mason", "f_t = 0.15 MPa, mason top",   "pushover_results_v5_ft0p15_masonrypush_TopMason", "#E07A2D", "-"),
+    ("ft0_elastic", "f_t = 0, elastic top (ref.)", "pushover_results_v5_ft0_masonrypush",             "#9CA3AF", "--"),
 ]
-ENVELOPE_CSV = "US1_fig13_digitised.csv"   # drift_pct, F_kN, d_mm (paper sign)
-M_EFF        = 1635.0     # kg, effective mass used for the periods (same as Route 2)
-D_LINEAR_MM  = 2.0        # K1 fitted over 0 < d <= D_LINEAR_MM
-D_SEC_MM     = 29.5       # secant evaluated here (US-1 run 24)
-OUT_DIR      = "pushover_postproc"
-os.makedirs(OUT_DIR, exist_ok=True)
+BILINEAR_JSON = "bilinear_idealisation_ft0p15/bilinear_periods.json"
+BILINEAR_CASE = "ft015_mason"            # the case the bilinear idealisation was made from
+BATCH_DIR     = "batch_ft0p15"
+ENVELOPE_CSV  = "us1_fig13_digitised.csv"
+FIG13_MASS_SCALE = 2.317                 # Fig 13's base shear carries the paper's mass scale; the processed test data
+                                         # divide it out (envelope_peaks_*.csv: mass_scale_removed 2.317). Same here,
+                                         # so the envelope is on the model's basis (sum m a on the wall). 1.0 = as printed.
+TEST_PEAKS    = {"US-1": "exp_envelope_peaks/envelope_peaks_US1.csv",     # peak force per run and the displacement
+                 "US-2": "exp_envelope_peaks/envelope_peaks_US2.csv"}     # there (from exp_envelope_peaks.py); {} = off
+FORCE         = "applied"                # "applied": |a| x m_tot | "reaction": F_tot_kN as logged
+SHOW_REACTION = True                     # draw F_tot as logged, dotted
+M_TOT_DEFAULT = 1308.3                   # kg, if the CSV has no '# ... m_tot ...' line
+M_EFF         = 1200.0                   # kg, L = sum m_j phi_j (as in Route 2 and the batch's bilinear stage)
+K_EL_RANGE_MM = (0.1, 1.5)               # K_el fit range (Route 2)
+D_U_MM        = 27.4                     # d_u of T_eff (Route 2: end of the US-1 envelope)
+D_SEC_MM      = 29.5                     # secant evaluated here (US-1 run 24)
+ZOOM_MM       = 5.0
+POCKET_EXIT_MM = 50.0                    # the v5 driver aborts beyond this
+OUT_DIR       = "pushover_postproc_batch"
+
+# ---- mechanical model (rigid two-block strip) ---------------------------------------------------------------
+MECH            = True
+MECH_DIR        = "mechanical_model_US1"
+MECH_H1_MID     = 1.51                       # m, formula optimum ("mid-height hinge")
+MECH_H1_ADJ     = {"pos": 2.09, "neg": 2.20} # m, adjusted hinge (DEM deformed shape, 23 Oct)
+MECH_TB_Y       = 2.629                      # m, top-beam centroid in the build
+MECH_TB_KG      = 212.986                    # kg, top beam in the build
+MECH_SPRING_KN  = 10.35
+MECH_BASE_Y     = (0.0, 0.30)                # m, lower pivot range of the band
+MECH_SHOW_CORNER = True                      # adjusted hinge rocking on the top-beam corner (mason top)
+MECH_FCR        = True                       # cracking force for f_w = 0.15 MPa when the bonded case is present
+MECH_COL        = "#0F766E"
+
+INK, MUTED, GRID, TEST = "#1f2937", "#6b7280", "#e5e7eb", "#374151"
+P = lambda *p: os.path.join(BASE_DIR, *p)
+os.makedirs(P(OUT_DIR), exist_ok=True)
+
 
 # ============================ READERS ================================
-def read_curve(path):
-    """-> dict(d, F, Fsrc, kind, extra...) with d, F as positive arrays, or None"""
+def read_v5(path):
+    """v5 pushover CSV -> dict of arrays (|d|, applied and reaction force, diagnostics) or None"""
     if not os.path.isfile(path):
         return None
     with open(path) as f:
-        rows = list(csv.DictReader(f))
+        lines = f.readlines()
+    head = " ".join(l for l in lines if l.lstrip().startswith("#"))
+    rows = list(csv.DictReader(io.StringIO("".join(l for l in lines if l.strip() and not l.lstrip().startswith("#")))))
     if not rows:
         return None
-    hdr = list(rows[0].keys())
+    m_tot = M_TOT_DEFAULT
+    if "m_tot" in head:
+        try:
+            m_tot = float(head.split("m_tot")[1].split("kg")[0])
+        except ValueError:
+            pass
+    meta = {}
+    for key in ("save", "top joint"):
+        if key in head:
+            meta[key] = head.split(key, 1)[1].split(";")[0].strip()
+
     def col(name, default=np.nan):
         out = []
         for r in rows:
-            v = r.get(name, "")
             try:
-                out.append(float(v))
+                out.append(float(r.get(name, "")))
             except (TypeError, ValueError):
                 out.append(default)
         return np.array(out)
-    d = np.abs(col("d_ctrl_mm"))
-    if "F_tot_kN" in hdr and np.isfinite(col("F_tot_kN")).any():
-        F, Fsrc = np.abs(col("F_tot_kN")), "F_tot (base+joists+top)"
-    else:
-        F, Fsrc = np.abs(col("F_base_kN")), "F_base (base+joists only)"
-    out = {"d": d, "F": F, "Fsrc": Fsrc, "n": len(rows)}
-    if "phase" in hdr:
-        out["kind"] = "load"
-        out["phase"] = np.array([r.get("phase", "") for r in rows])
-        out["a"] = np.abs(col("a_mps2"))
-        out["conv_ok"] = col("converged", 1.0) >= 0.5
-        out["m_part"] = col("m_part_kg")
-    elif "F_appl_kN" in hdr:
-        out["kind"] = "disp"
-        out["F_appl"] = np.abs(col("F_appl_kN")); out["KE_frac"] = col("KE_frac")
-    elif "lam_g" in hdr:
-        out["kind"] = "load"; out["a"] = np.abs(col("lam_g")) * 9.81
-        out["phase"] = np.array(["asc"] * len(rows)); out["conv_ok"] = np.ones(len(rows), bool)
-    else:
-        out["kind"] = "unknown"
-    return out
+    a = np.abs(col("a_mps2"))
+    c = dict(n=len(rows), m_tot=m_tot, meta=meta, path=path,
+             phase=np.array([r.get("phase", "") for r in rows]),
+             d=np.abs(col("d_ctrl_mm")), a=a,
+             F_app=a * m_tot / 1e3, F_rea=np.abs(col("F_tot_kN")),
+             ok=col("converged", 1.0) >= 0.5,
+             open=col("max_open_mm"), pocket=col("pocket_open_mm"), joistN=col("joist_N_kN"))
+    c["F"] = c["F_app"] if FORCE == "applied" else c["F_rea"]
+    return c
+
 
 def read_envelope(path):
     if not os.path.isfile(path):
-        print("  ! {} not found -- no test envelope".format(path)); return None
+        print("  ! {} not found -- no test envelope".format(path)); return {}
     e = np.genfromtxt(path, delimiter=",", names=True)
-    if "d_mm" not in e.dtype.names or "F_kN" not in e.dtype.names:
-        print("  ! {} lacks d_mm / F_kN".format(path)); return None
-    br = {}
-    for nm, m in (("test, positive branch", e["d_mm"] > 0), ("test, negative branch", e["d_mm"] < 0)):
-        d = np.abs(e["d_mm"][m]); F = np.abs(e["F_kN"][m]); o = np.argsort(d)
-        br[nm] = (d[o], F[o])
-    return br
+    out = {}
+    for br, m in (("pos", e["d_mm"] > 0), ("neg", e["d_mm"] < 0)):
+        d = np.abs(e["d_mm"][m]); F = np.abs(e["F_kN"][m]) / FIG13_MASS_SCALE; o = np.argsort(d)
+        out[br] = (d[o], F[o])
+    return out
+
+
+def read_peaks(path):
+    """peak force per run and the displacement there (relative to the run's start), per sign"""
+    if not os.path.isfile(path):
+        return None
+    out = {"pos": [], "neg": []}
+    for r in csv.DictReader(open(path)):
+        try:
+            d0 = float(r["d_start_mm"])
+            out["pos"].append((abs(float(r["d_at_Fmax_pos_mm"]) - d0), abs(float(r["F_max_pos_kN"]))))
+            out["neg"].append((abs(float(r["d_at_Fmax_neg_mm"]) - d0), abs(float(r["F_max_neg_kN"]))))
+        except (KeyError, ValueError):
+            continue
+    return {k: np.array(v) for k, v in out.items()}
+
+
+def read_bilinear(path):
+    if not os.path.isfile(path):
+        return None
+    with open(path) as f:
+        j = json.load(f)
+    return j.get("model")
+
 
 # ============================ METRICS ================================
-def k1_fit(d, F):
-    m = (d > 0) & (d <= D_LINEAR_MM)
+def k_el(d, F):
+    m = (d >= K_EL_RANGE_MM[0]) & (d <= K_EL_RANGE_MM[1])
     if m.sum() < 2:
         m = np.argsort(d)[:3]
-    return float(np.sum(d[m] * F[m]) / np.sum(d[m] * d[m])) if np.sum(d[m] * d[m]) > 0 else np.nan
+    return float(np.sum(d[m] * F[m]) / np.sum(d[m] ** 2)), d[m], F[m]
 
-def secant(d, F, dq):
-    o = np.argsort(d); d, F = d[o], F[o]
-    if dq > d.max():
-        return np.nan, np.nan
-    Fq = float(np.interp(dq, d, F)); return Fq, Fq / dq
 
-def period(K_kNmm):
-    return 2 * np.pi * np.sqrt(M_EFF / (K_kNmm * 1e6)) if K_kNmm and K_kNmm > 0 else np.nan
+def periods(K, Fy):
+    T1 = 2 * np.pi * np.sqrt(M_EFF / (K * 1e6)) if K > 0 else np.nan
+    Te = 2 * np.pi * np.sqrt(M_EFF * D_U_MM * 1e-3 / (Fy * 1e3)) if Fy > 0 else np.nan
+    return T1, Te
 
-def metrics(name, d, F):
-    i = int(np.argmax(F))
-    K1 = k1_fit(d, F); Fs, Ks = secant(d, F, D_SEC_MM)
-    return {"curve": name, "peak_F_kN": float(F[i]), "d_at_peak_mm": float(d[i]), "d_max_mm": float(d.max()),
-            "K1_kNmm": K1, "T1_s": period(K1), "F_at_{:g}mm_kN".format(D_SEC_MM): Fs,
-            "Ksec_{:g}mm_kNmm".format(D_SEC_MM): Ks, "Teff_{:g}mm_s".format(D_SEC_MM): period(Ks)}
+
+def branch_metrics(c):
+    ok = c["ok"]; d, F = c["d"][ok], c["F"][ok]
+    o = np.argsort(d, kind="stable"); d, F = d[o], F[o]
+    i = int(np.argmax(F)); K, _, _ = k_el(d, F); T1, Te = periods(K, F[i])
+    Fs = float(np.interp(D_SEC_MM, d, F)) if d.max() >= D_SEC_MM else np.nan
+    end = int(np.argmax(c["d"]))
+    return dict(peak_F_kN=float(F[i]), d_at_peak_mm=float(d[i]), K_el_kNmm=K, T1_s=T1, Teff_s=Te,
+                F_sec_kN=Fs, K_sec_kNmm=Fs / D_SEC_MM if np.isfinite(Fs) else np.nan,
+                d_end_mm=float(c["d"][end]), F_end_kN=float(c["F"][end]),
+                Ftot_minus_applied_end_kN=float(c["F_rea"][end] - c["F_app"][end]),
+                max_joint_open_mm=float(np.nanmax(c["open"])) if np.isfinite(c["open"]).any() else np.nan,
+                max_pocket_open_mm=float(np.nanmax(c["pocket"])) if np.isfinite(c["pocket"]).any() else np.nan,
+                joistN_min_kN=float(np.nanmin(c["joistN"])) if np.isfinite(c["joistN"]).any() else np.nan,
+                joistN_max_kN=float(np.nanmax(c["joistN"])) if np.isfinite(c["joistN"]).any() else np.nan,
+                n_rows=c["n"], n_unconverged=int((~c["ok"]).sum()), m_tot_kg=c["m_tot"],
+                top_joint=c["meta"].get("top joint", ""), save=c["meta"].get("save", ""))
+
+
+def combined_periods(cp, cn):
+    """Route 2 'mean': K_el pooled over both branches, F_y = mean of the two peaks"""
+    dd, ff = [], []
+    for c in (cp, cn):
+        ok = c["ok"]; _, d, F = k_el(c["d"][ok], c["F"][ok]); dd.append(d); ff.append(F)
+    dd, ff = np.concatenate(dd), np.concatenate(ff)
+    K = float(np.sum(dd * ff) / np.sum(dd * dd))
+    Fy = 0.5 * (cp["F"][cp["ok"]].max() + cn["F"][cn["ok"]].max())
+    T1, Te = periods(K, Fy)
+    return dict(K_el_kNmm=K, F_y_kN=Fy, T1_s=T1, Teff_s=Te)
+
 
 # ============================ COLLECT ================================
-print("discovery:")
-curves = []
-for label, path, colr in CURVES:
-    c = read_curve(path)
-    if c is None:
-        print("  {:40s} NOT FOUND [{}]".format(label, path)); continue
-    print("  {:40s} {} rows, kind {}, force = {}, d_max {:.1f} mm, peak {:.2f} kN".format(
-        label, c["n"], c["kind"], c["Fsrc"], c["d"].max(), c["F"].max()))
-    curves.append((label, colr, c))
-env = read_envelope(ENVELOPE_CSV)
+print("=" * 78)
+print("pushover post-processing  [{}]  force: {}".format(os.path.abspath(BASE_DIR), "|a| x m_tot" if FORCE == "applied" else "F_tot as logged"))
+st = P(BATCH_DIR, "batch_state.json")
+if os.path.isfile(st):
+    with open(st) as f:
+        done = json.load(f).get("done", [])
+    print("batch stages finished: {}".format(sorted(done) or "none"))
+else:
+    print("batch state: {} not found".format(st))
 
-rowsout = []
-for label, colr, c in curves:
-    rowsout.append(metrics(label, c["d"], c["F"]) | {"force": c["Fsrc"]})
-if env:
-    for nm, (d, F) in env.items():
-        rowsout.append(metrics(nm, d, F) | {"force": "Fig 13 (total)"})
-keys = ["curve", "force"] + [k for k in rowsout[0] if k not in ("curve", "force")] if rowsout else []
-with open(os.path.join(OUT_DIR, "pushover_summary.csv"), "w", newline="") as f:
-    w = csv.writer(f); w.writerow(keys)
-    for r in rowsout:
-        w.writerow([r.get(k, "") if not isinstance(r.get(k), float) else round(r[k], 4) for k in keys])
-print("-> " + os.path.join(OUT_DIR, "pushover_summary.csv"))
-for r in rowsout:
-    print("  {:40s} peak {:6.2f} kN at {:5.1f} mm | K1 {:.2f} kN/mm -> T1 {:.4f} s | at {:g} mm: F {} K {} -> T {}".format(
-        r["curve"], r["peak_F_kN"], r["d_at_peak_mm"], r["K1_kNmm"], r["T1_s"], D_SEC_MM,
-        "{:.1f}".format(r["F_at_{:g}mm_kN".format(D_SEC_MM)]) if np.isfinite(r["F_at_{:g}mm_kN".format(D_SEC_MM)]) else "n/a",
-        "{:.3f}".format(r["Ksec_{:g}mm_kNmm".format(D_SEC_MM)]) if np.isfinite(r["Ksec_{:g}mm_kNmm".format(D_SEC_MM)]) else "n/a",
-        "{:.3f}".format(r["Teff_{:g}mm_s".format(D_SEC_MM)]) if np.isfinite(r["Teff_{:g}mm_s".format(D_SEC_MM)]) else "n/a"))
+data = {}            # (case key, branch) -> curve
+snaps = {}
+for key, label, folder, colr, ls in CASES:
+    for br in ("pos", "neg"):
+        c = read_v5(P(folder, "pushover_{}.csv".format(br)))
+        tag = "{:28s} {}".format(label, br)
+        if c is None:
+            print("  {}  NOT FOUND  [{}]".format(tag, os.path.join(folder, "pushover_{}.csv".format(br)))); continue
+        data[(key, br)] = c
+        top = c["meta"].get("top joint", "?")
+        print("  {}  {} rows ({} unconverged), d to {:.1f} mm, peak {:.2f} kN, m_tot {:.1f} kg, top joint {}".format(
+            tag, c["n"], int((~c["ok"]).sum()), c["d"].max(), c["F"][c["ok"]].max(), c["m_tot"], top))
+        if ("elastic" in key) != (top == "elastic") and top != "?":
+            print("    ! the CSV says top joint '{}' -- check that the folder holds the case its label says".format(top))
+        if np.nanmax(c["pocket"]) > POCKET_EXIT_MM:
+            print("    ! pocket opening {:.0f} mm > {:.0f} mm: a joist left its pocket".format(np.nanmax(c["pocket"]), POCKET_EXIT_MM))
+    found = sorted(glob.glob(P(folder, "pushover_*_d[0-9]*.sav")) + glob.glob(P(folder, "pushover_*_end.sav")))
+    if found:
+        snaps[key] = (folder, [os.path.splitext(os.path.basename(s))[0] for s in found])
+env = read_envelope(P(ENVELOPE_CSV)) if ENVELOPE_CSV else {}
+peaks = {k: read_peaks(P(v)) for k, v in TEST_PEAKS.items()}
+for k, v in peaks.items():
+    print("test peaks {}: {}".format(k, "{} runs".format(len(v["pos"])) if v is not None else "not found ({})".format(TEST_PEAKS[k])))
+bil = read_bilinear(P(BILINEAR_JSON))
+print("bilinear idealisation: {}".format(
+    "{} (K1 {:.2f} kN/mm, mu {:.2f}, T1 {:.4f} s, T_eff {:.4f} s, m_eff {:.0f})".format(
+        BILINEAR_JSON, bil["K1_kNmm"], bil["mu"], bil["T1_s"], bil["Teff_s"],
+        list(bil["per_branch"].values())[0].get("m_eff", np.nan)) if bil else "not found"))
+if not data:
+    raise SystemExit("no pushover CSV found in any case folder under " + os.path.abspath(BASE_DIR))
+
+# ---- metrics
+rows, prow = [], []
+for key, label, folder, colr, ls in CASES:
+    for br in ("pos", "neg"):
+        if (key, br) in data:
+            rows.append(dict(case=label, branch=br, folder=folder, **branch_metrics(data[(key, br)])))
+    if (key, "pos") in data and (key, "neg") in data:
+        prow.append(dict(case=label, combine="mean (Route 2)", **combined_periods(data[(key, "pos")], data[(key, "neg")])))
+for br in ("pos", "neg"):
+    if br in env:
+        d, F = env[br]; i = int(np.argmax(F)); K, _, _ = k_el(d, F); T1, Te = periods(K, F[i])
+        rows.append(dict(case="US-1 test (Fig 13)", branch=br, folder=ENVELOPE_CSV, peak_F_kN=float(F[i]), d_at_peak_mm=float(d[i]),
+                         K_el_kNmm=K, T1_s=T1, Teff_s=Te))
+
+
+def write(path, rr):
+    keys = []
+    for r in rr:
+        keys += [k for k in r if k not in keys]
+    with open(path, "w", newline="") as f:
+        w = csv.writer(f); w.writerow(keys)
+        for r in rr:
+            w.writerow(["" if r.get(k) is None else (round(r[k], 4) if isinstance(r.get(k), float) and np.isfinite(r[k]) else
+                        ("" if isinstance(r.get(k), float) else r.get(k, ""))) for k in keys])
+
+
+write(P(OUT_DIR, "pushover_metrics.csv"), rows)
+
+# ---- mechanical model
+mech, F_CR = {}, None
+if MECH:
+    try:
+        sys.path.insert(0, os.path.abspath(P(MECH_DIR)))
+        import rigid_two_block_vw as vw
+
+        def rigid(h1, W, O, side, **kw):
+            for thmax in (0.25, 0.2, 0.16, 0.12, 0.08):     # largest rotation the geometry allows
+                try:
+                    dd, FF = vw.curve(h1, W, O, joists=vw.us1_joists(side, k_r=0.0), thmax=thmax, n=600, **kw)
+                    break
+                except ValueError:
+                    continue
+            k = int(np.argmax(FF < 0)) if (FF < 0).any() else len(FF)
+            if k < len(FF):
+                dz = float(np.interp(0.0, [-FF[k - 1], -FF[k]], [dd[k - 1], dd[k]]))
+                return np.r_[dd[:k], dz], np.r_[FF[:k], 0.0], dz
+            return dd, FF, np.nan
+        m_ref = next((c["m_tot"] for c in data.values()), M_TOT_DEFAULT)
+        W, O = m_ref * 9.81 / 1e3, MECH_SPRING_KN + MECH_TB_KG * 9.81 / 1e3
+        top_c = (vw.t / 2, MECH_TB_Y)
+        for br, side in (("pos", "leeward"), ("neg", "windward")):
+            h1 = MECH_H1_ADJ[br]
+            mech[(br, "mid")] = rigid(MECH_H1_MID, W, O, side)
+            mech[(br, "adj_lo")] = rigid(h1, W, O, side, top=top_c, base_y=MECH_BASE_Y[0])
+            mech[(br, "adj_hi")] = rigid(h1, W, O, side, top=top_c, base_y=MECH_BASE_Y[1])
+            if MECH_SHOW_CORNER:
+                mech[(br, "adj_corner")] = rigid(h1, W, O, side)
+        if MECH_FCR and any(k[0] == "ft015_mason" for k in data):
+            try:
+                import onur_single_leaf as osl
+                F_CR = osl.full_height(**dict(osl.US1, fw=0.15))["F_cr"]
+            except Exception as e:
+                print("  ! F_cr not computed ({})".format(e))
+        print("mechanical model: W {:.2f} kN, O {:.2f} kN at the top pivot, joists pinned; hinge {:.2f} m / {:.2f} (pos) / {:.2f} (neg) m{}".format(
+            W, O, MECH_H1_MID, MECH_H1_ADJ["pos"], MECH_H1_ADJ["neg"], "; F_cr (f_w 0.15) {:.1f} kN".format(F_CR) if F_CR else ""))
+    except Exception as e:
+        print("  ! mechanical model skipped: {} ({})".format(e, P(MECH_DIR, "rigid_two_block_vw.py")))
+        mech = {}
+MECH_NAMES = {"mid": "mid-height hinge {:.2f} m".format(MECH_H1_MID),
+              "adj_lo": "adjusted hinge, top-beam centroid, lower pivot at the base",
+              "adj_hi": "adjusted hinge, top-beam centroid, lower pivot at {:.2f} m".format(MECH_BASE_Y[1]),
+              "adj_corner": "adjusted hinge, rocking on the top-beam corner"}
+if mech:
+    mrows = []
+    for br in ("pos", "neg"):
+        for key in ("mid", "adj_lo", "adj_hi", "adj_corner"):
+            if (br, key) not in mech:
+                continue
+            dd, FF, dz = mech[(br, key)]
+            r = dict(model=MECH_NAMES[key], branch=br, h1_m=MECH_H1_MID if key == "mid" else MECH_H1_ADJ[br],
+                     F0_kN=float(FF[0]), zero_force_at_mm=dz)
+            for x in (20, 40, 80):
+                r["F_{}mm_kN".format(x)] = float(np.interp(x, dd, FF)) if x <= dd[-1] else 0.0
+            mrows.append(r)
+        for ckey, label, folder, colr, ls in CASES:      # the DEM at the same displacements, for the comparison
+            c = data.get((ckey, br))
+            if c is None:
+                continue
+            ok = c["ok"]; o = np.argsort(c["d"][ok]); d_, F_ = c["d"][ok][o], c["F"][ok][o]
+            r = dict(model="DEM: " + label, branch=br, F0_kN=float(F_.max()))
+            for x in (20, 40, 80):
+                r["F_{}mm_kN".format(x)] = float(np.interp(x, d_, F_)) if x <= d_.max() else np.nan
+            mrows.append(r)
+    write(P(OUT_DIR, "pushover_mech.csv"), mrows)
+    print("\n{:62s} {:4s} {:>6s} {:>6s} {:>6s} {:>6s} {:>8s}".format("mechanical model vs DEM (F0 / peak, F at d)", "br", "F0", "20mm", "40mm", "80mm", "zero at"))
+    for r in mrows:
+        print("{:62s} {:4s} {:6.2f} {:>6s} {:>6s} {:>6s} {:>8s}".format(
+            r["model"][:62], r["branch"], r["F0_kN"],
+            *["{:.2f}".format(r["F_{}mm_kN".format(x)]) if np.isfinite(r["F_{}mm_kN".format(x)]) else "-" for x in (20, 40, 80)],
+            "{:.0f} mm".format(r["zero_force_at_mm"]) if np.isfinite(r.get("zero_force_at_mm", np.nan)) else ""))
+    print("-> " + P(OUT_DIR, "pushover_mech.csv"))
+if prow:
+    write(P(OUT_DIR, "pushover_periods.csv"), prow)
+print("\n{:28s} {:4s} {:>7s} {:>6s} {:>7s} {:>7s} {:>7s} {:>7s} {:>7s} {:>7s}".format(
+    "case", "br", "peak kN", "at mm", "K_el", "T1 s", "T_eff s", "d_end", "F_end", "pocket"))
+for r in rows:
+    print("{:28s} {:4s} {:7.2f} {:6.1f} {:7.2f} {:7.4f} {:7.4f} {:>7s} {:>7s} {:>7s}".format(
+        r["case"][:28], r["branch"], r["peak_F_kN"], r["d_at_peak_mm"], r["K_el_kNmm"], r["T1_s"], r["Teff_s"],
+        "{:.1f}".format(r["d_end_mm"]) if "d_end_mm" in r else "", "{:.2f}".format(r["F_end_kN"]) if "F_end_kN" in r else "",
+        "{:.1f}".format(r["max_pocket_open_mm"]) if "max_pocket_open_mm" in r else ""))
+for r in prow:
+    print("{:28s} mean: K_el {:.2f} kN/mm, F_y {:.2f} kN -> T1 {:.4f} s, T_eff {:.4f} s  (L {:.0f} kg, d_u {:.1f} mm)".format(
+        r["case"][:28], r["K_el_kNmm"], r["F_y_kN"], r["T1_s"], r["Teff_s"], M_EFF, D_U_MM))
+print("-> " + P(OUT_DIR, "pushover_metrics.csv") + ("  " + P(OUT_DIR, "pushover_periods.csv") if prow else ""))
+
+if snaps:
+    print("\nsnapshot saves (paste into deformed_shape_3dec.py, with REF_SAV = the save of that case):")
+    for key, (folder, names) in snaps.items():
+        print("  # {}".format(key))
+        for n in names:
+            print('    ("{}", "{}/{}", {}),'.format(n.replace("pushover_", ""), folder, n, "+1" if "_pos_" in n else "-1"))
+
 
 # ============================ FIG 1: curves =========================
-fig, ax = plt.subplots(figsize=(8.5, 5.6), dpi=150)
-if env:
-    for (nm, (d, F)), ls in zip(env.items(), ("-", "--")):
-        ax.plot(d, F, ls, color="#444444", lw=1.8, label=nm)
-        i = int(np.argmax(F)); ax.plot(d[i], F[i], "o", color="#444444", ms=5)
-        ax.annotate("{:.1f} kN".format(F[i]), (d[i], F[i]), xytext=(4, 4), textcoords="offset points", fontsize=8, color="#444444")
-for label, colr, c in curves:
-    d, F = c["d"], c["F"]
-    if c["kind"] == "load":
-        for ph, mk, ls in (("asc", "o", "-"), ("desc", "s", "-")):
-            m = c["phase"] == ph
-            if not m.any():
-                continue
-            ok = m & c["conv_ok"]; bad = m & ~c["conv_ok"]
-            ax.plot(d[m], F[m], ls, color=colr, lw=1.4, label="{} [{}]".format(label, c["Fsrc"]) if ph == "asc" else None)
-            ax.plot(d[ok], F[ok], mk, color=colr, ms=4)
-            if bad.any():
-                ax.plot(d[bad], F[bad], mk, mfc="white", mec=colr, ms=5, label="unconverged / not settled" if ph == "asc" else None)
-    else:
-        ax.plot(d, F, "-", color=colr, lw=1.4, label="{} [{}]".format(label, c["Fsrc"]))
-ax.axvline(D_SEC_MM, color="#bbbbbb", lw=0.8, ls=":"); ax.text(D_SEC_MM + 0.4, 1, "{:g} mm".format(D_SEC_MM), fontsize=8, color="#888888")
-ax.set_xlabel("|displacement| at 2.06 m (mm)"); ax.set_ylabel("|base shear| (kN)")
-ax.set_title("OOP pushover of the model vs the US-1 envelope (Fig 13)", loc="left", fontweight="bold")
-ax.grid(color="#eeeeee"); ax.legend(fontsize=8.5, frameon=False, loc="upper right"); ax.set_xlim(left=0); ax.set_ylim(bottom=0)
-for sp in ("top", "right"): ax.spines[sp].set_visible(False)
-plt.tight_layout(); plt.savefig(os.path.join(OUT_DIR, "fig_pushover_curves.png")); print("-> fig_pushover_curves.png")
+def style_axes(ax):
+    ax.grid(color=GRID); ax.set_axisbelow(True)
+    for sp in ("top", "right"):
+        ax.spines[sp].set_visible(False)
 
-# ============================ FIG 2: control + quality ==============
-if curves:
-    fig, axs = plt.subplots(1, len(curves), figsize=(5.4 * len(curves), 4.4), dpi=150, squeeze=False)
-    for ax, (label, colr, c) in zip(axs[0], curves):
-        d = c["d"]
-        if c["kind"] == "load":
-            ok = c["conv_ok"]
-            ax.plot(d[ok], c["a"][ok] / 9.81, "o-", color=colr, ms=4, lw=1, label="converged / settled")
+
+fig, axs = plt.subplots(2, 2, figsize=(14, 10.4 if mech else 9.6), gridspec_kw=dict(height_ratios=[1.6, 1]))
+for j, (br, title) in enumerate((("pos", "Positive push (towards the joists)"), ("neg", "Negative push"))):
+    for row, zoom in ((0, False), (1, True)):
+        ax = axs[row, j]
+        if br in env:
+            d, F = env[br]
+            ax.plot(d, F, "-", color=TEST, lw=1.6, label="US-1 envelope (Fig 13 / {:g}), same sign".format(FIG13_MASS_SCALE))
+            if not zoom:
+                i = int(np.argmax(F)); ax.plot(d[i], F[i], "o", color=TEST, ms=5)
+                ax.annotate("{:.1f} kN".format(F[i]), (d[i], F[i]), xytext=(4, 5), textcoords="offset points", fontsize=8, color=TEST)
+        if mech and not zoom:
+            dlo, flo, zlo = mech[(br, "adj_lo")]; dhi, fhi, zhi = mech[(br, "adj_hi")]
+            xs = np.linspace(0.3, max(zlo, zhi), 300)
+            ax.fill_between(xs, np.interp(xs, dlo, flo, right=np.nan), np.interp(xs, dhi, fhi, right=np.nan),
+                            color=MECH_COL, alpha=0.14, lw=0, zorder=1)
+            ax.plot(dlo, flo, "-", color=MECH_COL, lw=1.5, zorder=1.5,
+                    label="mechanical: adjusted hinge ({:.2f} / {:.2f} m), top-beam centroid".format(MECH_H1_ADJ["pos"], MECH_H1_ADJ["neg"]))
+            ax.plot(dhi, fhi, "--", color=MECH_COL, lw=1.0, zorder=1.5,
+                    label="  same, lower pivot at {:.2f} m".format(MECH_BASE_Y[1]))
+            if (br, "adj_corner") in mech:
+                ax.plot(*mech[(br, "adj_corner")][:2], "-.", color=MECH_COL, lw=1.3, zorder=1.5,
+                        label="mechanical: adjusted hinge, rocking on the top-beam corner")
+            dm, fm, zm = mech[(br, "mid")]
+            ax.plot(dm, fm, color=INK, lw=1.8, ls=(0, (6, 3)), zorder=1.6, label="mechanical: mid-height hinge ({:.2f} m)".format(MECH_H1_MID))
+            if F_CR and ("ft015_mason", br) in data:
+                colr15 = dict((k, cc) for k, _, _, cc, _ in CASES)["ft015_mason"]
+                ax.plot([0, 15], [F_CR, F_CR], ":", color=colr15, lw=1.4, zorder=1.6,
+                        label="cracking force, f_w = 0.15 MPa (Graziotti)")
+        for (tk, pk), mk in zip(peaks.items(), ("o", "^")):
+            if pk is not None and len(pk[br]):
+                ax.plot(pk[br][:, 0], pk[br][:, 1], mk, ms=3.6, mfc="none", mec=TEST, mew=0.8, alpha=0.7,
+                        label="{} test, peak force per run".format(tk))
+        for key, label, folder, colr, ls in CASES:
+            c = data.get((key, br))
+            if c is None:
+                continue
+            ok = c["ok"]
+            ax.plot(c["d"][ok], c["F"][ok], ls, color=colr, lw=2.0 if ls == "-" else 1.4, label=label, zorder=3 if ls == "-" else 2)
             if (~ok).any():
-                ax.plot(d[~ok], c["a"][~ok] / 9.81, "o", mfc="white", mec=colr, ms=5, label="unconverged")
-            ax.set_ylabel("applied lateral acceleration (g)")
-            if "m_part" in c and np.isfinite(c["m_part"]).any():
-                ax2 = ax.twinx(); ax2.plot(d, c["m_part"], ":", color="#888888", lw=1); ax2.set_ylabel("participating mass (kg)", color="#888888")
-        elif c["kind"] == "disp":
-            ax.plot(d, c["F"], "-", color=colr, lw=1.2, label="F_base")
-            ax.plot(d, c["F_appl"], "--", color=colr, lw=1.0, label="F_appl (top beam)")
-            ax.set_ylabel("force (kN)")
-            ax2 = ax.twinx(); ax2.plot(d, c["KE_frac"], ":", color="#888888", lw=1); ax2.set_ylabel("KE_frac (quasi-static check)", color="#888888")
-        ax.set_xlabel("|displacement| at 2.06 m (mm)"); ax.set_title(label, loc="left", fontsize=10, fontweight="bold")
-        ax.grid(color="#eeeeee"); ax.legend(fontsize=8, frameon=False)
-        for sp in ("top",): ax.spines[sp].set_visible(False)
-    plt.tight_layout(); plt.savefig(os.path.join(OUT_DIR, "fig_pushover_control.png")); print("-> fig_pushover_control.png")
+                ax.plot(c["d"][~ok], c["F"][~ok], "o", mfc="white", mec=colr, ms=5, label=None)
+            if SHOW_REACTION and FORCE == "applied" and not zoom:
+                ax.plot(c["d"][ok], c["F_rea"][ok], ":", color=colr, lw=1.0, label=None)
+            if zoom:
+                K, de, Fe = k_el(c["d"][ok], c["F"][ok])
+                xs = np.linspace(0, ZOOM_MM, 2)
+                ax.plot(xs, K * xs, ls=(0, (2, 2)), color=colr, lw=1.0)
+        if bil and BILINEAR_CASE and (BILINEAR_CASE, br) in data and br in bil.get("per_branch", {}):
+            b = bil["per_branch"][br]; colr = dict((k, cc) for k, _, _, cc, _ in CASES)[BILINEAR_CASE]
+            ax.plot([0, b["dy_mm"], b["du_mm"]], [0, b["Vu_kN"], b["Vu_kN"]], "-", color=colr, lw=1.0, alpha=0.6,
+                    label="bilinear idealisation (f_t = 0.15)")
+            if not zoom:
+                ax.plot(b["du_mm"], 0.8 * b["Vu_kN"], "x", color=colr, ms=7)
+        if zoom:
+            ax.set_xlim(0, ZOOM_MM); ax.set_ylim(0, 16)
+            ax.set_title("{}: first {:g} mm (dashed: K_el fit over {:g}-{:g} mm)".format(
+                "(c)" if j == 0 else "(d)", ZOOM_MM, *K_EL_RANGE_MM), loc="left", fontsize=10)
+        else:
+            ax.axvline(D_U_MM, color="#cbd5e1", lw=0.9, ls=":")
+            ax.text(D_U_MM + 0.6, 0.6, "d_u {:g} mm".format(D_U_MM), fontsize=8, color=MUTED)
+            dmax = max([c["d"].max() for (k, b), c in data.items() if b == br] + [10.0])
+            ax.set_xlim(0, max(dmax * 1.1, 160.0) if mech else dmax * 1.05); ax.set_ylim(0, 20)
+            ax.set_title("{} {}".format("(a)" if j == 0 else "(b)", title), loc="left", fontsize=11, fontweight="bold")
+        ax.set_xlabel("displacement at the 2.06 m sensor (mm)")
+        style_axes(ax)
+axs[0, 0].set_ylabel("lateral force on the wall (kN)"); axs[1, 0].set_ylabel("force (kN)")
+h, l = [], []
+for ax in axs[0]:
+    for hh, ll in zip(*ax.get_legend_handles_labels()):
+        if ll not in l:
+            h.append(hh); l.append(ll)
+if SHOW_REACTION and FORCE == "applied":
+    h.append(plt.Line2D([], [], color=MUTED, ls=":", lw=1.0)); l.append("dotted: F_tot as logged (misses |N| sin(tilt) at the top)")
+h.append(plt.Line2D([], [], color=MUTED, ls="none", marker="o", mfc="white")); l.append("hollow: unconverged step (not an equilibrium)")
+fig.legend(h, l, loc="lower center", ncol=3, frameon=False, fontsize=8.4, bbox_to_anchor=(0.5, 0.0))
+fig.suptitle("OOP pushover, US-1 model (masonry-only push, force = {}) vs the test envelope".format(
+    "|a| x m_tot" if FORCE == "applied" else "F_tot"), x=0.01, ha="left", fontsize=12)
+fig.tight_layout(rect=(0, 0.11 if mech else 0.07, 1, 1))
+fig.savefig(P(OUT_DIR, "fig_pushover_curves.png"), dpi=150); plt.close(fig)
+print("-> " + P(OUT_DIR, "fig_pushover_curves.png"))
+
+# ============================ FIG 2: diagnostics =====================
+fig, axs = plt.subplots(3, 2, figsize=(14, 10), sharex="col")
+for j, br in enumerate(("pos", "neg")):
+    for key, label, folder, colr, ls in CASES:
+        c = data.get((key, br))
+        if c is None:
+            continue
+        ok = c["ok"]; lw = 1.6 if ls == "-" else 1.2
+        axs[0, j].plot(c["d"][ok], c["a"][ok] / 9.81, ls, color=colr, lw=lw, label=label)
+        if (~ok).any():
+            axs[0, j].plot(c["d"][~ok], c["a"][~ok] / 9.81, "o", mfc="white", mec=colr, ms=5)
+        axs[1, j].plot(c["d"], c["open"], ls, color=colr, lw=lw)
+        axs[1, j].plot(c["d"], c["pocket"], ls=(0, (1, 1.5)), color=colr, lw=lw)
+        axs[2, j].plot(c["d"], c["joistN"], ls, color=colr, lw=lw, label=label)
+    axs[0, j].set_title("{} {}".format("(a)" if j == 0 else "(b)", "Positive push" if br == "pos" else "Negative push"),
+                        loc="left", fontsize=11, fontweight="bold")
+    axs[1, j].axhline(POCKET_EXIT_MM, color="#ef4444", lw=0.8, ls=":")
+    axs[1, j].text(0.99, POCKET_EXIT_MM + 1, "pocket exit ({:g} mm)".format(POCKET_EXIT_MM), fontsize=8, color="#ef4444",
+                   ha="right", transform=axs[1, j].get_yaxis_transform())
+    axs[2, j].set_xlabel("displacement at the 2.06 m sensor (mm)")
+    for i in range(3):
+        style_axes(axs[i, j])
+axs[0, 0].set_ylabel("applied acceleration on the masonry (g)")
+axs[1, 0].set_ylabel("opening (mm)")
+axs[2, 0].set_ylabel("joist support load (kN)")
+axs[0, 0].legend(frameon=False, fontsize=8.5)
+axs[1, 0].legend([plt.Line2D([], [], color=MUTED, lw=1.4), plt.Line2D([], [], color=MUTED, lw=1.4, ls=(0, (1, 1.5)))],
+                 ["largest masonry joint opening", "pocket opening (joist-masonry)"], frameon=False, fontsize=8.5, loc="upper left")
+fig.tight_layout()
+fig.savefig(P(OUT_DIR, "fig_pushover_diagnostics.png"), dpi=150); plt.close(fig)
+print("-> " + P(OUT_DIR, "fig_pushover_diagnostics.png"))
