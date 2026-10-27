@@ -1,0 +1,9 @@
+case,branch,folder,peak_F_kN,d_at_peak_mm,K_el_kNmm,T1_s,Teff_s,F_sec_kN,K_sec_kNmm,d_end_mm,F_end_kN,Ftot_minus_applied_end_kN,max_joint_open_mm,max_pocket_open_mm,joistN_min_kN,joistN_max_kN,n_rows,n_unconverged,m_tot_kg,top_joint,save
+"f_t = 0, mason top",pos,pushover_results_v5_ft0_masonrypush_TopMason,10.9438,12.7131,4.7506,0.0999,0.3444,10.1355,0.3436,80.7178,6.8216,1.8403,32.9157,32.914,2.8554,4.6997,88,1,1308.3,mason,Part_I_MASON_v8_LargeStrain_springforce
+"f_t = 0, mason top",neg,pushover_results_v5_ft0_masonrypush_TopMason,10.2518,20.5413,4.5352,0.1022,0.3558,10.0427,0.3404,80.5397,6.1987,2.6162,38.7318,19.5365,0.964,3.0035,89,1,1308.3,mason,Part_I_MASON_v8_LargeStrain_springforce
+"f_t = 0.15 MPa, mason top",pos,pushover_results_v5_ft0p15_masonrypush_TopMason,17.0079,6.2086,5.9028,0.0896,0.2763,11.394,0.3862,80.2594,7.4848,2.313,36.8279,36.8093,1.8634,6.2497,99,1,1308.3,mason,Part_I_MASON_v8_LargeStrain_springforce_ft_0p15
+"f_t = 0.15 MPa, mason top",neg,pushover_results_v5_ft0p15_masonrypush_TopMason,17.0485,10.1239,5.9768,0.089,0.2759,10.4291,0.3535,80.1305,6.3798,2.5811,36.8621,19.1256,0.9214,3.6744,99,1,1308.3,mason,Part_I_MASON_v8_LargeStrain_springforce_ft_0p15
+"f_t = 0, elastic top (ref.)",pos,pushover_results_v5_ft0_masonrypush,10.9438,12.7131,4.7506,0.0999,0.3444,10.1355,0.3436,80.7178,6.8216,1.8403,32.9157,32.914,2.8554,4.6997,88,1,1308.3,elastic,Part_I_MASON_v8_LargeStrain_springforce
+"f_t = 0, elastic top (ref.)",neg,pushover_results_v5_ft0_masonrypush,10.2478,20.8012,4.5227,0.1023,0.3559,10.04,0.3403,80.7978,6.2195,2.5885,38.8447,19.6072,0.962,3.0048,89,1,1308.3,elastic,Part_I_MASON_v8_LargeStrain_springforce
+US-1 test (Fig 13),pos,us1_fig13_digitised.csv,13.0592,7.416,2.7563,0.1311,0.3153,,,,,,,,,,,,,,
+US-1 test (Fig 13),neg,us1_fig13_digitised.csv,12.957,14.832,3.7909,0.1118,0.3165,,,,,,,,,,,,,,

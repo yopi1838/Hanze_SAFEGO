@@ -46,9 +46,9 @@ SAVE_FT015    = "Part_I_MASON_v8_LargeStrain_springforce_ft_0p15"  # f_t = 0.15 
 FT0_MAX_PA    = 0.05e6             # check: tension in SAVE_FT0 below this
 FT015_RANGE   = (0.10e6, 0.20e6)   # check: tension in SAVE_FT015 inside this range
 
-PUSHOVER_SCRIPT = "pushover_oop_3dec_v5.py"
-BILINEAR_SCRIPT = "bilinear_idealisation.py"
-R2TM_SCRIPT     = "route2_Tm_ihsan_full25_3dec.py"
+PUSHOVER_SCRIPT = "pushover_oop_3dec_v4.py"
+BILINvEAR_SCRIPT = "bilinear_idealisation.py"
+R2TM_SCRIPT     = "r2m3_ihsan_full25.py"
 
 PO_DIR_FT0    = "pushover_results_v5_ft0_masonrypush_TopMason"     # stages 0 and 1 (positive and negative f_t = 0)
 PO_DIR_FT015  = "pushover_results_v5_ft0p15_masonrypush_TopMason"

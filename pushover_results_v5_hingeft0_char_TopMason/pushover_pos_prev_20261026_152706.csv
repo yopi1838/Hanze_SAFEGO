@@ -1,0 +1,6 @@
+# push: applied force a*m on masonry only (block.force.app z); gravity vertical; m_tot 1308.3 kg; save Part_I_MASON_v8_LargeStrain_springforce_hingeft0; top joint mason
+phase,a_mps2,d_ctrl_mm,F_base_kN,F_top_kN,F_tot_kN,conv,converged,m_part_kg,a_pred_mps2,settle_chunks,joist_N_kN,joist_Vz_kN,F_base_only_kN,max_open_mm,pocket_open_mm
+asc,0.5,0.1141,-0.3632,-0.2848,-0.648,0.00939,1,28.7,0.5279,,3.0644,-0.0,-0.3632,0.0083,0.0422
+asc,1.0,0.2322,-0.7403,-0.5802,-1.3205,0.00932,1,0.0,1.5422,,3.055,-0.0,-0.7403,0.0074,0.0329
+asc,1.5,0.3443,-1.0901,-0.8654,-1.9555,0.00351,1,1235.8,1.9428,,3.0414,-0.0,-1.0901,0.0088,0.0348
+asc,2.0,0.4592,-1.4566,-1.1518,-2.6084,0.00312,1,1074.6,2.5901,,3.03,-0.0,-1.4566,0.0114,0.043

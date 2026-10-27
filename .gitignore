@@ -81,3 +81,8 @@ desktop.ini
 
 # Staged-script intermediate JSON (safego_paths.cache_dir)
 .cache/
+
+# deck-building tooling and its build folders (generated, not research data)
+.codex/
+.presentation_build*/
+node_modules/
