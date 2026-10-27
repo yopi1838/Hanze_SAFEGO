@@ -41,7 +41,7 @@ DRY_RUN       = False
 BATCH_DIR     = "batch_ft0p15"
 FORCE_STAGES  = []                 # e.g. [4, 5] to redo stages that are marked done
 
-SAVE_FT0      = "Part_I_MASON_v8_LargeStrain_springforce"          # f_t = 0 build (stage 1)
+SAVE_FT0      = "Part_I_MASON_v8_LargeStrain_springforce"          # f_t = 0 build (stages 0, 1)
 SAVE_FT015    = "Part_I_MASON_v8_LargeStrain_springforce_ft_0p15"  # f_t = 0.15 MPa build (stages 2, 3, 5)
 FT0_MAX_PA    = 0.05e6             # check: tension in SAVE_FT0 below this
 FT015_RANGE   = (0.10e6, 0.20e6)   # check: tension in SAVE_FT015 inside this range

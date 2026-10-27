@@ -30,6 +30,15 @@ OUTPUT  <OUT_DIR>/<tag>_blocks.csv    one row per block: id, group, original x/y
 USAGE   inside 3DEC:   program call 'deformed_shape_3dec.py'    (or run it from the Python pane)
         outside 3DEC:  python deformed_shape_3dec.py --post     (re-processes the existing dump logs)
 
+JOINT HEIGHTS (v2, 23 Oct)
+  Joints are reported at their ORIGINAL height (y0). The dump now also writes the two block ids of every contact
+  (block.contact.b1 / b2), so a joint sits exactly halfway between its two courses. Dumps written before this
+  change have no ids; --post then assigns each subcontact geometrically (nearest course pair), which is exact away
+  from the hinges but can share a wide-open joint's subcontacts with its neighbour (two adjacent rows with the same
+  max opening). Re-dump inside 3DEC for exact rows. Pockets are split by floor (pocket_lower / pocket_upper), and
+  the top-joint tilt and |N| sin(tilt) are printed: the pushover's F_top sums only the SHEAR z-components of the
+  top joint, so once the top beam rotates F_tot over-reports the horizontal force by |N| sin(tilt).
+
 ASSUMPTIONS TO CHECK ON THE FIRST RUN
   * block.subcontact.disp.norm > 0 is OPENING (the v5 driver's max_open_mm assumes the same).
   * block.contact.normal exists in your build; if it does not, the script falls back to a dump
@@ -54,6 +63,8 @@ OPEN_MM       = 0.01      # a subcontact counts as open above this
 HINGE_MM      = 0.5       # a bed joint is reported as a hinge above this largest opening
 COURSE_GAP    = 0.02      # m, centroid-height gap that separates two courses / two joints
 BED_NY_MIN    = 0.8       # |normal_y| above this = bed joint
+FLOOR_Y       = (0.38, 2.14)   # m, joist bearings (drawn on the figure)
+FLOOR_SPLIT_Y = 1.26      # m, pockets below this = lower floor (0.38 m), above = upper floor (2.14 m)
 
 # ============================ FISH ===================================
 FISH_BLOCKS = r"""
@@ -103,7 +114,7 @@ fish define dfm_contacts
             local ny = NORMAL_EXPR
             loop foreach local sc block.contact.subcontactlist(cx)
                 local p = block.subcontact.pos(sc)
-                io.out('@@C,' + g + ',' + string(block.contact.id(cx)) + ',' + string(ny) + ',' + string(comp.x(p)) + ',' + string(comp.y(p)) + ',' + string(comp.z(p)) + ',' + string(block.subcontact.disp.norm(sc)) + ',' + string(block.subcontact.force.norm(sc)) + ',' + string(block.subcontact.area(sc)))
+                io.out('@@C,' + g + ',' + string(block.contact.id(cx)) + ',' + string(ny) + ',' + string(comp.x(p)) + ',' + string(comp.y(p)) + ',' + string(comp.z(p)) + ',' + string(block.subcontact.disp.norm(sc)) + ',' + string(block.subcontact.force.norm(sc)) + ',' + string(block.subcontact.area(sc)) + BIDS_EXPR)
             endloop
         endif
     endloop
@@ -125,12 +136,20 @@ def run_dump(it, tag, save, contacts):
     it.command(FISH_BLOCKS)
     have_normal = True
     if contacts:
-        try:
-            it.command(FISH_CONTACTS.replace("NORMAL_EXPR", "comp.y(block.contact.normal(cx))"))
-        except Exception as e:
-            print("block.contact.normal not available ({}); dumping without normals".format(e))
-            it.command(FISH_CONTACTS.replace("NORMAL_EXPR", "-9.0"))
-            have_normal = False
+        bids = "',' + string(block.id(block.contact.b1(cx))) + ',' + string(block.id(block.contact.b2(cx)))"
+        done = False
+        for nexpr, bexpr in (("comp.y(block.contact.normal(cx))", bids), ("comp.y(block.contact.normal(cx))", ""),
+                             ("-9.0", bids), ("-9.0", "")):
+            try:
+                it.command(FISH_CONTACTS.replace("NORMAL_EXPR", nexpr).replace("BIDS_EXPR", bexpr or "''"))
+                done = True
+                break
+            except Exception as e:
+                print("contact dump variant failed ({}); trying a simpler one".format(e))
+        if not done:
+            raise RuntimeError("could not define the contact dump")
+        have_normal = nexpr != "-9.0"
+        print("contact dump: normals {}, block ids {}".format("yes" if have_normal else "no", "yes" if bexpr else "no"))
     it.command('program log-file "{}"'.format(_cmdpath(log)))
     it.command("program log on")
     it.command("[dfm_blocks]")
@@ -154,8 +173,11 @@ def read_dump(log):
             i = line.find("@@C,")
             if i >= 0:
                 s = line[i + 4:].strip().split(",")
-                subs.append(dict(g=s[0], cid=int(float(s[1])), ny=float(s[2]), x=float(s[3]), y=float(s[4]),
-                                 z=float(s[5]), un=float(s[6]), fn=float(s[7]), area=float(s[8])))
+                d = dict(g=s[0], cid=int(float(s[1])), ny=float(s[2]), x=float(s[3]), y=float(s[4]),
+                         z=float(s[5]), un=float(s[6]), fn=float(s[7]), area=float(s[8]), b1=None, b2=None)
+                if len(s) >= 11 and s[9].strip() and s[10].strip():
+                    d["b1"], d["b2"] = int(float(s[9])), int(float(s[10]))
+                subs.append(d)
     return blocks, subs
 
 
@@ -219,13 +241,19 @@ def post(tag, push_dir, ref_blocks, blocks, subs, out_lines):
     for c in crs:
         P("  {:6.3f}  {:8.2f}  [{:6.2f} {:6.2f}]  {:7.2f}  {:9.2f}  {:9.2f}".format(
             c["y0"], c["dz_mm"], c["dz_min"], c["dz_max"], c["dy_mm"], c["rot_mrad"], c["kink_mrad"]))
+    # ---- reference (undeformed) height of every subcontact ----
+    # Joints are grouped by the height they had before the push, not by their current height: after a 10 deg
+    # rotation the current heights of neighbouring joints overlap and would be merged into one row.
+    yref_of = reference_heights(subs, mas, crs, ref_blocks, blocks)
+    for s_, yr in zip(subs, yref_of):
+        s_["yref"] = yr
     # ---- joints ----
     jrows = []
     if subs:
         def joint_stats(sub, label):
             A = sum(s["area"] for s in sub) or 1.0
             zc = sum(s["z"] * s["area"] for s in sub) / A
-            yc = sum(s["y"] * s["area"] for s in sub) / A
+            yc = sum(s["yref"] * s["area"] for s in sub) / A
             smax = max(sub, key=lambda s: s["un"])
             op = [s for s in sub if s["un"] * 1e3 > OPEN_MM]
             Aop = sum(s["area"] for s in op)
@@ -239,13 +267,15 @@ def post(tag, push_dir, ref_blocks, blocks, subs, out_lines):
         have_n = any(s["ny"] > -2 for s in mj)
         bed = [s for s in mj if (abs(s["ny"]) >= BED_NY_MIN if have_n else True)]
         head = [s for s in mj if have_n and abs(s["ny"]) < BED_NY_MIN]
-        for grp in cluster([s["y"] for s in bed], COURSE_GAP):
+        for grp in cluster([s["yref"] for s in bed], COURSE_GAP):
             sub = [bed[k] for k in grp]
             if len(sub) < 4:
                 continue
             jrows.append(joint_stats(sub, "bed"))
-        for g, label in (("Base", "base"), ("TopTB", "top_joint"), ("Pocket", "pocket")):
-            sub = [s for s in subs if s["g"] == g]
+        for g, label, sel in (("Base", "base", None), ("TopTB", "top_joint", None),
+                              ("Pocket", "pocket_lower", lambda s: s["yref"] < FLOOR_SPLIT_Y),
+                              ("Pocket", "pocket_upper", lambda s: s["yref"] >= FLOOR_SPLIT_Y)):
+            sub = [s for s in subs if s["g"] == g and (sel is None or sel(s))]
             if sub:
                 jrows.append(joint_stats(sub, label))
         jrows.sort(key=lambda r: r["y"])
@@ -253,22 +283,89 @@ def post(tag, push_dir, ref_blocks, blocks, subs, out_lines):
             w = csv.DictWriter(f, fieldnames=list(jrows[0])); w.writeheader()
             [w.writerow({k: round(v, 4) if isinstance(v, float) else v for k, v in r.items()}) for r in jrows]
         P("")
-        P("  joint       y (m)   max open (mm)  open frac  opens on        N (kN)   [normals: {}]".format("yes" if have_n else "NO -- head joints mixed in"))
+        P("  joint       y0 (m)  max open (mm)  open frac  opens on        N (kN)   [normals: {}]".format("yes" if have_n else "NO -- head joints mixed in"))
         for r in jrows:
             flag = "  <- HINGE" if (r["kind"] in ("bed", "base") and r["max_open_mm"] > HINGE_MM) else ""
-            P("  {:10s} {:6.3f}   {:10.3f}     {:6.2f}    {:3s} {:9s}  {:7.2f}{}".format(
+            P("  {:12s} {:6.3f} {:10.3f}     {:6.2f}    {:3s} {:9s}  {:7.2f}{}".format(
                 r["kind"], r["y"], r["max_open_mm"], r["open_frac"], r["face"], r["side"], r["N_kN"], flag))
         if head:
             ho = [s for s in head if s["un"] * 1e3 > HINGE_MM]
-            P("  head joints: {} subcontacts, {} open > {} mm (largest {:.2f} mm at y {:.2f} m)".format(
+            P("  head joints: {} subcontacts, {} open > {} mm (largest {:.2f} mm at y0 {:.2f} m)".format(
                 len(head), len(ho), HINGE_MM, max(s["un"] for s in head) * 1e3,
-                max(head, key=lambda s: s["un"])["y"]))
+                max(head, key=lambda s: s["un"])["yref"]))
+        top = [s for s in subs if s["g"] == "TopTB"]
+        if len(top) >= 3:
+            th = plane_tilt(top)
+            Ntop = -sum(s["fn"] for s in top) / 1e3
+            P("  top joint tilt {:.1f} mrad (the top beam rotates with it if the joint stays closed); "
+              "|N| sin(tilt) = {:.2f} kN".format(th * 1e3, abs(Ntop) * math.sin(abs(th))))
+            P("    -> the pushover's F_top sums the subcontact SHEAR z-components only; the tilted normal force adds")
+            P("       this much horizontal force that F_tot leaves out. On the descending branch compare |a| x m_tot.")
         hinges = [r for r in jrows if r["kind"] in ("bed", "base") and r["max_open_mm"] > HINGE_MM]
         P("")
         P("HINGES (bed joints opening > {} mm): ".format(HINGE_MM) + (", ".join(
             "{:.2f} m ({}, {:.1f} mm)".format(r["y"], r["side"], r["max_open_mm"]) for r in hinges) or "none"))
         P("three-hinge reading: base & top hinges open on the trailing face, the mid-span hinge on the leading face.")
     return dict(tag=tag, crs=crs, joints=jrows, push=push_dir)
+
+
+def plane_tilt(sub):
+    """tilt (rad) of a joint plane in the y-z plane from its subcontact positions (least squares y = c + k z)"""
+    A = sum(s["area"] for s in sub)
+    zm = sum(s["z"] * s["area"] for s in sub) / A
+    ym = sum(s["y"] * s["area"] for s in sub) / A
+    szz = sum(s["area"] * (s["z"] - zm) ** 2 for s in sub)
+    szy = sum(s["area"] * (s["z"] - zm) * (s["y"] - ym) for s in sub)
+    return math.atan(szy / szz) if szz > 0 else 0.0
+
+
+def reference_heights(subs, mas, crs, ref_blocks, blocks):
+    """undeformed height of each subcontact.
+    With block ids in the dump: a masonry-masonry contact sits halfway between its two blocks' original centroids
+    (a bed joint lands on the joint, a head joint on its course); a contact with one masonry block (pocket, base,
+    top joint) is placed by the geometric rule below on that block.
+    Without block ids (older dumps): a bed-joint subcontact takes the nearest masonry block A and the nearest block
+    B in the course just above or below A (whichever is closer) and sits halfway between their original centroids;
+    any other subcontact uses the geometric rule on the nearest masonry block -- its offset from that block's
+    current centroid along the block's rotated vertical axis (course rotation) is added to the original height."""
+    course_of, rot_of = {}, []
+    for grp_i, grp in enumerate(cluster([r["y0"] for r in mas], COURSE_GAP)):
+        for k in grp:
+            course_of[mas[k]["id"]] = grp_i
+    for i in range(len(crs)):
+        v = [crs[j]["rot_mrad"] for j in (i, i + 1) if 0 <= j < len(crs) and crs[j]["rot_mrad"] == crs[j]["rot_mrad"]]
+        rot_of.append(math.atan(sum(v) / len(v) / 1e3) if v else 0.0)
+    mas_ids = [r["id"] for r in mas]
+    cur = {b: blocks[b] for b in mas_ids if b in blocks}
+
+    def local(bid, s):
+        _, _, yc, zc, _ = cur[bid]
+        th = rot_of[course_of[bid]]
+        return ref_blocks[bid][2] + (s["z"] - zc) * math.sin(th) + (s["y"] - yc) * math.cos(th)
+
+    d2 = lambda b, s: (cur[b][1] - s["x"]) ** 2 + (cur[b][2] - s["y"]) ** 2 + (cur[b][3] - s["z"]) ** 2
+    by_course = {}
+    for b in mas_ids:
+        by_course.setdefault(course_of[b], []).append(b)
+
+    def nearest(s, pool=None):
+        return min(pool if pool is not None else mas_ids, key=lambda b: d2(b, s))
+    out = []
+    for s in subs:
+        ids = [b for b in (s.get("b1"), s.get("b2")) if b is not None and b in cur]
+        if len(ids) == 2:
+            out.append(0.5 * (ref_blocks[ids[0]][2] + ref_blocks[ids[1]][2]))
+        elif len(ids) == 1:
+            out.append(local(ids[0], s))
+        elif s["g"] == "MasJ" and not (-2 < s["ny"] and abs(s["ny"]) < BED_NY_MIN):
+            a = nearest(s)
+            ca = course_of[a]
+            cand = [nearest(s, by_course[c]) for c in (ca - 1, ca + 1) if c in by_course]
+            b = min(cand, key=lambda q: d2(q, s)) if cand else a
+            out.append(0.5 * (ref_blocks[a][2] + ref_blocks[b][2]))
+        else:
+            out.append(local(nearest(s), s))
+    return out
 
 
 def interp(x, xs, ys):
@@ -297,6 +394,13 @@ def plot(results):
                 ax[1].plot([j["max_open_mm"] for j in s], [j["y"] for j in s], mk, ms=6, color=c, ls="none",
                            label="{} opens {}".format(r["tag"], side))
     ax[0].axhline(SENSOR_Y, color="grey", ls=":", lw=0.8)
+    for a_ in ax:
+        for yf in FLOOR_Y:
+            a_.axhline(yf, color="#a16207", ls="--", lw=0.8, alpha=0.7)
+    ax[1].text(0.98, FLOOR_Y[1] + 0.02, "upper floor", color="#a16207", fontsize=8,
+               ha="right", transform=ax[1].get_yaxis_transform())
+    ax[1].text(0.98, FLOOR_Y[0] + 0.02, "lower floor", color="#a16207", fontsize=8, ha="right",
+               transform=ax[1].get_yaxis_transform())
     ax[0].set_xlabel("course lateral displacement dz (mm)"); ax[0].set_ylabel("original height (m)")
     ax[0].grid(alpha=0.25); ax[0].legend(fontsize=8); ax[0].set_title("Deformed shape", loc="left", fontsize=10)
     ax[1].axvline(HINGE_MM, color="grey", ls=":", lw=0.8)

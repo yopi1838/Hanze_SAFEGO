@@ -1,0 +1,9 @@
+specimen,segment,phi15_median,phi16_median,n_runs,mass_set,L_eff_kg,modal_mass_kg,sum_m_kg
+US1,free,0.3645,0.6413,24,v2 sheet (1732 kg),1202.0,942.5,1731.6
+US1,free,0.3645,0.6413,24,old files / 2.317 (1133 kg),758.6,590.3,1133.3
+US1,forced,0.4075,0.6626,24,v2 sheet (1732 kg),1235.9,976.2,1731.6
+US1,forced,0.4075,0.6626,24,old files / 2.317 (1133 kg),783.1,612.8,1133.3
+US2,free,0.3352,0.6513,25,v2 sheet (1732 kg),1195.5,941.9,1731.6
+US2,free,0.3352,0.6513,25,old files / 2.317 (1133 kg),749.9,586.1,1133.3
+US2,forced,0.4413,0.6990,25,v2 sheet (1732 kg),1275.7,1022.5,1731.6
+US2,forced,0.4413,0.6990,25,old files / 2.317 (1133 kg),808.6,640.4,1133.3

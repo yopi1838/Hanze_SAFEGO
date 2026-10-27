@@ -1,0 +1,13 @@
+{
+ "T1_s": 0.1014,
+ "Teff_s": 0.3572,
+ "Tp_s": {
+  "HU12": 0.121,
+  "EC40": 0.251,
+  "FR76": 0.261
+ },
+ "cycles": 1,
+ "xi": 0.05,
+ "delta_t": 0.005,
+ "source": "ft0/c0.2 pushover (pushover_pos_new.csv), K_el 4.60 kN/mm, F_y 10.17 kN, d_u 27.4 mm, L 1200 kg"
+}
