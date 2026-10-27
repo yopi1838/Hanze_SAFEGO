@@ -1,0 +1,11 @@
+model,branch,F0_kN,zero_force_at_mm,F_20mm_kN,F_40mm_kN,F_80mm_kN
+"cracking force f_w 0.15 MPa, crack at 2.09 m",both,19.6013,,,,
+"cracking force f_w 0.15 MPa, minimum (crack at 1.36 m)",both,12.889,,,,
+"mechanical model, adjusted hinge 2.09 m, lower pivot 0.00 m",pos,9.937,142.1011,8.5483,7.1407,4.3476
+"mechanical model, adjusted hinge 2.09 m, lower pivot 0.30 m",pos,11.7972,143.8262,10.1672,8.5195,5.2463
+"DEM: f_t = 0, mason top",pos,10.9438,,10.4608,,
+"DEM: f_t = 0.15 MPa, mason top",pos,17.0079,,10.6879,11.9416,7.5079
+"mechanical model, adjusted hinge 2.09 m, lower pivot 0.00 m",neg,9.8313,140.6872,8.4434,7.0366,4.2452
+"mechanical model, adjusted hinge 2.09 m, lower pivot 0.30 m",neg,11.6848,142.5506,10.0557,8.4089,5.1375
+"DEM: f_t = 0, mason top",neg,10.2518,,10.2361,9.5173,6.2391
+"DEM: f_t = 0.15 MPa, mason top",neg,17.0485,,11.2425,9.684,6.3921
