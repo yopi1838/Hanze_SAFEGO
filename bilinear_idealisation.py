@@ -17,8 +17,13 @@ branch is used and the output says so.
 
 SOURCES (each produces its own block in the outputs)
     model : pushover_pos*.csv (+ pushover_neg*.csv if present) in PUSHOVER_DIR,
-            F = |F_tot|, converged rows only, curve cut at MODEL_D_CUT_MM.
-            Lines starting with '#' (the v5 driver writes one) are skipped.
+            converged rows only, curve cut at MODEL_D_CUT_MM. Lines starting with '#'
+            (the v5 driver writes one) are skipped.
+            F_SOURCE = "applied": F = |a| x m_tot (m_tot from the '#' line), the force
+            the wall carries at a settled servo point; "reaction": |F_tot| as logged,
+            which misses |N| sin(tilt) of the top-joint normal force once the top beam
+            rotates (deformed_shape_3dec.py, 23 Oct). The batch passes cleaned CSVs in
+            which F_tot_kN already holds |a| x m_tot, so either setting gives the same there.
     fig13 : US1_fig13_digitised.csv, both branches (skipped if absent).
 
 OUTPUTS (OUT_DIR)
@@ -34,14 +39,15 @@ import matplotlib; matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 # ============================ CONFIG =================================
-PUSHOVER_DIR   = "pushover_results_v5_ft0_masonrypush"   # the pushover driver's OUT_DIR
-OUT_DIR        = "bilinear_idealisation_v12"             # where the json / csv / figures go
+PUSHOVER_DIR   = "pushover_results_v5_ft0p15_masonrypush_TopMason"   # the pushover driver's OUT_DIR
+OUT_DIR        = "bilinear_idealisation_ft0p15"             # where the json / csv / figures go
 MODEL_CSVS     = {"pos": None, "neg": None}   # explicit paths; None = pushover_pos*.csv / pushover_neg*.csv in PUSHOVER_DIR
 M_EFF          = 1635.0      # kg, as agreed (Table 4 T_sec reproduced); sensitivity printed for M_ALT
 M_ALT          = 1318.0      # wall mass, for the sensitivity line only
 K_FRAC         = 0.5         # secant point on the rising branch
 DROP_FRAC      = 0.8         # ultimate: force fallen to this fraction of Vu
 SECANT_TO_DROP = True        # T_eff = T1 sqrt(mu / DROP_FRAC)  (False: T1 sqrt(mu))
+F_SOURCE       = "applied"   # "applied": |a| x m_tot | "reaction": |F_tot| as logged
 MODEL_D_CUT_MM = 90.0        # ignore the model curve beyond this (abrupt tail)
 DU_FALLBACK    = "end"     # "error": stop if the descending branch never reaches 0.8 Vu
                              # "end"  : take the last point as du and FLAG it everywhere (json, csv, figure)
@@ -96,9 +102,22 @@ def read_csv_skip_comments(path):
         text = "".join(line for line in f if not line.lstrip().startswith("#"))
     return list(csv.DictReader(io.StringIO(text)))
 
+def m_tot_of(path):
+    try:
+        with open(path) as f:
+            head = f.readline()
+        return float(head.split("m_tot")[1].split("kg")[0]) if "m_tot" in head else None
+    except Exception:
+        return None
+
 def load_model_branch(path):
     rows = [r for r in read_csv_skip_comments(path) if r.get("converged", "1") == "1"]
-    x = np.array([float(r["d_ctrl_mm"]) for r in rows]); F = np.abs(np.array([float(r["F_tot_kN"]) for r in rows]))
+    x = np.array([float(r["d_ctrl_mm"]) for r in rows])
+    m_tot = m_tot_of(path)
+    if F_SOURCE == "applied" and m_tot and rows and "a_mps2" in rows[0]:
+        F = np.abs(np.array([float(r["a_mps2"]) for r in rows])) * m_tot / 1e3
+    else:
+        F = np.abs(np.array([float(r["F_tot_kN"]) for r in rows]))
     keep = np.abs(x) <= MODEL_D_CUT_MM
     return np.abs(x[keep]), F[keep]
 
@@ -134,7 +153,7 @@ else:
     print("fig13: {} not found, envelope block skipped".format(FIG13_CSV))
 
 # ============================ RUN ===================================
-result = {"rule": dict(K_FRAC=K_FRAC, DROP_FRAC=DROP_FRAC, secant_to_drop=SECANT_TO_DROP, m_eff=M_EFF,
+result = {"rule": dict(K_FRAC=K_FRAC, DROP_FRAC=DROP_FRAC, secant_to_drop=SECANT_TO_DROP, m_eff=M_EFF, f_source=F_SOURCE,
                        model_d_cut_mm=MODEL_D_CUT_MM, du_fallback=DU_FALLBACK, pushover_dir=PUSHOVER_DIR)}
 table = []
 for src, brs in branches.items():
@@ -169,4 +188,38 @@ for src, brs in branches.items():
         print("  !! T_eff for this source rests on a FLAGGED du: " + "; ".join("{}: {}".format(b, f) for b, f in flags.items()))
     table.append([src, "average", "", "", "", K1m, "", "", mum, T1m, Tem, "; ".join(flags.values())])
 
-    # ----
+    # ---- figure: the construction, one panel per branch
+    fig, axs = plt.subplots(1, len(per), figsize=(max(9.0, 7.2 * len(per)), 5.4), dpi=140, squeeze=False)
+    for ax, (br, r) in zip(axs[0], per.items()):
+        x, F, Vu = r["x"], r["F"], r["Vu_kN"]
+        ax.plot(x, F, color=COL[src], lw=1.6, label="{} backbone ({})".format("model pushover" if src == "model" else "Fig 13 envelope", br))
+        xe = max(r["du_mm"] * 1.6, r["d_peak_mm"] * 1.3)
+        ax.plot([0, r["dy_mm"], xe], [0, Vu, Vu], color=COL["k1"], lw=1.4, ls="--", label="K1 = 0.5Vu/d50, plateau at Vu")
+        ax.plot([0, r["du_mm"]], [0, DROP_FRAC * Vu], color=COL["keff"], lw=1.4, ls="-.", label="K_eff = 0.8Vu/du")
+        ax.plot([r["d50_mm"]], [K_FRAC * Vu], "o", ms=7, color=COL["k1"], mec="white")
+        ax.plot([r["du_mm"]], [DROP_FRAC * Vu], "s", ms=7, color=COL["keff"], mec="white")
+        ax.plot([r["d_peak_mm"]], [Vu], "^", ms=7, color=COL[src], mec="white")
+        for xx, lab in ((r["dy_mm"], "dy {:.1f}".format(r["dy_mm"])), (r["du_mm"], "du {:.1f}".format(r["du_mm"]))):
+            ax.axvline(xx, color="#bbbbbb", lw=0.7, ls=":"); ax.text(xx, -0.02 * Vu, lab, ha="center", va="top", fontsize=8.5, color="#444")
+        ax.text(r["d50_mm"] + 0.02 * xe, K_FRAC * Vu, "0.5 Vu", fontsize=8.5, va="center", color=COL["k1"])
+        ax.text(r["du_mm"] + 0.02 * xe, DROP_FRAC * Vu, "0.8 Vu", fontsize=8.5, va="center", color=COL["keff"])
+        ax.text(0.98, 0.30, "Vu {:.1f} kN\nK1 {:.2f} kN/mm\nmu = du/dy = {:.2f}\nT1 {:.3f} s   T_eff {:.3f} s\n(m_eff {:.0f} kg){}".format(
+            Vu, r["K1_kNmm"], r["mu"], r["T1_s"], r["Teff_s"], M_EFF, "\nFLAGGED: " + r["du_flag"] if r["du_flag"] else ""),
+            transform=ax.transAxes, ha="right", va="top", fontsize=8.5, bbox=dict(fc="white", ec="#dddddd"))
+        ax.set_xlim(0, xe); ax.set_ylim(-0.08 * Vu, 1.12 * Vu)
+        ax.set_xlabel("OOP displacement at 2.06 m (mm)"); ax.set_ylabel("force (kN)")
+        ax.set_title("{} branch".format(br), loc="left", fontsize=10.5, fontweight="bold")
+        ax.grid(color="#eeeeee"); ax.legend(fontsize=8, frameon=False, loc="upper right")
+        for sp in ("top", "right"): ax.spines[sp].set_visible(False)
+    fig.suptitle("Bilinear idealisation, {}\naverage K1 {:.2f} kN/mm, mu {:.2f}  ->  T1 {:.3f} s, T_eff {:.3f} s (m_eff {:.0f} kg)".format(
+        "model pushover" if src == "model" else "Fig 13 envelope", K1m, mum, T1m, Tem, M_EFF), fontsize=11, fontweight="bold")
+    plt.tight_layout(rect=(0, 0, 1, 0.92)); p = os.path.join(OUT_DIR, "fig_bilinear_{}.png".format(src)); plt.savefig(p); plt.close(fig); print("  -> " + p)
+
+with open(os.path.join(OUT_DIR, "bilinear_periods.json"), "w") as f:
+    json.dump(result, f, indent=1)
+with open(os.path.join(OUT_DIR, "bilinear_periods.csv"), "w", newline="") as f:
+    w = csv.writer(f)
+    w.writerow(["source", "branch", "Vu_kN", "d_peak_mm", "d50_mm", "K1_kNmm", "dy_mm", "du_mm", "mu", "T1_s", "Teff_s", "du_flag"])
+    for row in table:
+        w.writerow([("{:.4f}".format(v) if isinstance(v, float) else v) for v in row])
+print("-> {}/bilinear_periods.json, .csv".format(OUT_DIR))
