@@ -21,8 +21,8 @@ TWO WAYS TO GET THE FRICTIONLESS SAVE (POCKET_SWITCH)
            the model re-settles (the pocket normal forces were set up with friction).
 STEPS
     1. restore SAVE_IN, check FISH 'tension' (0.30-0.40 MPa);
-    2. (POCKET_SWITCH) reassign the pocket contacts and re-settle; count pocket contacts and how many have
-       friction 0 (stops if any pocket contact still has friction); switch on the mechanical energy bookkeeping
+    2. (POCKET_SWITCH) reassign the pocket contacts and re-settle; count pocket subcontacts and how many have
+       friction 0 (stops if any pocket subcontact still has friction); switch on the mechanical energy bookkeeping
        (ENERGY = True: the slip work of the contacts is kept in the saves), save SAVE_OUT;
     3. pushover_oop_3dec_v5.py from SAVE_OUT for each direction in DIRS, snapshots at SNAP_MM, into PO_DIR.
 USAGE (3DEC 9, working folder with the forced-hinge save and the pushover script; needs the licence)
@@ -57,6 +57,11 @@ try:
 except ImportError:
     it = None
 POCKET = "group-intersection 'Joist' 'Masonry'"
+# material-table entry: pocket contacts that 3DEC creates later (large-strain contact updates during the settle and the
+# push) are frictionless too; without it they take the default entry (mason_v12, friction @friction)
+TABLE_CMD = "block contact material-table add jmodel mohr property {} range {}".format(
+    "stiffness-normal [kn] stiffness-shear [ks] friction 0 cohesion 0 tension 0", POCKET)
+MAX_TRIES = 3
 
 
 def log(s=""):
@@ -104,8 +109,15 @@ def pushover_source(push_dir):
 
 FISH_COUNT = r"""
 fish define hnf_count
+    ; the result is built in 'msg': reading this function's own name inside it would call it again
     local n = 0
     local nf = 0
+    local nc = 0
+    local ncbad = 0
+    local ncmix = 0
+    local fmax = 0.0
+    local ylo = 1e9
+    local yhi = -1e9
     loop foreach local cx block.contact.list
         local b1 = block.contact.b1(cx)
         local b2 = block.contact.b2(cx)
@@ -121,13 +133,36 @@ fish define hnf_count
             endif
         endif
         if j = 1 then
-            n = n + 1
-            if block.contact.prop(cx, 'friction') < 1e-6 then
-                nf = nf + 1
+            nc = nc + 1
+            local k0 = 0
+            local k1 = 0
+            loop foreach local sc block.contact.subcontactlist(cx)
+                n = n + 1
+                local phi = block.subcontact.prop(sc, 'friction')
+                if phi < 1e-6 then
+                    nf = nf + 1
+                    k0 = k0 + 1
+                else
+                    k1 = k1 + 1
+                    local yy = comp.y(block.subcontact.pos(sc))
+                    fmax = math.max(fmax, phi)
+                    ylo = math.min(ylo, yy)
+                    yhi = math.max(yhi, yy)
+                endif
+            endloop
+            if k1 > 0 then
+                ncbad = ncbad + 1
+                if k0 > 0 then
+                    ncmix = ncmix + 1
+                endif
             endif
         endif
     endloop
-    hnf_count = string(n) + ' pocket contacts, ' + string(nf) + ' with friction 0'
+    local msg = string(n) + ' pocket subcontacts, ' + string(nf) + ' with friction 0 (' + string(nc) + ' contacts)'
+    if nf < n then
+        msg = msg + '; with friction: ' + string(ncbad) + ' contacts (' + string(ncmix) + ' mixed with frictionless subcontacts), friction up to ' + string(fmax) + ', y ' + string(ylo) + ' - ' + string(yhi) + ' m'
+    endif
+    hnf_count = msg
 end
 """
 
@@ -141,20 +176,29 @@ def prepare():
     log("{}: joint tension {:.3f} MPa".format(SAVE_IN, ft / 1e6))
     if not (FT_RANGE[0] <= ft <= FT_RANGE[1]):
         raise RuntimeError("wrong save: joint tension {:.3f} MPa (expected the forced-hinge build)".format(ft / 1e6))
-    if POCKET_SWITCH:
+    it.command(TABLE_CMD)
+    log("  " + TABLE_CMD)
+    it.command(FISH_COUNT)
+
+    def count():
+        it.command("[global hnf_msg = hnf_count]")
+        msg = str(it.fish.get("hnf_msg")); log("  " + msg)
+        n, nf = [int(float(x)) for x in re.findall(r"[-\d.]+", msg)[:2]]
+        return n, nf, msg
+
+    n, nf, msg = count()
+    if not POCKET_SWITCH and n > 0 and nf == n:
+        log("  pockets taken from the build ({}); all frictionless".format(BUILD_DAT))
+    tries = 0
+    while (POCKET_SWITCH and tries == 0) or ((n == 0 or nf != n) and tries < MAX_TRIES):
+        tries += 1
         it.command("block contact jmodel assign mohr range {}".format(POCKET))
         it.command("block contact property {} range {}".format(POCKET_PROPS, POCKET))
-        log("  pocket contacts -> mohr, {}".format(POCKET_PROPS))
-        log("  " + SETTLE)
+        log("  [{}] pocket contacts -> mohr, {}; {}".format(tries, POCKET_PROPS, SETTLE))
         it.command(SETTLE)
-    else:
-        log("  pockets taken from the build ({}); not changed here".format(BUILD_DAT))
-    it.command(FISH_COUNT)
-    it.command("[global hnf_msg = hnf_count]")
-    msg = str(it.fish.get("hnf_msg")); log("  " + msg)
-    n, nf = [int(float(x)) for x in re.findall(r"[-\d.]+", msg)[:2]]
+        n, nf, msg = count()
     if n == 0 or nf != n:
-        raise RuntimeError("pocket contacts not all frictionless ({}): wrong save?".format(msg))
+        raise RuntimeError("pocket subcontacts still not all frictionless after {} reassignments ({})".format(tries, msg))
     if ENERGY:
         try:
             it.command("model energy mechanical on")

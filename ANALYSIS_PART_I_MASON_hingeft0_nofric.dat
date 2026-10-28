@@ -6,8 +6,8 @@
 ;   The joists still rest in and push on their pockets (normal contact only).
 ;   Diagnostic, not a physical value: timber on masonry has a friction coefficient of about 0.4-0.6.
 ;   The pockets are frictionless from the start, so gravity and the spring force settle without pocket friction.
-;   Contacts created later in large strain take the default material table (mason_v12, friction @friction):
-;   a joist end touching a NEW masonry block would get friction there; pocket_check (end of file) shows the state.
+;   Contacts created later in large strain (contact updates during the settle and the push) get the pocket
+;   entry of the material table (frictionless), not the default entry. pocket_check (end of file) shows the state.
 ; Output: Part_I_MASON_v8_LargeStrain_springforce_hingeft0_nofric.sav
 ; =====================================================================
 ; =====================================================================
@@ -109,6 +109,9 @@ block contact material-table default prop stiffness-normal @kn stiffness-initial
     friction-residual @friction cohesion-residual 0 G_I @Gt G_II @Gs ...
     G_c @Gc compression @fc_comp comp-residual [0] Cn [0] Cnn [1] Css [9] ...
     peak_ratio [3.0]
+; new Joist - Masonry contacts (large-strain updates) frictionless too, not the default entry above
+block contact material-table add jmodel mohr property stiffness-normal [kn] stiffness-shear [ks] ...
+    friction 0 cohesion 0 tension 0 range group-intersection 'Joist' 'Masonry'
 
 ;BOUNDARY CONDITIONS
 block fix range group 'S'
@@ -310,11 +313,11 @@ fish define pocket_check
     local fs = 0.0
     loop foreach local cx block.contact.list
         if block.contact.isgroup(cx, 'Pocket', 'pocket')
-            n = n + 1
-            if block.contact.prop(cx, 'friction') < 1e-6 then
-                nf = nf + 1
-            endif
             loop foreach local sc block.contact.subcontactlist(cx)
+                n = n + 1
+                if block.subcontact.prop(sc, 'friction') < 1e-6 then
+                    nf = nf + 1
+                endif
                 fn = fn + block.subcontact.force.norm(sc)
                 local sx = block.subcontact.force.shear.x(sc)
                 local sy = block.subcontact.force.shear.y(sc)
@@ -324,7 +327,7 @@ fish define pocket_check
         endif
     endloop
     io.out('==== POCKET CHECK ====')
-    io.out('pocket contacts (Joist - Masonry) = ' + string(n) + ', with friction 0 = ' + string(nf) + '   [CHECK: equal, > 0]')
+    io.out('pocket subcontacts (Joist - Masonry) = ' + string(n) + ', with friction 0 = ' + string(nf) + '   [CHECK: equal, > 0]')
     io.out('sum normal force in the pockets   = ' + string(fn) + ' N')
     io.out('sum |shear force| in the pockets  = ' + string(fs) + ' N   [CHECK: ~0]')
     io.out('======================')
