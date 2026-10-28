@@ -14,8 +14,15 @@ Maxwell / Rayleigh ratio of the DEM. For the rocking runs xi_eq also contains th
 that the DEM must produce through its contacts; giving the DEM that much VISCOUS damping would count it twice.
 Raw files are only read.
 
-USAGE   python exp_equivalent_damping.py <raw_dir> <out_dir>
+USAGE   python exp_equivalent_damping.py <raw_dir> <out_dir>                    (the tests)
         python exp_equivalent_damping.py EXP_DATA exp_damping
+        python exp_equivalent_damping.py --model <stratF_folder> <out_dir> [--tests <tests csv>] [--runs 1-6]
+        python exp_equivalent_damping.py --model stratF_full_LS_MAXWELL15_char_tr exp_damping \
+                                         --tests exp_damping/equivalent_damping_runs_acc.csv --runs 1-6
+MODEL MODE fits the same oscillator to a Strategy F run folder, with the SAME channels: table velocity
+(Channel_12_AccTable, exported as Z velocity) differentiated to a_table, and the relative acceleration at 2.06 m from
+d/dt (vz_acc17 - table velocity). The identification bias then cancels between model and test, so the viscous damping
+of the DEM can be set where the model's xi_eq meets the test's in the runs before cracking.
 """
 import sys, os, glob, re, csv
 import numpy as np
@@ -90,8 +97,73 @@ def fit_run(t, a, d):
                 pga_g=float(np.max(np.abs(aa)) / 9.81), window_s=float(tt[-1]))
 
 
+def _read_hist(path):
+    with open(path) as f:
+        f.readline(); f.readline()
+        d = np.loadtxt(f)
+    return d[:, 0], d[:, 1]
+
+
+def load_model_run(rf, fs_out=200.0):
+    """table acceleration and relative acceleration at 2.06 m of one model run, resampled to fs_out"""
+    def one(key):
+        hits = sorted(glob.glob(os.path.join(rf, "*_" + key + ".csv")))
+        if not hits:
+            raise FileNotFoundError("{}: no *_{}.csv".format(rf, key))
+        return _read_hist(hits[0])
+    tv, vt = one("Channel_12_AccTable")
+    t7, v7 = one("vz_acc17")
+    t = np.arange(max(tv[0], t7[0]), min(tv[-1], t7[-1]), 1.0 / fs_out)
+    vt = np.interp(t, tv, vt); v7 = np.interp(t, t7, v7)
+    a_tab = np.gradient(vt, t); a_rel = np.gradient(v7 - vt, t)
+    return t, a_tab, a_rel
+
+
+def main_model():
+    global RESP
+    RESP = "acc"
+    i = sys.argv.index("--model"); folder = sys.argv[i + 1]
+    rest = [a for k, a in enumerate(sys.argv[1:], 1) if k not in (i, i + 1) and not a.startswith("--")
+            and sys.argv[k - 1] not in ("--tests", "--runs")]
+    out = rest[0] if rest else "exp_damping"; os.makedirs(out, exist_ok=True)
+    runs = None
+    if "--runs" in sys.argv:
+        spec = sys.argv[sys.argv.index("--runs") + 1]
+        runs = set()
+        for part in spec.split(","):
+            a, _, b = part.partition("-"); runs.update(range(int(a), int(b or a) + 1))
+    tests = pd.read_csv(sys.argv[sys.argv.index("--tests") + 1]) if "--tests" in sys.argv else None
+    rows = []
+    for rf in sorted(glob.glob(os.path.join(folder, "Run[0-9][0-9]_*"))):
+        if not os.path.isdir(rf):
+            continue
+        n = int(re.search(r"Run(\d+)", os.path.basename(rf)).group(1))
+        if runs and n not in runs:
+            continue
+        try:
+            r = fit_run(*load_model_run(rf))
+        except Exception as e:
+            print("! run {}: {}".format(n, e)); continue
+        r.update(run=n); rows.append(r)
+        line = "model run {:2d}: T_eq {:.3f} s  xi_eq {:5.1f} %  G {:5.2f}  R2 {:.2f}".format(
+            n, r["T_eq_s"], 100 * r["xi_eq"], r["G"], r["R2"])
+        if tests is not None:
+            for lab in ("US-1", "US-2"):
+                q = tests[(tests.test == lab) & (tests.run == n)]
+                if len(q):
+                    line += "  | {} T {:.3f} xi {:5.1f} %".format(lab, q.T_eq_s.iloc[0], 100 * q.xi_eq.iloc[0])
+        print(line)
+    if not rows:
+        raise SystemExit("no run folders read in " + folder)
+    df = pd.DataFrame(rows)[["run", "T_eq_s", "xi_eq", "G", "R2", "peak_resp", "pga_g", "window_s"]]
+    dst = os.path.join(out, "equivalent_damping_model_{}.csv".format(os.path.basename(os.path.normpath(folder))))
+    df.to_csv(dst, index=False); print("->", dst)
+
+
 def main():
     global RESP
+    if "--model" in sys.argv:
+        return main_model()
     raw, out = sys.argv[1], sys.argv[2]; os.makedirs(out, exist_ok=True)
     if "--disp" in sys.argv:
         RESP = "disp"
