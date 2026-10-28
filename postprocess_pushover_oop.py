@@ -73,6 +73,10 @@ CASES = [   # (key, label, folder, colour, line style)
     ("hinge_char",  "forced hinges (f_t = 0 at base, 2.11 m, top)", "pushover_results_v5_hingeft0_char_TopMason", "#7C3AED", "-."),
     ("hinge_nofric", "forced hinges, frictionless joist pockets", "pushover_results_v5_hingeft0_nofric_TopMason", "#DB2777", ":"),
     ("hinge_unclamp", "forced hinges, unclamped joist pockets", "pushover_results_v5_hingeft0_unclamp_TopMason", "#0F766E", "-"),
+    # f_t sweep (run_pushover_ft_sweep.py / _neg.py): cohesion 0.2 MPa, only f_t and its G_I changed
+    ("ft0p05_mason",  "f_t = 0.05 MPa, mason top",  "pushover_results_v5_ft_0p050_TopMason", "#16A34A", "-"),
+    ("ft0p075_mason", "f_t = 0.075 MPa, mason top", "pushover_results_v5_ft_0p075_TopMason", "#CA8A04", "-"),
+    ("ft0p10_mason",  "f_t = 0.10 MPa, mason top",  "pushover_results_v5_ft_0p100_TopMason", "#DC2626", "-"),
 ]
 BILINEAR_JSON = "bilinear_idealisation_ft0p15/bilinear_periods.json"
 BILINEAR_CASE = "ft015_mason"            # the case the bilinear idealisation was made from
@@ -111,6 +115,11 @@ MECH_B_M        = 1.292                      # m, wall width (per-unit-width str
 MECH_BASE_Y     = (0.0, 0.30)                # m, lower pivot: the line (base toe) and the far edge of the band
                                              #   (kink at the lower floor, DEM deformed shape)
 MECH_COL        = "#0F766E"
+# pocket friction + elastic branch (28 Oct; rigid_two_block_vw.py POCKET CLAMP / ELASTIC BRANCH). Drawn as a second band.
+MECH_MU         = 0.75                       # pocket friction coefficient: the DEM pockets inherit the masonry 36.9 deg
+                                             #   (a timber joist in a real pocket: about 0.4-0.6). 0 = off
+MECH_T1_K       = 0.091                      # s, elastic branch K = 4 pi^2 M_EFF / T1^2 (US-1 ring-down T1, run 1); None = off
+MECH_F_COL      = "#134E4A"
 
 INK, MUTED, GRID, TEST = "#1f2937", "#6b7280", "#e5e7eb", "#374151"
 P = lambda *p: os.path.join(BASE_DIR, *p)
@@ -308,6 +317,7 @@ write(P(OUT_DIR, "pushover_metrics.csv"), rows)
 
 # ---- mechanical model: adjusted hinge
 mech = {}
+mechf = {}
 MECH_LABEL = "mechanical model, adjusted hinge {:.2f} m".format(MECH_H1)
 if MECH:
     try:
@@ -328,6 +338,29 @@ if MECH:
                 dz = float(np.interp(0.0, [-FF[k - 1], -FF[k]], [dd[k - 1], dd[k]])) if k < len(FF) else np.nan
                 mech[(br, j)] = (np.r_[dd[:k], dz] if k < len(FF) else dd, np.r_[FF[:k], 0.0] if k < len(FF) else FF, dz)
         print("mechanical model: adjusted hinge {:.2f} m, W {:.2f} kN, O {:.2f} kN at the top-beam centroid, joists pinned".format(MECH_H1, W, O))
+        # + pocket friction (lower pocket, clamped only when pushed towards the joists) + elastic branch
+        MECH_K = 4 * np.pi ** 2 * M_EFF / MECH_T1_K ** 2 / 1e6 if MECH_T1_K else None     # kN/mm
+        if MECH_MU > 0 or MECH_K:
+            mechf = {}
+            for br, side in (("pos", "leeward"), ("neg", "windward")):
+                for j, yb in enumerate(MECH_BASE_Y):
+                    for thmax in (0.25, 0.2, 0.16, 0.12, 0.08):
+                        try:
+                            dd, FF = vw.curve(MECH_H1, W, O, joists=vw.us1_joists(side, k_r=0.0, mu=MECH_MU, W=W, O=O),
+                                              thmax=thmax, n=600, top=(vw.t / 2, MECH_TB_Y), base_y=yb)
+                            break
+                        except ValueError:
+                            continue
+                    k = int(np.argmax(FF < 0)) if (FF < 0).any() else len(FF)
+                    dz = float(np.interp(0.0, [-FF[k - 1], -FF[k]], [dd[k - 1], dd[k]])) if k < len(FF) else np.nan
+                    dd, FF = (np.r_[dd[:k], dz], np.r_[FF[:k], 0.0]) if k < len(FF) else (dd, FF)
+                    dmeet = np.nan
+                    if MECH_K:
+                        dd, FF, dmeet = vw.with_elastic_branch(dd, FF, MECH_K)
+                    mechf[(br, j)] = (dd, FF, dz, dmeet)
+            print("  + pocket friction mu {:.2f}: clamp {:.1f} kN on the lower pocket when pushed towards the joists, 0 the "
+                  "other way; elastic branch K {} kN/mm".format(MECH_MU, vw.pocket_clamp_N(W, O, 0.38, "leeward"),
+                                                              "{:.2f} (T1 {:.3f} s, L {:.0f} kg)".format(MECH_K, MECH_T1_K, M_EFF) if MECH_K else "off"))
     except Exception as e:
         print("  ! mechanical model skipped: {} ({})".format(e, P(MECH_DIR, "rigid_two_block_vw.py")))
         mech = {}
@@ -359,6 +392,15 @@ if mech:
         for j, yb in enumerate(MECH_BASE_Y):
             dd, FF, dz = mech[(br, j)]
             r = dict(model="{}, lower pivot {:.2f} m".format(MECH_LABEL, yb), branch=br, F0_kN=float(FF[0]), zero_force_at_mm=dz)
+            for x in (20, 40, 80):
+                r["F_{}mm_kN".format(x)] = float(np.interp(x, dd, FF)) if x <= dd[-1] else 0.0
+            mrows.append(r)
+        for j, yb in enumerate(MECH_BASE_Y):
+            if (br, j) not in mechf:
+                continue
+            dd, FF, dz, dmeet = mechf[(br, j)]
+            r = dict(model="{} + pocket friction + elastic branch, lower pivot {:.2f} m".format(MECH_LABEL, yb), branch=br,
+                     F0_kN=float(FF.max()), zero_force_at_mm=dz, elastic_branch_meets_at_mm=dmeet)
             for x in (20, 40, 80):
                 r["F_{}mm_kN".format(x)] = float(np.interp(x, dd, FF)) if x <= dd[-1] else 0.0
             mrows.append(r)
@@ -428,6 +470,14 @@ for j, (br, title) in enumerate((("pos", "Positive push (towards the joists)"), 
                                 color=MECH_COL, alpha=0.14, lw=0, zorder=1,
                                 label="  band: lower pivot from the base to {:.2f} m".format(MECH_BASE_Y[-1]))
                 ax.plot(d2, f2, color=MECH_COL, lw=0.9, ls="--", zorder=1.5)
+            if mechf:
+                fa, fb = mechf[(br, 0)], mechf[(br, len(MECH_BASE_Y) - 1)]
+                xs = np.linspace(0.0, np.nanmax([fa[2], fb[2], fa[0][-1]]), 400)
+                ax.fill_between(xs, np.interp(xs, fa[0], fa[1], right=np.nan), np.interp(xs, fb[0], fb[1], right=np.nan),
+                                color=MECH_F_COL, alpha=0.18, lw=0, zorder=1.1,
+                                label="mechanical model + pocket friction (\u03bc {:.2f}) + elastic branch, lower pivot "
+                                      "0 \u2013 {:.2f} m".format(MECH_MU, MECH_BASE_Y[-1]))
+                ax.plot(fb[0], fb[1], color=MECH_F_COL, lw=1.6, zorder=1.7)
             if FCR and ("ft015_mason", br) in data:
                 ax.plot([0, 18], [FCR[0], FCR[0]], ":", color=MECH_COL, lw=1.8, zorder=1.6,
                         label="mechanical model: cracking force, crack at {:.2f} m, f_w = {:.2f} MPa".format(MECH_H1, MECH_FW))
@@ -435,6 +485,10 @@ for j, (br, title) in enumerate((("pos", "Positive push (towards the joists)"), 
             if np.isfinite(zm):
                 ax.annotate("zero at {:.0f} mm".format(zm), xy=(zm, 0), xytext=(zm - 22, 3.2), fontsize=8.3, color=MECH_COL, ha="right",
                             arrowprops=dict(arrowstyle="-", color=MECH_COL, lw=0.8))
+        if mechf and zoom:
+            fb = mechf[(br, len(MECH_BASE_Y) - 1)]; fa = mechf[(br, 0)]
+            ax.plot(fb[0], fb[1], color=MECH_F_COL, lw=1.6, zorder=1.7)
+            ax.plot(fa[0], fa[1], color=MECH_F_COL, lw=1.0, ls="--", zorder=1.7)
         for (tk, pk), mk in zip(peaks.items(), ("o", "^")):
             if pk is not None and len(pk[br]):
                 ax.plot(pk[br][:, 0], pk[br][:, 1], mk, ms=3.6, mfc="none", mec=TEST, mew=0.8, alpha=0.7,

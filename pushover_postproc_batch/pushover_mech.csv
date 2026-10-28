@@ -1,15 +1,21 @@
-model,branch,F0_kN,zero_force_at_mm,F_20mm_kN,F_40mm_kN,F_80mm_kN
-"cracking force f_w 0.15 MPa, crack at 2.09 m",both,19.6013,,,,
-"cracking force f_w 0.15 MPa, minimum (crack at 1.36 m)",both,12.889,,,,
-"mechanical model, adjusted hinge 2.09 m, lower pivot 0.00 m",pos,9.937,142.1011,8.5483,7.1407,4.3476
-"mechanical model, adjusted hinge 2.09 m, lower pivot 0.30 m",pos,11.7972,143.8262,10.1672,8.5195,5.2463
-"DEM: f_t = 0, mason top",pos,10.9438,,10.4608,,
-"DEM: f_t = 0.15 MPa, mason top",pos,17.0079,,10.6879,11.9416,7.5079
-"DEM: f_t = 0, elastic top (ref.)",pos,10.9438,,10.4608,9.7745,6.9007
-"DEM: forced hinges (f_t = 0 at base, 2.11 m, top)",pos,11.1445,,10.9119,10.6014,9.266
-"mechanical model, adjusted hinge 2.09 m, lower pivot 0.00 m",neg,9.8313,140.6872,8.4434,7.0366,4.2452
-"mechanical model, adjusted hinge 2.09 m, lower pivot 0.30 m",neg,11.6848,142.5506,10.0557,8.4089,5.1375
-"DEM: f_t = 0, mason top",neg,10.2518,,10.2361,9.5173,6.2391
-"DEM: f_t = 0.15 MPa, mason top",neg,17.0485,,11.2425,9.684,6.3921
-"DEM: f_t = 0, elastic top (ref.)",neg,10.2478,,10.2318,9.5108,6.2821
-"DEM: forced hinges (f_t = 0 at base, 2.11 m, top)",neg,12.4289,,11.0889,10.5787,9.2814
+model,branch,F0_kN,zero_force_at_mm,F_20mm_kN,F_40mm_kN,F_80mm_kN,elastic_branch_meets_at_mm
+"cracking force f_w 0.15 MPa, crack at 2.09 m",both,19.6013,,,,,
+"cracking force f_w 0.15 MPa, minimum (crack at 1.36 m)",both,12.889,,,,,
+"mechanical model, adjusted hinge 2.09 m, lower pivot 0.00 m",pos,9.937,142.1011,8.5483,7.1407,4.3476,
+"mechanical model, adjusted hinge 2.09 m, lower pivot 0.30 m",pos,11.7972,143.8262,10.1672,8.5195,5.2463,
+"mechanical model, adjusted hinge 2.09 m + pocket friction + elastic branch, lower pivot 0.00 m",pos,11.207,162.2211,9.9313,8.5299,5.7494,1.959
+"mechanical model, adjusted hinge 2.09 m + pocket friction + elastic branch, lower pivot 0.30 m",pos,13.4487,165.8589,11.985,10.34,7.0728,2.3508
+"DEM: f_t = 0, mason top",pos,10.9438,,10.4608,,,
+"DEM: f_t = 0.15 MPa, mason top",pos,17.0079,,10.6879,11.9416,7.5079,
+"DEM: f_t = 0.05 MPa, mason top",pos,12.0993,,11.2207,10.7079,7.5788,
+"DEM: f_t = 0.075 MPa, mason top",pos,13.083,,11.2083,10.7454,7.4541,
+"DEM: f_t = 0.10 MPa, mason top",pos,14.3913,,11.5857,10.2004,7.5395,
+"mechanical model, adjusted hinge 2.09 m, lower pivot 0.00 m",neg,9.8313,140.6872,8.4434,7.0366,4.2452,
+"mechanical model, adjusted hinge 2.09 m, lower pivot 0.30 m",neg,11.6848,142.5506,10.0557,8.4089,5.1375,
+"mechanical model, adjusted hinge 2.09 m + pocket friction + elastic branch, lower pivot 0.00 m",neg,9.7419,140.6872,8.4434,7.0366,4.2452,1.7029
+"mechanical model, adjusted hinge 2.09 m + pocket friction + elastic branch, lower pivot 0.30 m",neg,11.5484,142.5506,10.0557,8.4089,5.1375,2.0187
+"DEM: f_t = 0, mason top",neg,10.2518,,10.2361,9.5173,6.2391,
+"DEM: f_t = 0.15 MPa, mason top",neg,17.0485,,11.2425,9.684,6.3921,
+"DEM: f_t = 0.05 MPa, mason top",neg,11.1205,,10.5482,9.5946,6.4425,
+"DEM: f_t = 0.075 MPa, mason top",neg,13.083,,10.6858,9.7138,6.4363,
+"DEM: f_t = 0.10 MPa, mason top",neg,15.0454,,,,,

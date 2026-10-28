@@ -29,6 +29,23 @@ JOISTS (optional, list of Joist) -- each one is a floor (both joists of a floor 
              at a constant moment (elastic-perfectly-plastic clamp). Monotonic loading assumed (pushover).
     m_floor  floor mass (kg) that the push also accelerates (inertia through the pocket), used if inertia=True
     side     "leeward" (push towards the joists) or "windward" (push away from them)
+    mu, N_clamp, slip_lever   POCKET FRICTION (28 Oct; 0 = off). A joist clamped in its pocket by a normal force N_clamp
+             (kN) turns relative to the pocket by dphi = (rotation of the block it sits in) - (rotation of the joist,
+             bearing rise / L); its clamped face slides by slip_lever * |dphi| against the masonry. Coulomb friction then
+             dissipates  D = mu * N_clamp * slip_lever * |dphi|  (kN m), added to U (monotonic push, so the dissipated
+             work enters the virtual work like stored energy). slip_lever = half the joist depth in the pocket (US-1:
+             0.176 m pocket -> 0.088 m).
+
+POCKET CLAMP (pocket_clamp_N): in the rocking state the whole vertical load at the lower pivot passes through the
+leeward toe. The lower US-1 pocket (0.293-0.469 m) spans the 0.30 m pivot on the joist side, so in a push TOWARDS the
+joists (side "leeward") the rigid joist block sits in the toe and carries that load: N = O + W (h - y_p)/h, about 23 kN
+(the DEM's free-run energy balance found 24 kN). Pushed the other way the toe is on the opposite face and the pocket
+is on the lifting side: no clamp. The upper pocket is not clamped either way (its ceiling lifts off with the upper
+block). Its friction work, 0.75 x 23.4 kN x 0.088 m x 0.048 rad = 74 J at 80 mm, matches the DEM's 80 J dissipated.
+
+ELASTIC BRANCH (with_elastic_branch): F = min(K d, F_rigid(d)) -- a line of stiffness K from the origin to where it
+meets the rocking curve (Appendix A.5, option 1). Rigid blocks have no stiffness; K is an input (e.g. from the test's
+T1 with the effective mass: K = 4 pi^2 L / T1^2).
 """
 from dataclasses import dataclass
 import numpy as np
@@ -68,6 +85,9 @@ class Joist:
     m_floor: float = 0.0     # kg, floor mass accelerated with the wall
     side: str = "leeward"    # "leeward": push towards the joists; "windward": push away from them
     pocket: float = 0.5      # pocket depth as a fraction of t (US-1: 105 of 210 mm)
+    mu: float = 0.0          # friction coefficient in the pocket (0 = no pocket friction)
+    N_clamp: float = 0.0     # kN, normal force clamping the joist in its pocket
+    slip_lever: float = 0.088   # m, slip of the clamped face per radian of joist-pocket rotation (half joist depth)
 
     def zb(self):            # bearing point: middle of the pocket, on the joist side
         d = self.pocket * t / 2
@@ -109,6 +129,11 @@ def state(th1, h1, W, O, kr=0.0, joists=(), inertia=False, top=None, base_y=0.0)
             kv = j.k_r / 1e3 / j.L ** 2                                      # kN/m at the far end
             v = blk(np.array([j.zf(), j.y]))[1] - j.y                        # far-end rise (m)
             U += far_end_energy(v, kv, j.W_lever, j.M_cap / j.L)
+        if j.mu > 0 and j.N_clamp > 0:                                      # (5) pocket friction (dissipated)
+            th_blk = th1 if j.y <= h1 else -th2
+            rise = pb[1] - j.y
+            dphi = th_blk - rise / j.L * (1.0 if j.side == "leeward" else -1.0)
+            U += j.mu * j.N_clamp * j.slip_lever * abs(dphi)
         if inertia and j.m_floor > 0:                                        # floor mass pushed with the wall
             Z += j.m_floor / M_wall * (pb[0] - j.zb())
     ps = lo(np.array([t, zs])) if zs <= h1 else up(np.array([t, zs]))
@@ -122,8 +147,36 @@ def curve(h1, W, O, kr=0.0, thmax=0.12, n=400, joists=(), inertia=False, top=Non
     return d * 1e3, F
 
 
-def us1_joists(side, k_r=1.3e5, M_cap=float("inf"), m_floor=203.0, R_wall=0.186 * 2, W_lever=(0.996 - 0.186) * 2):
+def pocket_clamp_N(W, O, y_p, side):
+    """clamp force (kN) on a joist in a pocket at height y_p near the lower pivot: the vertical load there when the
+    pocket is on the leeward (toe) face, 0 otherwise (see POCKET CLAMP above)"""
+    return (O + W * (h - y_p) / h) if side == "leeward" else 0.0
+
+
+def us1_joists(side, k_r=1.3e5, M_cap=float("inf"), m_floor=203.0, R_wall=0.186 * 2, W_lever=(0.996 - 0.186) * 2,
+               mu=0.0, W=None, O=None, N_clamp=None):
     """US-1 DEM build: two floors (2 joists each, 101.5 kg per joist); the wall carries 76 kg of the 406 kg at rest.
-    side: 'leeward' for a push towards the joists (positive z in the 3DEC model), 'windward' for the negative push."""
-    return [Joist(0.38, R_wall, W_lever, k_r=k_r, M_cap=M_cap, m_floor=m_floor, side=side),
+    side: 'leeward' for a push towards the joists (positive z in the 3DEC model), 'windward' for the negative push.
+    mu > 0 adds pocket friction on the LOWER floor: N_clamp given, or pocket_clamp_N(W, O, 0.38, side)."""
+    Nl = 0.0
+    if mu > 0:
+        Nl = N_clamp if N_clamp is not None else pocket_clamp_N(W, O, 0.38, side)
+    return [Joist(0.38, R_wall, W_lever, k_r=k_r, M_cap=M_cap, m_floor=m_floor, side=side, mu=mu, N_clamp=Nl),
             Joist(2.14, R_wall, W_lever, k_r=k_r, M_cap=M_cap, m_floor=m_floor, side=side)]
+
+
+def with_elastic_branch(d, F, K):
+    """d (mm), F (kN) of a rocking curve -> the same curve started by a line of stiffness K (kN/mm) from the origin:
+    F = min(K d, F_rocking(d)), with the intersection inserted. Returns (d, F, d_meet)."""
+    d = np.asarray(d, float); F = np.asarray(F, float)
+    g = K * d - F
+    k = int(np.argmax(g >= 0)) if (g >= 0).any() else None
+    if k is None:
+        return np.r_[0.0, d], np.r_[0.0, K * d], np.nan
+    if k == 0:
+        dm = F[0] / K
+    else:
+        dm = float(np.interp(0.0, [g[k - 1], g[k]], [d[k - 1], d[k]]))
+    Fm = K * dm
+    keep = d > dm
+    return np.r_[0.0, dm, d[keep]], np.r_[0.0, Fm, F[keep]], dm
