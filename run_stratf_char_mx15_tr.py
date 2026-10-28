@@ -1,29 +1,29 @@
 # -*- coding: ascii -*-
 """
-run_stratF_char_mx15_tr_tr.py -- Strategy F on the bonded characterisation build (f_t = 0.344 MPa, c = 0.75 MPa),
-large strain, 1.5 % Maxwell (as run_stratF_char_mx15_tr.py), with TRUNCATED record tables and a longer FREE-VIBRATION
-tail after every run.
+run_stratF_char_mx_tr.py -- Strategy F on the bonded characterisation build (f_t = 0.344 MPa, c = 0.75 MPa), large
+strain, truncated records + 4 s free-vibration tail (as run_stratF_char_mx_tr.py), with the Maxwell damping level
+set by DAMP_PCT. Levels with their own optimised (MATLAB) 1-25 Hz set are taken from MAXWELL_SETS as given:
+    1.5 %  0.0112 1.0005  0.0081 7.4315  0.0096 25.0004   (v12)
+    5 %    0.0388 1.0008  0.0230 5.4866  0.0473 24.9990
+Any other DAMP_PCT falls back to the 1.5 % set with its ratios scaled by DAMP_PCT / 1.5 (a warning is printed).
 
-    tables     vel_HU_tr.txt / vel_EC_tr.txt / vel_FR_tr.txt  (make_truncated_tables.py: quiet lead-in cut, 0.5 s
-               fade-in, 0.25 s fade-out; 1.5 %-damped Sd at T1 and T_eff within 0.5 % of the full records).
-               Written first if missing (MAKE_TABLES). HU12 35.9 -> 3.3 s, EC40 39.6 -> 26.1 s, FR76 17.3 -> 9.3 s.
-    tail       TAIL_SEC_RECORD = TAIL_S (4 s; driver default 2.5 s): after each record the table velocity is removed
-               and the wall rings down freely -- the part to check for over-damping against the tests.
-    OUT_DIR    stratF_full_LS_MAXWELL15_char_tr
-Everything else as run_stratF_char_mx15_tr.py (START_SAVE ..._springforce_char.sav, T1_init 0.089 s, Table-2 protocol).
-The post-processor reads the table file of each run from strategy_C_log.csv, so its input-velocity panel uses the
-truncated tables automatically.
+Why (28 Oct): the same equivalent-SDOF identification on model and tests (exp_equivalent_damping.py) gave, for
+runs 1-6 before cracking, xi_eq 2.2-4.7 % for the 1.5 % model against 3.4-18.6 % (US-1) and 5.4-10.8 % (US-2); the
+model's free vibration rang for ~2 s where the tests died out in ~0.3 s. The model adds ~0.7 % to its Maxwell level
+before cracking, so DAMP_PCT = 5 puts it at ~6 %, inside the tests' range. Re-check runs 1-6 and then 15-21 (where
+the contacts add their own hysteresis) with exp_equivalent_damping.py --model, for over-damping.
 
-USAGE (3DEC 9, working folder = the one holding the saves, the driver and vel_*.txt):
-    DRY_RUN = True :  program call 'run_stratF_char_mx15_tr_tr.py'   (or plain python) -> tables, overrides, compile
-    DRY_RUN = False:  program call 'run_stratF_char_mx15_tr_tr.py'
-Post-processing:  python postprocess_stratF_full25.py --runs "f_t 0, 1.5 %=stratF_full_LS_MAXWELL15_v12" \\
-                      --runs "0.344 MPa, 1.5 %, truncated=stratF_full_LS_MAXWELL15_char_tr"
+    OUT_DIR    stratF_full_LS_MAXWELL<pct x10>_char_tr   (DAMP_PCT 5 -> stratF_full_LS_MAXWELL50_char_tr)
+Everything else as run_stratF_char_mx_tr.py. Starts at run 1 in its own folder (a new damping cannot resume a
+1.5 % checkpoint).
+
+USAGE (3DEC 9):  DRY_RUN = True first (plain python is fine), then DRY_RUN = False and
+                 program call 'run_stratF_char_mx_tr.py'
 """
 import os, re
 
 # ============================ CONFIG =================================
-DRY_RUN       = False
+DRY_RUN       = True
 DRIVER        = "strategy_F_full_3dec_LS.py"
 SAVE_FT0      = "Part_I_MASON_v8_LargeStrain_springforce_char.sav"
 BUILD_DAT     = "ANALYSIS_PART_I_MASON_char.dat"   # run first if SAVE_FT0 is missing (None: never)
@@ -31,10 +31,22 @@ SAVE_TENSION_RANGE = (0.30e6, 0.40e6)     # Pa, FISH tension of the save (the ch
 TAIL_S        = 4.0                        # s, free vibration after each record (driver default 2.5)
 MAKE_TABLES   = True                       # write the truncated tables first if they are missing
 RAY_EFF       = 0.0   # no Rayleigh in this case
-MAXWELL_15    = "block mech damp maxwell 0.0112 1.0005 0.0081 7.4315 0.0096 25.0004"   # v12, 1.5 % flat 1-25 Hz
+DAMP_PCT      = 5.0                        # target Maxwell damping (%), flat 1-25 Hz
+MAXWELL_SETS  = {                          # optimised 1-25 Hz sets, (ratio, freq) x 3
+    1.5: (0.0112, 1.0005, 0.0081, 7.4315, 0.0096, 25.0004),   # v12
+    5.0: (0.0388, 1.0008, 0.0230, 5.4866, 0.0473, 24.9990),   # 28 Oct
+}
+if DAMP_PCT in MAXWELL_SETS:
+    _MX = MAXWELL_SETS[DAMP_PCT]
+else:
+    _k  = DAMP_PCT / 1.5
+    _b  = MAXWELL_SETS[1.5]
+    _MX = (_b[0] * _k, _b[1], _b[2] * _k, _b[3], _b[4] * _k, _b[5])
+    print("[run_stratF_char_mx_tr] WARNING: no optimised set for {} %, using the 1.5 % set x {:.3f}".format(DAMP_PCT, _k))
+MAXWELL_15    = "block mech damp maxwell {:.4f} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}".format(*_MX)
 RAY_RATIO     = 2.0 * RAY_EFF              # (Rayleigh mass term, unused here: RAY_EFF = 0)
 T1_INIT       = 0.089                      # s, bonded wall (the driver's period tracking)
-_TAGR         = "MAXWELL15" if RAY_EFF <= 0 else "RAYM{:03d}".format(int(round(RAY_EFF * 1000)))   # named by the EFFECTIVE ratio
+_TAGR         = "MAXWELL{:02d}".format(int(round(DAMP_PCT * 10))) if RAY_EFF <= 0 else "RAYM{:03d}".format(int(round(RAY_EFF * 1000)))   # named by the EFFECTIVE ratio
 OVERRIDES = dict(                          # NAME = value lines rewritten in the driver (last assignment of each)
     OUT_DIR="stratF_full_LS_{}_char_tr".format(_TAGR),
     CASE_ID="F_LS_{}_char_tr".format(_TAGR),
@@ -61,11 +73,11 @@ try:
     import itasca as it
 except ImportError:
     it = None
-TAG = "# [run_stratF_char_mx15_tr override]"
+TAG = "# [run_stratF_char_mx_tr override]"
 
 
 def log(s):
-    print("[run_stratF_char_mx15_tr] " + s)
+    print("[run_stratF_char_mx_tr] " + s)
 
 
 def patch_last(src, name, val):
@@ -121,7 +133,7 @@ def main():
             raise RuntimeError("override of {} did not take (a later assignment wins?)".format(name))
     if TAG not in current_value(out, "BASE_TABLES"):
         raise RuntimeError("override of BASE_TABLES did not take")
-    code = compile(out, DRIVER + " [char mx15 tr]", "exec")
+    code = compile(out, DRIVER + " [char mx tr]", "exec")
     log("  patched driver compiles")
     if os.path.isfile(os.path.join(OVERRIDES["OUT_DIR"], "stratC_checkpoint.json")):
         log("  checkpoint found in {}: the driver resumes after its last finished run".format(OVERRIDES["OUT_DIR"]))
