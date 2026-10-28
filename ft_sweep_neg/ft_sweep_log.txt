@@ -1,0 +1,30 @@
+[12:48:06] ======================================================================
+[12:48:06] run_pushover_ft_sweep  (DRY RUN)  f_t = 0.050, 0.075, 0.100 MPa, cohesion 0.2 MPa
+[12:48:06] ----------------------------------------------------------------------
+[12:48:06] f_t 0.050 MPa, NEG: ANALYSIS_PART_I_MASON_ft_0p050_n.dat -> Part_I_MASON_v8_LargeStrain_springforce_ft_0p050_n.sav; pushover TOP_JOINT='mason', RESTORE_SAV='Part_I_MASON_v8_LargeStrain_springforce_ft_0p050_n', OUT_DIR='pushover_results_v5_ft_0p050_TopMason', PUSH_DIR=-1, TENSION_MAX_PA=60000.0
+[12:48:06] ----------------------------------------------------------------------
+[12:48:06] f_t 0.075 MPa, NEG: ANALYSIS_PART_I_MASON_ft_0p075_n.dat -> Part_I_MASON_v8_LargeStrain_springforce_ft_0p075_n.sav; pushover TOP_JOINT='mason', RESTORE_SAV='Part_I_MASON_v8_LargeStrain_springforce_ft_0p075_n', OUT_DIR='pushover_results_v5_ft_0p075_TopMason', PUSH_DIR=-1, TENSION_MAX_PA=85000.0
+[12:48:06] ----------------------------------------------------------------------
+[12:48:06] f_t 0.100 MPa, NEG: ANALYSIS_PART_I_MASON_ft_0p100_n.dat -> Part_I_MASON_v8_LargeStrain_springforce_ft_0p100_n.sav; pushover TOP_JOINT='mason', RESTORE_SAV='Part_I_MASON_v8_LargeStrain_springforce_ft_0p100_n', OUT_DIR='pushover_results_v5_ft_0p100_TopMason', PUSH_DIR=-1, TENSION_MAX_PA=110000.0
+[12:48:06] dry run: build files written and the pushover compiles; set DRY_RUN = False to run
+[12:48:20] ======================================================================
+[12:48:20] run_pushover_ft_sweep    f_t = 0.050, 0.075, 0.100 MPa, cohesion 0.2 MPa
+[12:48:20] ----------------------------------------------------------------------
+[12:48:20] f_t 0.050 MPa, NEG: ANALYSIS_PART_I_MASON_ft_0p050_n.dat -> Part_I_MASON_v8_LargeStrain_springforce_ft_0p050_n.sav; pushover TOP_JOINT='mason', RESTORE_SAV='Part_I_MASON_v8_LargeStrain_springforce_ft_0p050_n', OUT_DIR='pushover_results_v5_ft_0p050_TopMason', PUSH_DIR=-1, TENSION_MAX_PA=60000.0
+[12:50:41]   built Part_I_MASON_v8_LargeStrain_springforce_ft_0p050_n.sav in 2.4 min
+[20:44:45]   pushover neg done in 474.0 min
+[20:44:45] ----------------------------------------------------------------------
+[20:44:45] f_t 0.075 MPa, NEG: ANALYSIS_PART_I_MASON_ft_0p075_n.dat -> Part_I_MASON_v8_LargeStrain_springforce_ft_0p075_n.sav; pushover TOP_JOINT='mason', RESTORE_SAV='Part_I_MASON_v8_LargeStrain_springforce_ft_0p075_n', OUT_DIR='pushover_results_v5_ft_0p075_TopMason', PUSH_DIR=-1, TENSION_MAX_PA=85000.0
+[20:48:00]   built Part_I_MASON_v8_LargeStrain_springforce_ft_0p075_n.sav in 3.2 min
+[04:53:33]   pushover neg done in 485.5 min
+[04:53:33] ----------------------------------------------------------------------
+[04:53:33] f_t 0.100 MPa, NEG: ANALYSIS_PART_I_MASON_ft_0p100_n.dat -> Part_I_MASON_v8_LargeStrain_springforce_ft_0p100_n.sav; pushover TOP_JOINT='mason', RESTORE_SAV='Part_I_MASON_v8_LargeStrain_springforce_ft_0p100_n', OUT_DIR='pushover_results_v5_ft_0p100_TopMason', PUSH_DIR=-1, TENSION_MAX_PA=110000.0
+[04:56:45]   built Part_I_MASON_v8_LargeStrain_springforce_ft_0p100_n.sav in 3.2 min
+[08:42:36]   pushover neg done in 225.8 min
+[08:42:36] summary -> ft_sweep_neg\ft_sweep_summary.csv
+[08:42:36]   f_t 0.000 MPa neg: K_el 4.54 kN/mm, T1 0.1022 s, peak 10.25 kN at 20.5 mm, F(20) 10.24, F(40) 9.52 kN
+[08:42:36]   f_t 0.050 MPa neg: K_el 5.49 kN/mm, T1 0.0929 s, peak 11.12 kN at 3.0 mm, F(20) 10.55, F(40) 9.59 kN
+[08:42:36]   f_t 0.075 MPa neg: K_el 5.60 kN/mm, T1 0.0920 s, peak 13.08 kN at 4.0 mm, F(20) 10.69, F(40) 9.71 kN
+[08:42:36]   f_t 0.100 MPa neg: K_el 5.58 kN/mm, T1 0.0921 s, peak 15.05 kN at 5.5 mm, F(20) nan, F(40) nan kN
+[08:42:36]   f_t 0.150 MPa neg: K_el 5.98 kN/mm, T1 0.0890 s, peak 17.05 kN at 10.1 mm, F(20) 11.24, F(40) 9.68 kN
+[08:42:36] finished

@@ -1,0 +1,43 @@
+[12:33:30] ======================================================================
+[12:33:31] run_pushover_ft_sweep  (DRY RUN)  f_t = 0.050, 0.075, 0.100 MPa, cohesion 0.2 MPa
+[12:33:52] ======================================================================
+[12:33:52] run_pushover_ft_sweep  (DRY RUN)  f_t = 0.050, 0.075, 0.100 MPa, cohesion 0.2 MPa
+[12:33:52] ----------------------------------------------------------------------
+[12:36:40] ======================================================================
+[12:36:40] run_pushover_ft_sweep  (DRY RUN)  f_t = 0.050, 0.075, 0.100 MPa, cohesion 0.2 MPa
+[12:36:40] ----------------------------------------------------------------------
+[12:36:40]   note: ANALYSIS_PART_I_MASON.dat saves 'Part_I_MASON_v8_LargeStrain_springforce_ft0p2' (not 'Part_I_MASON_v8_LargeStrain_springforce'); the sweep replaces that last save line
+[12:36:40] f_t 0.050 MPa: ANALYSIS_PART_I_MASON_ft_0p050.dat -> Part_I_MASON_v8_LargeStrain_springforce_ft_0p050.sav; pushover TOP_JOINT='mason', PUSH_DIR=1, RESTORE_SAV='Part_I_MASON_v8_LargeStrain_springforce_ft_0p050', OUT_DIR='pushover_results_v5_ft_0p050_TopMason', TENSION_MAX_PA=60000.0
+[12:36:40] ----------------------------------------------------------------------
+[12:36:40]   note: ANALYSIS_PART_I_MASON.dat saves 'Part_I_MASON_v8_LargeStrain_springforce_ft0p2' (not 'Part_I_MASON_v8_LargeStrain_springforce'); the sweep replaces that last save line
+[12:36:40] f_t 0.075 MPa: ANALYSIS_PART_I_MASON_ft_0p075.dat -> Part_I_MASON_v8_LargeStrain_springforce_ft_0p075.sav; pushover TOP_JOINT='mason', PUSH_DIR=1, RESTORE_SAV='Part_I_MASON_v8_LargeStrain_springforce_ft_0p075', OUT_DIR='pushover_results_v5_ft_0p075_TopMason', TENSION_MAX_PA=85000.0
+[12:36:40] ----------------------------------------------------------------------
+[12:36:40]   note: ANALYSIS_PART_I_MASON.dat saves 'Part_I_MASON_v8_LargeStrain_springforce_ft0p2' (not 'Part_I_MASON_v8_LargeStrain_springforce'); the sweep replaces that last save line
+[12:36:40] f_t 0.100 MPa: ANALYSIS_PART_I_MASON_ft_0p100.dat -> Part_I_MASON_v8_LargeStrain_springforce_ft_0p100.sav; pushover TOP_JOINT='mason', PUSH_DIR=1, RESTORE_SAV='Part_I_MASON_v8_LargeStrain_springforce_ft_0p100', OUT_DIR='pushover_results_v5_ft_0p100_TopMason', TENSION_MAX_PA=110000.0
+[12:36:40] dry run: build files written and the pushover compiles; set DRY_RUN = False to run
+[12:36:57] ======================================================================
+[12:36:57] run_pushover_ft_sweep    f_t = 0.050, 0.075, 0.100 MPa, cohesion 0.2 MPa
+[12:36:57] ----------------------------------------------------------------------
+[12:36:57]   note: ANALYSIS_PART_I_MASON.dat saves 'Part_I_MASON_v8_LargeStrain_springforce_ft0p2' (not 'Part_I_MASON_v8_LargeStrain_springforce'); the sweep replaces that last save line
+[12:36:57] f_t 0.050 MPa: ANALYSIS_PART_I_MASON_ft_0p050.dat -> Part_I_MASON_v8_LargeStrain_springforce_ft_0p050.sav; pushover TOP_JOINT='mason', PUSH_DIR=1, RESTORE_SAV='Part_I_MASON_v8_LargeStrain_springforce_ft_0p050', OUT_DIR='pushover_results_v5_ft_0p050_TopMason', TENSION_MAX_PA=60000.0
+[12:38:45]   built Part_I_MASON_v8_LargeStrain_springforce_ft_0p050.sav in 1.8 min
+[12:46:12] ======================================================================
+[12:46:12] run_pushover_ft_sweep    f_t = 0.050, 0.075, 0.100 MPa, cohesion 0.2 MPa
+[21:16:14]   pushover done in 517.5 min
+[21:16:14] ----------------------------------------------------------------------
+[21:16:14]   note: ANALYSIS_PART_I_MASON.dat saves 'Part_I_MASON_v8_SmallStrain_springforce' (not 'Part_I_MASON_v8_LargeStrain_springforce'); the sweep replaces that last save line
+[21:16:14] f_t 0.075 MPa: ANALYSIS_PART_I_MASON_ft_0p075.dat -> Part_I_MASON_v8_LargeStrain_springforce_ft_0p075.sav; pushover TOP_JOINT='mason', PUSH_DIR=1, RESTORE_SAV='Part_I_MASON_v8_LargeStrain_springforce_ft_0p075', OUT_DIR='pushover_results_v5_ft_0p075_TopMason', TENSION_MAX_PA=85000.0
+[21:17:59]   built Part_I_MASON_v8_LargeStrain_springforce_ft_0p075.sav in 1.8 min
+[05:57:24]   pushover done in 519.4 min
+[05:57:24] ----------------------------------------------------------------------
+[05:57:24]   note: ANALYSIS_PART_I_MASON.dat saves 'Part_I_MASON_v8_SmallStrain_springforce' (not 'Part_I_MASON_v8_LargeStrain_springforce'); the sweep replaces that last save line
+[05:57:24] f_t 0.100 MPa: ANALYSIS_PART_I_MASON_ft_0p100.dat -> Part_I_MASON_v8_LargeStrain_springforce_ft_0p100.sav; pushover TOP_JOINT='mason', PUSH_DIR=1, RESTORE_SAV='Part_I_MASON_v8_LargeStrain_springforce_ft_0p100', OUT_DIR='pushover_results_v5_ft_0p100_TopMason', TENSION_MAX_PA=110000.0
+[05:59:09]   built Part_I_MASON_v8_LargeStrain_springforce_ft_0p100.sav in 1.8 min
+[11:13:28]   pushover done in 314.3 min
+[11:13:28] summary -> ft_sweep\ft_sweep_summary.csv
+[11:13:28]   f_t 0.000 MPa: K_el 4.75 kN/mm, T1 0.0999 s, peak 10.94 kN at 12.7 mm, F(20) 10.46, F(40) nan kN
+[11:13:28]   f_t 0.050 MPa: K_el 5.72 kN/mm, T1 0.0910 s, peak 12.10 kN at 6.2 mm, F(20) 11.22, F(40) 10.71 kN
+[11:13:28]   f_t 0.075 MPa: K_el 5.82 kN/mm, T1 0.0902 s, peak 13.08 kN at 3.8 mm, F(20) 11.21, F(40) 10.75 kN
+[11:13:28]   f_t 0.100 MPa: K_el 5.89 kN/mm, T1 0.0896 s, peak 14.39 kN at 4.5 mm, F(20) 11.59, F(40) 10.20 kN
+[11:13:28]   f_t 0.150 MPa: K_el 5.90 kN/mm, T1 0.0896 s, peak 17.01 kN at 6.2 mm, F(20) 10.69, F(40) 11.94 kN
+[11:13:28] finished

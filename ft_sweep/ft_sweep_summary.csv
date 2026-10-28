@@ -1,0 +1,6 @@
+ft_MPa,K_el_kN_per_mm,T1_s,F_peak_kN,d_at_peak_mm,F_20mm_kN,F_40mm_kN,d_last_mm,n_points,csv
+0.0000,4.7506,0.0999,10.9438,12.7131,10.4608,nan,26.7159,33,pushover_results_v5_ft0_masonrypush_TopMason/pushover_pos.csv
+0.0500,5.7168,0.0910,12.0993,6.1952,11.2207,10.7079,80.2031,93,pushover_results_v5_ft_0p050_TopMason\pushover_pos.csv
+0.0750,5.8239,0.0902,13.0830,3.7731,11.2083,10.7454,80.8115,94,pushover_results_v5_ft_0p075_TopMason\pushover_pos.csv
+0.1000,5.8947,0.0896,14.3913,4.5168,11.5857,10.2004,80.1678,71,pushover_results_v5_ft_0p100_TopMason\pushover_pos.csv
+0.1500,5.9028,0.0896,17.0079,6.2086,10.6879,11.9416,80.2594,98,pushover_results_v5_ft0p15_masonrypush_TopMason/pushover_pos.csv
