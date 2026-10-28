@@ -13,11 +13,17 @@ WHAT IT CHANGES (everything else is the forced-hinge build: hinges at the base /
     stiffness as the masonry joints (kn, ks of mat_case.dat). The joists still rest in their pockets (normal contact),
     they just cannot transmit friction; the pocket back face still pushes them along on the positive push.
     Joist supports (Joist - Joist_S1/S2) unchanged.
+TWO WAYS TO GET THE FRICTIONLESS SAVE (POCKET_SWITCH)
+    False (default): SAVE_IN is built by ANALYSIS_PART_I_MASON_hingeft0_nofric.dat, frictionless pockets from the
+           start, so gravity and the spring force settle without pocket friction (the clean version). Built first
+           if missing (BUILD_DAT). The script only checks it.
+    True : SAVE_IN is the ordinary forced-hinge save; the pockets are switched to frictionless after the restore and
+           the model re-settles (the pocket normal forces were set up with friction).
 STEPS
-    1. restore SAVE_IN (the forced-hinge build), check FISH 'tension' (0.30-0.40 MPa);
-    2. reassign the pocket contacts, list how many changed, re-settle (model solve ratio 1e-5), switch on the
-       mechanical energy bookkeeping (ENERGY = True: 3DEC then records the slip work of the contacts in the save,
-       so the remaining dissipation can be read from the snapshot saves), save SAVE_OUT;
+    1. restore SAVE_IN, check FISH 'tension' (0.30-0.40 MPa);
+    2. (POCKET_SWITCH) reassign the pocket contacts and re-settle; count pocket subcontacts and how many have
+       friction 0 (stops if any pocket subcontact still has friction); switch on the mechanical energy bookkeeping
+       (ENERGY = True: the slip work of the contacts is kept in the saves), save SAVE_OUT;
     3. pushover_oop_3dec_v5.py from SAVE_OUT for each direction in DIRS, snapshots at SNAP_MM, into PO_DIR.
 USAGE (3DEC 9, working folder with the forced-hinge save and the pushover script; needs the licence)
     MODE = "dry" : patches and compiles the pushover; no model work
@@ -30,9 +36,11 @@ import os, re, time
 
 # ============================ CONFIG =================================
 MODE        = "dry"                                   # "dry" | "prep" | "run"
-PUSHOVER_SCRIPT = "pushover_oop_3dec_v4.py"
-SAVE_IN     = "Part_I_MASON_v8_LargeStrain_springforce_hingeft0"
-SAVE_OUT    = "Part_I_MASON_v8_LargeStrain_springforce_hingeft0_nofric"
+PUSHOVER_SCRIPT = "pushover_oop_3dec_v5.py"
+POCKET_SWITCH = False                                 # False: SAVE_IN already frictionless (built by BUILD_DAT)
+BUILD_DAT   = "ANALYSIS_PART_I_MASON_hingeft0_nofric.dat"   # run first if SAVE_IN is missing (None: never)
+SAVE_IN     = "Part_I_MASON_v8_LargeStrain_springforce_hingeft0_nofric"   # POCKET_SWITCH True: ..._hingeft0
+SAVE_OUT    = "Part_I_MASON_v8_LargeStrain_springforce_hingeft0_nofric_po"  # pushover start (energy on)
 FT_RANGE    = (0.30e6, 0.40e6)                        # SAVE_IN must hold this joint tension (FISH 'tension')
 PO_DIR      = "pushover_results_v5_hingeft0_nofric_TopMason"
 DIRS        = (+1, -1)
@@ -49,6 +57,11 @@ try:
 except ImportError:
     it = None
 POCKET = "group-intersection 'Joist' 'Masonry'"
+# material-table entry: pocket contacts that 3DEC creates later (large-strain contact updates during the settle and the
+# push) are frictionless too; without it they take the default entry (mason_v12, friction @friction)
+TABLE_CMD = "block contact material-table add jmodel mohr property {} range {}".format(
+    "stiffness-normal [kn] stiffness-shear [ks] friction 0 cohesion 0 tension 0", POCKET)
+MAX_TRIES = 3
 
 
 def log(s=""):
@@ -96,8 +109,15 @@ def pushover_source(push_dir):
 
 FISH_COUNT = r"""
 fish define hnf_count
+    ; the result is built in 'msg': reading this function's own name inside it would call it again
     local n = 0
     local nf = 0
+    local nc = 0
+    local ncbad = 0
+    local ncmix = 0
+    local fmax = 0.0
+    local ylo = 1e9
+    local yhi = -1e9
     loop foreach local cx block.contact.list
         local b1 = block.contact.b1(cx)
         local b2 = block.contact.b2(cx)
@@ -113,13 +133,36 @@ fish define hnf_count
             endif
         endif
         if j = 1 then
-            n = n + 1
-            if block.contact.prop(cx, 'friction') < 1e-6 then
-                nf = nf + 1
+            nc = nc + 1
+            local k0 = 0
+            local k1 = 0
+            loop foreach local sc block.contact.subcontactlist(cx)
+                n = n + 1
+                local phi = block.subcontact.prop(sc, 'friction')
+                if phi < 1e-6 then
+                    nf = nf + 1
+                    k0 = k0 + 1
+                else
+                    k1 = k1 + 1
+                    local yy = comp.y(block.subcontact.pos(sc))
+                    fmax = math.max(fmax, phi)
+                    ylo = math.min(ylo, yy)
+                    yhi = math.max(yhi, yy)
+                endif
+            endloop
+            if k1 > 0 then
+                ncbad = ncbad + 1
+                if k0 > 0 then
+                    ncmix = ncmix + 1
+                endif
             endif
         endif
     endloop
-    hnf_count = string(n) + ' pocket contacts, ' + string(nf) + ' with friction 0'
+    local msg = string(n) + ' pocket subcontacts, ' + string(nf) + ' with friction 0 (' + string(nc) + ' contacts)'
+    if nf < n then
+        msg = msg + '; with friction: ' + string(ncbad) + ' contacts (' + string(ncmix) + ' mixed with frictionless subcontacts), friction up to ' + string(fmax) + ', y ' + string(ylo) + ' - ' + string(yhi) + ' m'
+    endif
+    hnf_count = msg
 end
 """
 
@@ -133,20 +176,35 @@ def prepare():
     log("{}: joint tension {:.3f} MPa".format(SAVE_IN, ft / 1e6))
     if not (FT_RANGE[0] <= ft <= FT_RANGE[1]):
         raise RuntimeError("wrong save: joint tension {:.3f} MPa (expected the forced-hinge build)".format(ft / 1e6))
-    it.command("block contact jmodel assign mohr range {}".format(POCKET))
-    it.command("block contact property {} range {}".format(POCKET_PROPS, POCKET))
-    log("  pocket contacts -> mohr, {}".format(POCKET_PROPS))
-    try:
-        it.command(FISH_COUNT)
+    it.command(TABLE_CMD)
+    log("  " + TABLE_CMD)
+    it.command(FISH_COUNT)
+
+    def count():
         it.command("[global hnf_msg = hnf_count]")
-        log("  " + str(it.fish.get("hnf_msg")))
-    except Exception as e:
-        log("  (pocket contact count not available: {})".format(e))
-    log("  " + SETTLE)
-    it.command(SETTLE)
+        msg = str(it.fish.get("hnf_msg")); log("  " + msg)
+        n, nf = [int(float(x)) for x in re.findall(r"[-\d.]+", msg)[:2]]
+        return n, nf, msg
+
+    n, nf, msg = count()
+    if not POCKET_SWITCH and n > 0 and nf == n:
+        log("  pockets taken from the build ({}); all frictionless".format(BUILD_DAT))
+    tries = 0
+    while (POCKET_SWITCH and tries == 0) or ((n == 0 or nf != n) and tries < MAX_TRIES):
+        tries += 1
+        it.command("block contact jmodel assign mohr range {}".format(POCKET))
+        it.command("block contact property {} range {}".format(POCKET_PROPS, POCKET))
+        log("  [{}] pocket contacts -> mohr, {}; {}".format(tries, POCKET_PROPS, SETTLE))
+        it.command(SETTLE)
+        n, nf, msg = count()
+    if n == 0 or nf != n:
+        raise RuntimeError("pocket subcontacts still not all frictionless after {} reassignments ({})".format(tries, msg))
     if ENERGY:
-        it.command("model energy mechanical on")
-        log("  model energy mechanical on")
+        try:
+            it.command("model energy mechanical on")
+            log("  model energy mechanical on")
+        except Exception as e:
+            log("  ! energy bookkeeping not switched on ({}); the pushover is unaffected".format(e))
     it.command("model save '{}'".format(cmdpath(SAVE_OUT)))
     log("  saved {}.sav".format(SAVE_OUT))
 
@@ -167,7 +225,17 @@ def main():
     if it is None:
         raise RuntimeError("itasca not available: run inside 3DEC")
     if not (os.path.isfile(SAVE_IN) or os.path.isfile(SAVE_IN + ".sav")):
-        raise RuntimeError("missing {}.sav (build it with ANALYSIS_PART_I_MASON_hingeft0.dat)".format(SAVE_IN))
+        if BUILD_DAT and not POCKET_SWITCH:
+            if not os.path.isfile(BUILD_DAT):
+                raise RuntimeError("missing {}.sav and {}".format(SAVE_IN, BUILD_DAT))
+            log("building {}.sav: program call '{}'".format(SAVE_IN, BUILD_DAT))
+            t0 = time.time()
+            it.command("python-reset-state false")
+            it.command("program call '{}'".format(BUILD_DAT))
+            it.command("python-reset-state false")
+            log("  built in {:.1f} min".format((time.time() - t0) / 60))
+        if not (os.path.isfile(SAVE_IN) or os.path.isfile(SAVE_IN + ".sav")):
+            raise RuntimeError("missing {}.sav".format(SAVE_IN))
     prepare()
     if MODE == "prep":
         return

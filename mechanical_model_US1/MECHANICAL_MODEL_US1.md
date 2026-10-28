@@ -115,9 +115,9 @@ All cases are in `onur_single_leaf_US1.csv` (`full_height()` in `onur_single_lea
 
 ## 4. What changed from Onur's model
 
-![From Onur's cavity model to the adjusted-hinge model](fig_mech_model_evolution.png)
+![From Onur's cavity model to the adjusted-hinge model, and the pushover comparison](fig_mech_model_and_pushover.png)
 
-*Figure 2. (a) Onur's cavity-wall model: inner leaf split at the floors (Casapulla block + Graziotti strip + Casapulla block), outer leaf one strip, ties and joist slip friction. (b) US-1 with the mid-height hinge (§3): one leaf, full height, floors moving with the wall, hinge at the formula's optimum 1.51 m. (c) US-1 with the adjusted hinge (Appendix D): hinge at the upper-floor course, top pivot at the top-beam centroid, lower pivot between the base and 0.30 m; the orange dots are the DEM's course displacements at 80 mm (positive push), scaled to the drawing. (d) What changed at each step; red marks what the adjusted hinge takes from the DEM deformed shape.*
+*Figure 2. (a) Onur's cavity-wall model: inner leaf split at the floors (Casapulla block + Graziotti strip + Casapulla block), outer leaf one strip, ties and joist slip friction. (b) US-1 with the mid-height hinge (§3): one leaf, full height, floors moving with the wall, hinge at the formula's optimum 1.51 m. (c) US-1 with the adjusted hinge (Appendix D): hinge at the upper-floor course, top pivot at the top-beam centroid, lower pivot between the base and 0.30 m; the orange dots are the DEM's course displacements at 80 mm (positive push), scaled to the drawing. (d) What changed at each step; red marks what the adjusted hinge takes from the DEM deformed shape. (e, f) The resulting pushover curves against the DEM (f_t = 0, elastic top), positive and negative push: the adjusted hinge (blue band, lower pivot at the base … 0.30 m) follows the DEM's slope and reaches zero at 127–142 mm; the mid-height hinge (black dashed) reaches zero at 100 mm. Details in Appendix D.*
 
 The table below lists the step from (a) to (b) in more detail.
 
@@ -155,7 +155,8 @@ Their combined effect on the US-1 numbers is about 0.01 kN.
 | `onur_single_leaf_US1.csv` | all cases: floors move / held, f_w 0 / 0.15, e 0 / t/2, F_Q on / off |
 | `rocking_model.py` | Onur's formulas transcribed cell by cell: `graziotti()`, `cantilever_a0()`, `bilinear_elastic()`, `doherty_trilinear()` |
 | `rigid_two_block_vw.py`, `fig_mech_*.png` and their scripts | Appendices A and B; `curve(..., top=(z, y), base_y=...)` sets the top pivot and the lower pivot (Appendix D) |
-| `fig_mech_model_evolution.py`, `fig_mech_model_evolution.png`, `dem_pos_end_courses.csv` | Figure 2: Onur's model, the mid-height hinge and the adjusted hinge side by side |
+| `fig_mech_model_and_pushover.py`, `fig_mech_model_and_pushover.png` | Figure 2: runs `fig_mech_model_evolution.py` (panels a-d) and `fig_dem_vs_mech.py --combined` (panels e-f) and stacks them |
+| `fig_mech_model_evolution.py`, `fig_mech_model_evolution.png`, `dem_pos_end_courses.csv` | the illustration on its own (Figure 2 a-d) |
 | `fig_dem_vs_mech.py`, `fig_dem_vs_mech.png`, `dem_vs_mech.csv` | Appendix D: DEM pushover vs the rigid model with the DEM's own mechanism |
 | `pushover_v5_ft0_elastictop_pos.csv`, `..._neg.csv` | copies of the 22 Oct v5 pushovers (f_t = 0, elastic top) used in Appendix D |
 
@@ -166,7 +167,9 @@ Their combined effect on the US-1 numbers is about 0.01 kN.
 - **The remaining 0.3–2.5 kN.** The DEM carries more than the rigid model with its own mechanism. The joist support reactions change through the descending branch (Appendix D.4), so the joists are the first candidate; quantify it with the joist forces from the DEM instead of the crude clamp of Appendix B.
 - **Top-beam weight.** The build's top beam is 213 kg (2.09 kN); this note has used 1.485 kN. Check which one the test had.
 - **Floor load.** 1.18 kN per floor is the value used so far; check it against the paper's floor masses.
-- **Doherty ratios** (Appendix A.5): check them against the paper.
+- **Doherty ratios** (Appendix A.5): check them against the paper; Appendix D.5 uses them.
+- **Closing the DEM–model gap** (Appendix D.5): DEM pushovers that remove one feature at a time (joists replaced by their loads, stiffer joints, rigid-limit check) to show which feature accounts for the plateau and the 1.5–2.6 kN.
+- **Compressive damage in the dynamic runs:** check the hinge toes at the end saves of Strategy F and Route 2 (D.5, item 2).
 
 ---
 
@@ -270,7 +273,7 @@ In both tests the peak Σ m·a keeps rising up to run 21 (14.2 kN for US-1, 15.7
 ### A.7 Comparison with the DEM pushover (f_t = 0, c = 0.2 MPa build)
 
 - **Strip at its optimum (h1 = 1.51 m).** It predicts a steep softening slope (−0.12 kN/mm) and zero force at about 100 mm. The DEM curve is much flatter: about 10 kN out to 40–50 mm, and still about 8.7 kN at 80 mm.
-- **Hinge at about 2.0 m.** The rigid line has slope −0.085 kN/mm and reaches zero at about 180 mm. **Superseded by Appendix D:** the "close match" with a Doherty plateau used a top pivot at the wall's top corner, which is not what the elastic-top DEM does, and it was read against F_tot as logged, which over-reports the force once the top beam tilts. The conclusion that the DEM's ductility is mainly geometric (a high hinge) still holds.
+- **Hinge at about 2.0 m.** The rigid line has slope −0.085 kN/mm and reaches zero at about 180 mm. **Superseded by Appendix D:** the "close match" with a Doherty plateau used a top pivot at the wall's top corner, which is not what the elastic-top DEM does, and it was read against F_tot as logged, which over-reports the force once the top beam tilts. The conclusion that the DEM's ductility is mainly geometric (a high hinge) still holds for the slope; the late 80 % point also needs the plateau and the joists (Appendix D.5).
 - **Joists act as a secondary rotational spring.** The joists sit tightly in their pockets and rest on supports about 1 m out from the wall. When the wall rotates they press on those supports. The old gravity-tilt run measured the joist support reaction rising by about 1.5 kN by 19 mm, which is equivalent to about 1.3×10⁵ N·m/rad. That run pushed the joists along their length too, so recheck this with the v5 logs.
 - **The top joint was not mason_v12 in the pushover.** `pushover_oop_3dec_v5.py` defaults to `TOP_JOINT = "elastic"`, which glues the top course to the beam. The shaking runs keep mason_v12, so the pushover that sets T1 and T_eff had a different top boundary. Redo it with `TOP_JOINT = "mason"`.
 - **Precompression** in the current build is 10,350 N applied as a force on the beam. It is **not** doubled; the earlier ×2 concern applied only to the old equivalent-density build.
@@ -467,3 +470,25 @@ Naming used below and in Figure D1: the **mid-height hinge** is the formula's op
 3. **The top condition matters as much as the hinge height** (not drawn in Figure D1). Rocking on the top-beam corner instead of about the beam's centroid adds about 6 kN at small displacement and pushes the zero point to about 200 mm. The mason-top runs of the batch will show which one the DEM does when the top joint can open; the tests' peak forces of 14–16 kN sit nearer the corner line.
 4. **For the instability displacement:** with a hinge at the upper floor, the rigid model gives 127–209 mm at the sensor depending on the top condition, against about 30 mm reached in the tests (stopped by the table). The DEM and the mechanical model now agree that the wall had a large reserve; they differ by about 30 mm on where it ends, not by a factor of two.
 
+
+### D.5 Ductility: where each curve drops to 80 % of its peak (26 Oct)
+
+The 80 %-of-peak point on the descending branch is the usual ultimate displacement d_u of a bilinear idealisation. It was computed for the rigid model with the adjusted hinge (2.09 m), with and without a pre-peak branch, and for the DEM (f_t = 0, elastic top, |a|·m_tot). Lower pivot at the base … 0.30 m, both push directions:
+
+| Curve | Peak (kN) | Peak at | 80 %-of-peak point |
+|---|---|---|---|
+| rigid, no pre-peak branch | 9.9–11.8 | 0 mm | 28–29 mm (0.2 × u_ins) |
+| rigid + bilinear elastic branch, K = 4.6–5.7 kN/mm | ≈ F0 | about 2 mm | about 28–30 mm |
+| rigid + Doherty trilinear, "new" (A.5 ratios) | 7.1–8.5 | plateau 8.5–40 mm | 60–61 mm |
+| rigid + Doherty, "moderately degraded" | 5.9–7.1 | plateau 18–57 mm | 73–75 mm |
+| rigid + Doherty, "severely degraded" | 4.9–5.9 | plateau 28–72 mm | 85–86 mm |
+| rigid, mid-height hinge 1.51 m | 9.4–12.0 | 0 mm | 17–18 mm |
+| rigid, hinge 2.20 m | 10.6–12.6 | 0 mm | 25 mm |
+| **DEM, positive / negative** | **10.94 / 10.25** | **12.7 / 20.8 mm** | **56.6 / 57.1 mm** |
+| test envelope (US-1) | 14–16 | | 27.4 mm |
+
+1. **The DEM's descending slope is the rigid model's** (D.4, item 1). Its later 80 % point comes from two things the rigid model leaves out: a **rounded plateau** to about 20 mm (the hinge rotates first about a compressed contact zone of finite joint stiffness, and the middle hinge is spread over two or three joints and the pocket course), and the **joists**, which keep the DEM 1.5–2.6 kN above the band at large displacement.
+2. **No compressive damage.** MASON has a compressive limit in the joints, but the end saves of the f_t = 0 pushovers show no compressive damage at the hinge toes (axial force about 15 kN at the 2.1 m hinge and 25 kN at the base). The DEM pushover is therefore an undamaged, monotonic response. The test reached its 27.4 mm under 25 runs of cyclic dynamic loading; whether toe damage, the envelope definition, or both explain the difference cannot be told from the pushover. Compressive damage at the hinge toes in the dynamic runs (Strategy F, Route 2, f_t = 0.15) would point to cyclic damage.
+3. **A stiff elastic branch changes nothing:** with the DEM's or the test's initial stiffness it meets the rigid line at about 2 mm, so the DEM's plateau is not an elastic effect of the initial stiffness.
+4. **The Doherty trilinear matches the DEM's 80 % point for the wrong reason.** Its plateau sits at the rigid line's force at Δ2, about 3 kN below the DEM's peak; its 80 % point is late because its peak is low. Neither law reproduces both the DEM's force and its plateau.
+5. **The 80 % point depends on the idealisation more than on the wall** (28 mm or 60–85 mm on the same mechanism). For Route 2 the rigid-line value, about 28 mm, is test-independent, needs no tuned ratios, and agrees with the test's 27.4 mm: T_eff becomes 0.280 s (f_t = 0.15) and 0.355 s (f_t = 0), against 0.276 and 0.350 s with the test's d_u. The DEM's own 56–57 mm would raise T_eff by √2, into the range the Route 2 preflight flags.

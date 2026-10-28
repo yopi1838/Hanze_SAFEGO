@@ -71,6 +71,8 @@ CASES = [   # (key, label, folder, colour, line style)
     # the 2.110 m bed joint, the top joint and the joist pockets; 0.344 MPa / c 0.75 MPa everywhere else.
     # Compare with the solid edge of the mechanical-model band (lower pivot at the base; 2.09 m is within 0.2 kN of 2.11 m)
     ("hinge_char",  "forced hinges (f_t = 0 at base, 2.11 m, top)", "pushover_results_v5_hingeft0_char_TopMason", "#7C3AED", "-."),
+    ("hinge_nofric", "forced hinges, frictionless joist pockets", "pushover_results_v5_hingeft0_nofric_TopMason", "#DB2777", ":"),
+    ("hinge_unclamp", "forced hinges, unclamped joist pockets", "pushover_results_v5_hingeft0_unclamp_TopMason", "#0F766E", "-"),
 ]
 BILINEAR_JSON = "bilinear_idealisation_ft0p15/bilinear_periods.json"
 BILINEAR_CASE = "ft015_mason"            # the case the bilinear idealisation was made from

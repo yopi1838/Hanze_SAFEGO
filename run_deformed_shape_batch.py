@@ -14,6 +14,9 @@ snapshot sequence (light = early, dark = late): where the first hinge opens and 
     deformed_shape_ft0_neg/     f_t = 0,    negative push
     deformed_shape_ft0p15_pos/  f_t = 0.15, positive push   (REF: ..._springforce_ft_0p15)
     deformed_shape_ft0p15_neg/  f_t = 0.15, negative push
+    deformed_shape_hinge_pos/   forced hinges (f_t = 0 at base, 2.110 m, top, joist pockets; 0.344 MPa elsewhere),
+    deformed_shape_hinge_neg/     REF: ..._springforce_hingeft0 (ANALYSIS_PART_I_MASON_hingeft0.dat)
+ONLY selects cases by output folder (empty = all), so finished cases need not be repeated.
 Per case: <tag>_summary.txt (course profile, bed-joint map, hinges, top-joint tilt), <tag>_courses/joints/blocks.csv,
 deformed_shape.png and the raw _dump_<tag>.log files.
 
@@ -31,12 +34,16 @@ MODE   = "dry"                                   # "dry" | "run" | "post"
 SCRIPT = "deformed_shape_3dec.py"
 SAVE_FT0   = "Part_I_MASON_v8_LargeStrain_springforce"
 SAVE_FT015 = "Part_I_MASON_v8_LargeStrain_springforce_ft_0p15"
+SAVE_HINGE = "Part_I_MASON_v8_LargeStrain_springforce_hingeft0"
 CASES = [   # (output folder, reference save, pushover folder, direction "pos" | "neg")
     ("deformed_shape_ft0_pos",    SAVE_FT0,   "pushover_results_v5_ft0_masonrypush_TopMason",    "pos"),
     ("deformed_shape_ft0_neg",    SAVE_FT0,   "pushover_results_v5_ft0_masonrypush_TopMason",    "neg"),
     ("deformed_shape_ft0p15_pos", SAVE_FT015, "pushover_results_v5_ft0p15_masonrypush_TopMason", "pos"),
     ("deformed_shape_ft0p15_neg", SAVE_FT015, "pushover_results_v5_ft0p15_masonrypush_TopMason", "neg"),
+    ("deformed_shape_hinge_pos",  SAVE_HINGE, "pushover_results_v5_hingeft0_char_TopMason",      "pos"),
+    ("deformed_shape_hinge_neg",  SAVE_HINGE, "pushover_results_v5_hingeft0_char_TopMason",      "neg"),
 ]
+ONLY = ["deformed_shape_hinge_pos", "deformed_shape_hinge_neg"]   # output folders to process; [] = every case
 LOG = "run_deformed_shape_batch.log"
 # ======================================================================
 
@@ -92,7 +99,9 @@ def main():
         src0 = f.read()
     import sys
     argv0 = list(sys.argv)
-    for out_dir, ref, po_dir, direction in CASES:
+    todo = [c for c in CASES if not ONLY or c[0] in ONLY]
+    log("cases: " + ", ".join(c[0] for c in todo))
+    for out_dir, ref, po_dir, direction in todo:
         log("-" * 70)
         if MODE == "post":
             dumps = sorted(glob.glob(os.path.join(out_dir, "_dump_*.log")))

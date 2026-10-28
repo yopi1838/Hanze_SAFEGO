@@ -383,6 +383,8 @@ def plot(results):
         print("matplotlib not available ({}); CSVs written, no figure".format(e)); return
     fig, ax = plt.subplots(1, 2, figsize=(11, 6.5), sharey=True)
     cols = ["#2a78d6", "#eb6834", "#1baf7a", "#6250d6"]
+    if len(results) > len(cols):                 # a snapshot sequence (d05 ... end): light to dark, one hue
+        cols = [plt.cm.viridis(0.85 - 0.8 * k / (len(results) - 1)) for k in range(len(results))]
     for k, r in enumerate(results):
         c = cols[k % len(cols)]
         ax[0].plot([q["dz_mm"] for q in r["crs"]], [q["y0"] for q in r["crs"]], "o-", ms=3, color=c, label=r["tag"])

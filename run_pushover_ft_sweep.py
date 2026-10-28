@@ -8,13 +8,13 @@ Purpose: choose f_t from a curve instead of a single value. For each f_t in FT_L
      (mat_case.dat's own G_I expression), and it saves Part_I_MASON_v8_LargeStrain_springforce_ft_<tag>.sav;
      mat_case.dat itself is not edited;
   2. builds that save (program call) if it does not exist yet;
-  3. runs pushover_oop_3dec_v5.py POSITIVE only from it (config lines rewritten in memory, as the batch does) into
-     pushover_results_v5_ft_<tag>_TopMason/;
+  3. runs pushover_oop_3dec_v5.py from it in each direction of DIRS (default positive AND negative: all positives first,
+     then all negatives), config lines rewritten in memory as the batch does, into pushover_results_v5_ft_<tag>_TopMason/;
   4. adds a line to ft_sweep/ft_sweep_summary.csv: initial stiffness K_el (|a| m_tot against d over 0.1-1.5 mm, as
      the post-processing), T1 = 2 pi sqrt(L / K_el) with L = 1200 kg, peak |a| m_tot and its displacement,
      the force at 20 / 40 mm. The existing f_t = 0 and f_t = 0.15 positive pushovers are added for reference.
 Everything except f_t is the f_t = 0 build: cohesion 0.2 MPa, same stiffness, joists, loads; the material table for
-new contacts stays tension 0 / cohesion 0. A finished f_t (its pushover_pos.csv exists) is skipped; FORCE redoes it.
+new contacts stays tension 0 / cohesion 0. A finished push (its pushover_<dir>.csv exists) is skipped; FORCE redoes it.
 
 Targets (US-1, corrected base shear of 26 Oct): T1 about 0.091 s, peak about 10.6 kN total (8.7 kN wall part).
 Expected: below about f_t = 0.06 MPa the cracking force stays under the rocking capacity, so the peak should stay
@@ -29,19 +29,24 @@ pushover script; needs the licence):
 import os, re, csv, math, time
 
 # ============================ CONFIG =================================
-DRY_RUN       = False
+DRY_RUN       = True
 FT_LIST       = (0.05e6, 0.075e6, 0.10e6)      # Pa, the builds to make and push
 COHESION      = 0.2e6                          # Pa, kept at the f_t = 0 build's value: f_t is the only change
 TEMPLATE      = "ANALYSIS_PART_I_MASON.dat"    # the f_t = 0 build (saves Part_I_MASON_v8_LargeStrain_springforce)
 TEMPLATE_SAVE = "Part_I_MASON_v8_LargeStrain_springforce"
-PUSHOVER_SCRIPT = "pushover_oop_3dec_v4.py"
-PO_COMMON     = dict(TOP_JOINT="mason", PUSH_DIR=+1)
+PUSHOVER_SCRIPT = "pushover_oop_3dec_v5.py"
+PO_COMMON     = dict(TOP_JOINT="mason")
+DIRS          = (+1, -1)                       # push directions; all positives first, then all negatives
+                                               # (an f_t whose pushover_<dir>.csv exists is skipped per direction)
 FORCE         = []                             # f_t values (Pa) to redo even if their CSV exists
-REFERENCE     = [(0.0, "pushover_results_v5_ft0_masonrypush_TopMason/pushover_pos.csv"),
-                 (0.15e6, "pushover_results_v5_ft0p15_masonrypush_TopMason/pushover_pos.csv")]
+REFERENCE     = [(0.0, "pushover_results_v5_ft0_masonrypush_TopMason"),           # folders; pos and neg read if there
+                 (0.15e6, "pushover_results_v5_ft0p15_masonrypush_TopMason")]
 L_KG          = 1200.0                         # effective mass for T1 (measured mode shape)
 K_EL_RANGE_MM = (0.1, 1.5)
 OUT           = "ft_sweep"
+SAVE_SUFFIX   = ""                             # e.g. "_n" for a SECOND 3DEC session running at the same time: it then
+                                               # writes and builds its own .dat / .sav (same content, other names), so
+                                               # the two sessions never write or read the same build file
 # ======================================================================
 
 try:
@@ -78,7 +83,7 @@ def build_dat(ft):
     if later:
         log("  ! {} assigns {} after the mat_case call: those lines would override the sweep -- check the template".format(
             TEMPLATE, sorted(set(later))))
-    new_save = "{}_ft_{}".format(TEMPLATE_SAVE, tag(ft))
+    new_save = "{}_ft_{}{}".format(TEMPLATE_SAVE, tag(ft), SAVE_SUFFIX)
     over = ("\n; ---- run_pushover_ft_sweep: f_t = {:.3f} MPa, cohesion {:.3f} MPa (overrides mat_case.dat) ----\n"
             "[global tension  = {:g}]\n[global cohesion = {:g}]\n"
             "[global Gt = 0.025*((2*tension*1e-6)^0.7)*1000]\n"
@@ -89,7 +94,7 @@ def build_dat(ft):
     head = ("; ANALYSIS_PART_I_MASON_ft_{t}.dat -- written by run_pushover_ft_sweep.py from {tpl}.\n"
             "; Identical to it except f_t = {ft:.3f} MPa and cohesion {c:.3f} MPa for every joint, and the save name.\n"
             ).format(t=tag(ft), tpl=TEMPLATE, ft=ft / 1e6, c=COHESION / 1e6)
-    dat = "ANALYSIS_PART_I_MASON_ft_{}.dat".format(tag(ft))
+    dat = "ANALYSIS_PART_I_MASON_ft_{}{}.dat".format(tag(ft), SAVE_SUFFIX)
     with open(dat, "w") as f:
         f.write(head + src)
     return dat, new_save
@@ -104,14 +109,14 @@ def patch(src, over):
     return src
 
 
-def pushover_src(save, out_dir, ft):
+def pushover_src(save, out_dir, ft, push_dir):
     with open(PUSHOVER_SCRIPT) as f:
         src = f.read()
-    over = dict(PO_COMMON, RESTORE_SAV=save, OUT_DIR=out_dir, TENSION_MAX_PA=ft + 0.01e6)
+    over = dict(PO_COMMON, RESTORE_SAV=save, OUT_DIR=out_dir, PUSH_DIR=int(push_dir), TENSION_MAX_PA=ft + 0.01e6)
     return patch(src, over), over
 
 
-def summarise(ft, path):
+def summarise(ft, path, direction="pos"):
     if not os.path.isfile(path):
         return None
     head = open(path).readline()
@@ -135,22 +140,22 @@ def summarise(ft, path):
             if d[i - 1] <= x0 <= d[i]:
                 return F[i - 1] + (F[i] - F[i - 1]) * (x0 - d[i - 1]) / (d[i] - d[i - 1] or 1)
         return float("nan")
-    return dict(ft_MPa=ft / 1e6, K_el_kN_per_mm=K, T1_s=T1, F_peak_kN=F[j], d_at_peak_mm=d[j],
+    return dict(ft_MPa=ft / 1e6, dir=direction, K_el_kN_per_mm=K, T1_s=T1, F_peak_kN=F[j], d_at_peak_mm=d[j],
                 F_20mm_kN=at(20.0), F_40mm_kN=at(40.0), d_last_mm=d[-1], n_points=len(rows), csv=path)
 
 
 def write_summary(rows):
-    keys = ["ft_MPa", "K_el_kN_per_mm", "T1_s", "F_peak_kN", "d_at_peak_mm", "F_20mm_kN", "F_40mm_kN", "d_last_mm",
+    keys = ["ft_MPa", "dir", "K_el_kN_per_mm", "T1_s", "F_peak_kN", "d_at_peak_mm", "F_20mm_kN", "F_40mm_kN", "d_last_mm",
             "n_points", "csv"]
     p = os.path.join(OUT, "ft_sweep_summary.csv")
     with open(p, "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=keys); w.writeheader()
-        for r in sorted(rows, key=lambda r: r["ft_MPa"]):
+        for r in sorted(rows, key=lambda r: (r["ft_MPa"], r["dir"] != "pos")):
             w.writerow({k: ("{:.4f}".format(v) if isinstance(v, float) else v) for k, v in r.items()})
     log("summary -> {}".format(p))
-    for r in sorted(rows, key=lambda r: r["ft_MPa"]):
-        log("  f_t {:.3f} MPa: K_el {:.2f} kN/mm, T1 {:.4f} s, peak {:.2f} kN at {:.1f} mm, F(20) {:.2f}, F(40) {:.2f} kN".format(
-            r["ft_MPa"], r["K_el_kN_per_mm"], r["T1_s"], r["F_peak_kN"], r["d_at_peak_mm"], r["F_20mm_kN"], r["F_40mm_kN"]))
+    for r in sorted(rows, key=lambda r: (r["ft_MPa"], r["dir"] != "pos")):
+        log("  f_t {:.3f} MPa {}: K_el {:.2f} kN/mm, T1 {:.4f} s, peak {:.2f} kN at {:.1f} mm, F(20) {:.2f}, F(40) {:.2f} kN".format(
+            r["ft_MPa"], r["dir"], r["K_el_kN_per_mm"], r["T1_s"], r["F_peak_kN"], r["d_at_peak_mm"], r["F_20mm_kN"], r["F_40mm_kN"]))
 
 
 def main():
@@ -161,57 +166,63 @@ def main():
         if not os.path.isfile(f):
             raise RuntimeError("{} not found in {}".format(f, os.getcwd()))
     rows = []
-    for ft in FT_LIST:
-        log("-" * 70)
-        dat, save = build_dat(ft)
-        out_dir = "pushover_results_v5_ft_{}_TopMason".format(tag(ft))
-        csvp = os.path.join(out_dir, "pushover_pos.csv")
-        src, over = pushover_src(save, out_dir, ft)
-        compile(src, PUSHOVER_SCRIPT, "exec")
-        log("f_t {:.3f} MPa: {} -> {}.sav; pushover {}".format(ft / 1e6, dat, save,
-                                                             ", ".join("{}={!r}".format(k, v) for k, v in over.items())))
-        if DRY_RUN:
-            continue
-        if it is None:
-            raise RuntimeError("itasca not available: run inside 3DEC (or DRY_RUN = True)")
-        if os.path.isfile(csvp) and ft not in FORCE:
-            log("  {} exists -- skipped (add {:g} to FORCE to redo)".format(csvp, ft))
-        else:
-            try:
-                if not (os.path.isfile(save) or os.path.isfile(save + ".sav")):
-                    t0 = time.time()
-                    it.command("python-reset-state false")
-                    it.command("program call '{}'".format(dat))
-                    it.command("python-reset-state false")
-                    log("  built {}.sav in {:.1f} min".format(save, (time.time() - t0) / 60))
-                it.command("python-reset-state false")
-                it.command("model restore '{}'".format(save))
-                it.command("python-reset-state false")
-                ftv = float(it.fish.get("tension"))
-                if abs(ftv - ft) > 1.0:
-                    raise RuntimeError("{}.sav holds tension {:.0f} Pa, expected {:.0f}".format(save, ftv, ft))
-                if os.path.isfile(csvp):
-                    os.rename(csvp, csvp.replace(".csv", "_prev_{}.csv".format(time.strftime("%Y%m%d_%H%M%S"))))
-                t0 = time.time()
+    builds = {ft: build_dat(ft) for ft in FT_LIST}
+    for push_dir in DIRS:
+        tagd = "pos" if push_dir > 0 else "neg"
+        for ft in FT_LIST:
+            log("-" * 70)
+            dat, save = builds[ft]
+            out_dir = "pushover_results_v5_ft_{}_TopMason".format(tag(ft))
+            csvp = os.path.join(out_dir, "pushover_{}.csv".format(tagd))
+            src, over = pushover_src(save, out_dir, ft, push_dir)
+            compile(src, PUSHOVER_SCRIPT, "exec")
+            log("f_t {:.3f} MPa, {}: {} -> {}.sav; pushover {}".format(ft / 1e6, tagd.upper(), dat, save,
+                                                                     ", ".join("{}={!r}".format(k, v) for k, v in over.items())))
+            if DRY_RUN:
+                continue
+            if it is None:
+                raise RuntimeError("itasca not available: run inside 3DEC (or DRY_RUN = True)")
+            if os.path.isfile(csvp) and ft not in FORCE:
+                log("  {} exists -- skipped (add {:g} to FORCE to redo)".format(csvp, ft))
+            else:
                 try:
-                    exec(compile(src, PUSHOVER_SCRIPT, "exec"), {"__name__": "__main__", "__file__": os.path.abspath(PUSHOVER_SCRIPT)})
-                except SystemExit:
-                    pass
-                log("  pushover done in {:.1f} min".format((time.time() - t0) / 60))
-            except Exception as e:
-                log("  f_t {:.3f} FAILED: {} -- next one".format(ft / 1e6, e))
-        r = summarise(ft, csvp)
-        if r:
-            rows.append(r)
+                    if not (os.path.isfile(save) or os.path.isfile(save + ".sav")):
+                        t0 = time.time()
+                        it.command("python-reset-state false")
+                        it.command("program call '{}'".format(dat))
+                        it.command("python-reset-state false")
+                        log("  built {}.sav in {:.1f} min".format(save, (time.time() - t0) / 60))
+                    it.command("python-reset-state false")
+                    it.command("model restore '{}'".format(save))
+                    it.command("python-reset-state false")
+                    ftv = float(it.fish.get("tension"))
+                    if abs(ftv - ft) > 1.0:
+                        raise RuntimeError("{}.sav holds tension {:.0f} Pa, expected {:.0f}".format(save, ftv, ft))
+                    if os.path.isfile(csvp):
+                        os.rename(csvp, csvp.replace(".csv", "_prev_{}.csv".format(time.strftime("%Y%m%d_%H%M%S"))))
+                    t0 = time.time()
+                    try:
+                        exec(compile(src, PUSHOVER_SCRIPT, "exec"), {"__name__": "__main__", "__file__": os.path.abspath(PUSHOVER_SCRIPT)})
+                    except SystemExit:
+                        pass
+                    log("  pushover {} done in {:.1f} min".format(tagd, (time.time() - t0) / 60))
+                except Exception as e:
+                    log("  f_t {:.3f} {} FAILED: {} -- next one".format(ft / 1e6, tagd, e))
+            r = summarise(ft, csvp, tagd)
+            if r:
+                rows.append(r)
     if DRY_RUN:
         log("dry run: build files written and the pushover compiles; set DRY_RUN = False to run")
         return
-    for ft, p in REFERENCE:
-        r = summarise(ft, p)
-        if r:
-            rows.append(r)
-        else:
-            log("  reference {} not found -- not in the summary".format(p))
+    for ft, folder in REFERENCE:
+        for push_dir in DIRS:
+            tagd = "pos" if push_dir > 0 else "neg"
+            p = os.path.join(folder, "pushover_{}.csv".format(tagd))
+            r = summarise(ft, p, tagd)
+            if r:
+                rows.append(r)
+            else:
+                log("  reference {} not found -- not in the summary".format(p))
     write_summary(rows)
     log("finished")
 

@@ -98,6 +98,10 @@ def args_():
     p.add_argument("--pushover-neg", default="pushover_results_v5_ft0_masonrypush_TopMason/pushover_neg.csv")
     p.add_argument("--mass-set", default="v3", choices=sorted(MASS_SETS))
     p.add_argument("--loop-runs", default="1,15,18,21,23,24")
+    p.add_argument("--raw-dir", default="EXP_DATA",
+                   help="raw test workbooks (read only) for the measured table velocity in the time-history figure")
+    p.add_argument("--th-runs", default="1,10,15,18,21,23",
+                   help="runs for the displacement time-history figure (fig_stratF_timehistory.png)")
     p.add_argument("--table-dir", default=".", help="folder with the vel_*.txt tables named in strategy_C_log.csv")
     p.add_argument("--out", default="stratF_postproc")
     return p.parse_args()
@@ -309,6 +313,183 @@ def plot_loops(path, variants, tests, loop_runs, bb):
     return True
 
 
+def _onset(t, x, q=0.01):
+    """time at which the cumulative energy of the de-meaned velocity (from x) reaches q (strong-motion start)"""
+    v = np.gradient(np.asarray(x, float), np.asarray(t, float))
+    E = np.cumsum(v ** 2)
+    if E[-1] <= 0:
+        return float(t[0])
+    return float(t[int(np.searchsorted(E / E[-1], q))])
+
+
+def _onset_F(t, F, q=0.01):
+    """strong-motion start from the base shear, as the test windows are defined (cumulative F^2 reaches q)"""
+    F = np.asarray(F, float) - np.median(F[:max(5, len(F) // 50)])
+    E = np.cumsum(F ** 2)
+    if E[-1] <= 0:
+        return float(t[0])
+    return float(t[int(np.searchsorted(E / E[-1], q))])
+
+
+def _align_lag(tm, xm, tt, xt, dt=0.005, max_lag=1.0):
+    """time shift (s) to add to the test time so its displacement best matches the model's (cross-correlation)"""
+    t0, t1 = max(tm[0], tt[0] - max_lag), min(tm[-1], tt[-1] + max_lag)
+    if t1 - t0 < 1.0:
+        return 0.0
+    g = np.arange(min(tm[0], tt[0]), max(tm[-1], tt[-1]), dt)
+    a = np.interp(g, tm, xm, left=0.0, right=0.0); b = np.interp(g, tt, xt, left=0.0, right=0.0)
+    a = a - a.mean(); b = b - b.mean()
+    n = int(max_lag / dt)
+    best, lag = -np.inf, 0
+    for k in range(-n, n + 1):
+        if k >= 0:
+            c = np.dot(a[k:], b[:len(b) - k])
+        else:
+            c = np.dot(a[:k], b[-k:])
+        if c > best:
+            best, lag = c, k
+    return lag * dt
+
+
+_RAWV = {}
+def test_table_velocity(raw_dir, name, n):
+    """measured table velocity (m/s) of a test run: raw channel 12 (table acceleration, g), band-passed 0.1-30 Hz
+    and integrated, on the raw time base (= the processed files' time base). None if the raw file is missing."""
+    key = (raw_dir, name, n)
+    if key in _RAWV:
+        return _RAWV[key]
+    out = None
+    test = "Test9" if name == US1 else "Test12"
+    for fn in ("{}Run{}.xlsx".format(test, n), "{}Run{:02d}.xlsx".format(test, n)):
+        pth = os.path.join(raw_dir, fn)
+        if not os.path.isfile(pth):
+            continue
+        try:
+            import openpyxl
+            from scipy.signal import butter, filtfilt
+            ws = openpyxl.load_workbook(pth, read_only=True, data_only=True).worksheets[0]
+            rows = ws.iter_rows(values_only=True); hdr = [str(h).strip() if h is not None else "" for h in next(rows)]
+            ct, ca = hdr.index("Time"), hdr.index("12")
+            tv = [(r[ct], r[ca]) for r in rows if r and r[ct] is not None and r[ca] is not None]
+            t = np.array([a for a, _ in tv], float); acc = np.array([b for _, b in tv], float) * 9.81
+            fs = 1.0 / float(np.median(np.diff(t)))
+            b, a = butter(2, [0.1 / (0.5 * fs), min(30.0, 0.45 * fs) / (0.5 * fs)], "band")
+            acc = filtfilt(b, a, acc - np.mean(acc))
+            v = np.concatenate([[0.0], np.cumsum(0.5 * (acc[1:] + acc[:-1]) * np.diff(t))])
+            b, a = butter(2, 0.1 / (0.5 * fs), "high"); v = filtfilt(b, a, v)
+            out = (t - t[0], v)
+        except Exception as e:
+            print("! table velocity {} run {}: {}".format(name, n, e))
+        break
+    _RAWV[key] = out
+    return out
+
+
+def model_table_velocity(folder, n):
+    """table velocity the model received: history Channel_12_AccTable (exported as Z velocity, m/s)"""
+    rf = R.run_folder(folder, n)
+    if rf is None:
+        return None
+    t, v = R.find_hist(rf, "Channel_12_AccTable")
+    return (np.asarray(t, float), np.asarray(v, float)) if t is not None else None
+
+
+def input_velocity(table_dir, table_file, scale):
+    """designed input: the record velocity table x the run's scale"""
+    pth = os.path.join(table_dir, table_file) if table_file else ""
+    if not table_file or not os.path.isfile(pth):
+        return None
+    d = np.loadtxt(pth, skiprows=2)
+    return d[:, 0], d[:, 1] * scale
+
+
+def plot_timehistory(path, variants, tests, th_runs, pre=0.5, post=4.0, raw_dir="EXP_DATA", table_dir="."):
+    """relative displacement at 2.06 m against time, model variants and both tests, all re-zeroed at the START OF THE
+    MOTION (t = 0 where 1 % of the run's base-shear energy has arrived -- the definition of the test windows -- so the
+    zero-input lead-in of the model runs and the quiet pre-roll of the test files are cut away). Each test is first put on its own onset, then fine-shifted
+    onto the first model variant by cross-correlating the MEASURED TABLE VELOCITY with the model's table velocity
+    (+-2 s; the table motion is the common input, so the response is not used to align it). Without the raw file the
+    displacement is cross-correlated instead (+-1 s). Window: pre s before the onset to post s after the
+    end of the strong motion (99 % energy), so the free-vibration tail is in view.
+    Over-damping shows as a model tail that dies out faster than the test's; under-damping as one that rings on."""
+    runs = [n for n in th_runs if any(n in V["runs"] for V in variants)]
+    if not runs:
+        return False
+    fig, ax = plt.subplots(2 * len(runs), 1, figsize=(13, 4.4 * len(runs)), dpi=DPI, squeeze=False,
+                           gridspec_kw=dict(height_ratios=[0.75, 1.0] * len(runs)))
+    for k, n in enumerate(runs):
+        av, a = ax[2 * k, 0], ax[2 * k + 1, 0]
+        ref, t_end, vref = None, 0.0, None
+        for j, V in enumerate(variants):
+            r = V["runs"].get(n)
+            if r is None:
+                continue
+            t, x = np.asarray(r["t"], float), np.asarray(r["x"], float) - r["x"][0]
+            if "F" in r:                                # same definition as the test windows: base-shear energy
+                on = _onset_F(r["tF"], r["F"]); t99 = _onset_F(r["tF"], r["F"], q=0.99)
+            else:
+                on = _onset(t, x); t99 = _onset(t, x, q=0.99)
+            tz = t - on
+            t_end = max(t_end, t99 - on)
+            m = (tz >= -pre) & (tz <= t_end + post + 5.0)
+            a.plot(tz[m], x[m], lw=1.4, color=VAR_COLORS[j % len(VAR_COLORS)], alpha=NUM_ALPHA, zorder=2, label=V["label"])
+            mv = model_table_velocity(V["folder"], n)
+            if mv is not None:
+                tv = mv[0] - on; mm = (tv >= -pre) & (tv <= t_end + post + 5.0)
+                av.plot(tv[mm], mv[1][mm], lw=1.4, color=VAR_COLORS[j % len(VAR_COLORS)], alpha=NUM_ALPHA, zorder=3,
+                        label="{} table (achieved)".format(V["label"]))
+                if vref is None:
+                    vref = (tv, mv[1])
+            if ref is None:
+                ref = (tz, x)
+                rec_, sc_ = R.PROT[n]
+                iv = input_velocity(table_dir, r.get("table_file", ""), sc_)
+                if iv is not None:
+                    ti = iv[0] - on
+                    if vref is not None:
+                        ti = ti + _align_lag(vref[0], vref[1], ti, iv[1], max_lag=0.5)
+                    mi = (ti >= -pre) & (ti <= t_end + post + 5.0)
+                    av.plot(ti[mi], iv[1][mi], lw=3.0, color="#B9C0C7", zorder=1,
+                            label="input: {} x {:g}".format(r.get("table_file", ""), sc_))
+        for name in (US1, US2):
+            r = tests[name].get(n)
+            if r is None:
+                continue
+            tt, xt = np.asarray(r["t"], float), np.asarray(r["x"], float) - r["d_start"]
+            i0, i1 = r["win"]                           # base-shear energy 1 % / 99 % (load_test_run)
+            ont = float(tt[i0])
+            tz = tt - ont
+            tvl = test_table_velocity(raw_dir, name, n)
+            if tvl is not None and vref is not None:
+                # align on the TABLE motion (the common excitation): measured table velocity onto the model's
+                lag = _align_lag(vref[0], vref[1], tvl[0] - ont, tvl[1], max_lag=2.0)
+                tz = tz + lag
+            elif ref is not None:
+                tz = tz + _align_lag(ref[0], ref[1], tz, xt)
+            if ref is None:
+                t_end = max(t_end, float(tt[min(i1, len(tt) - 1)]) - ont)
+            m = (tz >= -pre) & (tz <= t_end + post + 5.0)
+            st = TEST_STYLE[name]
+            a.plot(tz[m], xt[m], lw=0.9, ls=st["ls"], color=st["color"], zorder=5, label=st["label"])
+            if tvl is not None:
+                tzv = tvl[0] + (tz[0] - tt[0])          # the displacement's shift (raw and processed share the time base)
+                mv_ = (tzv >= -pre) & (tzv <= t_end + post + 5.0)
+                av.plot(tzv[mv_], tvl[1][mv_], lw=0.9, ls=st["ls"], color=st["color"], zorder=5,
+                        label="{} table (measured)".format(st["label"]))
+        rec, sc = R.PROT[n]
+        for aa in (av, a):
+            aa.set_xlim(-pre, t_end + post)
+            aa.axhline(0, color="#555555", lw=0.5); aa.axvline(0, color="#999999", lw=0.6, ls=":")
+        finish(av, yl="table v (m/s)", title="Run {} - {} x {:.2f}: table velocity".format(n, rec, sc), legend=(k == 0))
+        finish(a, xl="time from the start of the motion (s)" if k == len(runs) - 1 else None, yl="d (mm)",
+               title="Run {}: relative displacement at 2.06 m".format(n), legend=(k == 0))
+    fig.suptitle("Table velocity (input, achieved in the model, measured) and relative displacement at 2.06 m, "
+                 "from the start of the motion",
+                 fontweight="bold")
+    fig.tight_layout(rect=(0, 0, 1, 0.97)); fig.savefig(path, bbox_inches="tight"); plt.close(fig)
+    return True
+
+
 def plot_table(path, variants):
     fig, ax = plt.subplots(3, 1, figsize=(12, 10), dpi=DPI, sharex=True)
     for k, V in enumerate(variants):
@@ -492,11 +673,14 @@ def main():
 
     # ---- figures
     loop_runs = [int(s) for s in a.loop_runs.split(",") if s.strip()]
+    th_runs = [int(s) for s in a.th_runs.split(",") if s.strip()]
     for fn, func in (("fig_stratF_sequence.png", lambda p: plot_sequence(p, variants, tests)),
                      ("fig_stratF_ratios.png", lambda p: plot_ratios(p, variants, tests)),
                      ("fig_stratF_loops.png", lambda p: plot_loops(p, variants, tests, loop_runs, bb)),
                      ("fig_stratF_table.png", lambda p: plot_table(p, variants)),
-                     ("fig_stratF_damping.png", lambda p: plot_damping(p, variants, tests))):
+                     ("fig_stratF_damping.png", lambda p: plot_damping(p, variants, tests)),
+                     ("fig_stratF_timehistory.png", lambda p: plot_timehistory(p, variants, tests, th_runs,
+                                                                                 raw_dir=a.raw_dir, table_dir=a.table_dir))):
         p = os.path.join(a.out, fn)
         if func(p) is not False:
             print("-> " + p)

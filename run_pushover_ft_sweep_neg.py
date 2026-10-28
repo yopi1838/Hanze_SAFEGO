@@ -36,12 +36,12 @@ pushover script; needs the licence):
 import os, re, csv, math, time
 
 # ============================ CONFIG =================================
-DRY_RUN       = False
+DRY_RUN       = True
 FT_LIST       = (0.05e6, 0.075e6, 0.10e6)      # Pa, the builds to make and push
 COHESION      = 0.2e6                          # Pa, kept at the f_t = 0 build's value: f_t is the only change
 TEMPLATE      = "ANALYSIS_PART_I_MASON.dat"    # the f_t = 0 build (saves Part_I_MASON_v8_LargeStrain_springforce)
 TEMPLATE_SAVE = "Part_I_MASON_v8_LargeStrain_springforce"
-PUSHOVER_SCRIPT = "pushover_oop_3dec_v4.py"
+PUSHOVER_SCRIPT = "pushover_oop_3dec_v5.py"
 PO_COMMON     = dict(TOP_JOINT="mason")
 DIRS          = (-1,)                         # push directions; all positives first, then all negatives
                                                # (an f_t whose pushover_<dir>.csv exists is skipped per direction)

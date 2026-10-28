@@ -2,18 +2,20 @@
 ; ANALYSIS_PART_I_MASON_hingeft0.dat -- the v8 large-strain spring-force build (ANALYSIS_PART_I_MASON.dat) with
 ;   * the characterisation joint properties everywhere:  tension 0.344 MPa, cohesion 0.75 MPa
 ;     (G_I from the same Gt expression as mat_case.dat, cohesion-residual 0.1 c)
-;   * the f_t = 0 joint ONLY in the hinge strips:          tension 0, G_I 0, cohesion 0.2 MPa, residual 0.02 MPa
-;       base joint           pos-y -0.01 ... 0.01
-;       upper-floor course   pos-y  2.03 ... 2.25  (bed joints 2.051, 2.110, 2.168, 2.227; head joints of the
-;                                                    pocket course; the upper joist pocket)
-;       top joint            pos-y  2.57 ... 2.59  (masonry - top beam)
+;   * the f_t = 0 joint ONLY at the three hinges:          tension 0, G_I 0, cohesion 0.2 MPa, residual 0.02 MPa
+;       base joint           pos-y -0.01  ... 0.01
+;       ONE bed joint        pos-y  2.105 ... 2.115  (the 2.110 m joint, the one that opened most in the f_t = 0
+;                                                     push; the rigid model's hinge h1 = 2.11 m)
+;       top joint            pos-y  2.57  ... 2.59   (masonry - top beam)
+;     and in both joist pockets (Joist - Masonry), as in the f_t = 0 build: the upper joist (2.052-2.228 m) spans
+;     the 2.110 m joint, so a bonded pocket would tie the two blocks together through the joist.
+;   Alternative (commented out below): the whole upper-floor course 2.03-2.25 m instead of the one joint.
 ; Everything else (geometry, joists, stiffness, supports, loads, histories) is ANALYSIS_PART_I_MASON.dat unchanged.
 ; mat_case.dat is called as before and NOT edited: the two strengths are overridden right after it.
-; The strips are set before the joist-support block, so the Joist - Joist_S2 contact (y 2.052, inside the upper
-; strip) gets its Mohr properties back from the lines that follow, exactly as in the original build.
+; The hinges are set before the joist-support block, so the Joist - Joist_S2 contact (y 2.052, inside the upper
+; course) gets its Mohr properties back from the lines that follow, exactly as in the original build.
 ; FISH 'tension' holds 0.344e6 in this save (the pushover guard: TENSION_MAX_PA >= 0.35e6).
-; Lower joist pockets keep the characterisation joint (bonded); new contacts formed later use the material table
-; (tension 0, cohesion 0), as before.
+; New contacts formed later use the material table (tension 0, cohesion 0), as before.
 ; Output: Part_I_MASON_v8_LargeStrain_springforce_hingeft0.sav
 ; =====================================================================
 model new 
@@ -58,10 +60,14 @@ block contact prop stiffness-normal @kn stiffness-initial @kn  stiffness-shear @
 
 ;HINGE STRIPS: f_t = 0 joint only where the wall hinges (before the supports, see the header)
 block contact prop tension @hinge_tension G_I @hinge_Gt cohesion @hinge_cohesion cohesion-residual [0.1*hinge_cohesion] range pos-y -0.01 0.01
-block contact prop tension @hinge_tension G_I @hinge_Gt cohesion @hinge_cohesion cohesion-residual [0.1*hinge_cohesion] range pos-y 2.03 2.25
+block contact prop tension @hinge_tension G_I @hinge_Gt cohesion @hinge_cohesion cohesion-residual [0.1*hinge_cohesion] range pos-y 2.105 2.115
+;block contact prop tension @hinge_tension G_I @hinge_Gt cohesion @hinge_cohesion cohesion-residual [0.1*hinge_cohesion] range pos-y 2.03 2.25
+block contact prop tension @hinge_tension G_I @hinge_Gt cohesion @hinge_cohesion cohesion-residual [0.1*hinge_cohesion] range group-intersection 'Joist' 'Masonry'
 block contact prop tension @hinge_tension G_I @hinge_Gt cohesion @hinge_cohesion cohesion-residual [0.1*hinge_cohesion] range pos-y 2.57 2.59
 block contact group 'HingeFT0' slot 'hingeft0' range pos-y -0.01 0.01
-block contact group 'HingeFT0' slot 'hingeft0' range pos-y 2.03 2.25
+block contact group 'HingeFT0' slot 'hingeft0' range pos-y 2.105 2.115
+;block contact group 'HingeFT0' slot 'hingeft0' range pos-y 2.03 2.25
+block contact group 'HingeFT0' slot 'hingeft0' range group-intersection 'Joist' 'Masonry'
 block contact group 'HingeFT0' slot 'hingeft0' range pos-y 2.57 2.59
 block contact group 'none' slot 'hingeft0' range group-intersection 'Joist' 'Joist_S1'
 block contact group 'none' slot 'hingeft0' range group-intersection 'Joist' 'Joist_S2'

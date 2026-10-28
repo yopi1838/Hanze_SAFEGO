@@ -86,3 +86,4 @@ desktop.ini
 .codex/
 .presentation_build*/
 node_modules/
+**/_exp_cache.pkl
