@@ -81,6 +81,7 @@ CASES = [   # (key, label, folder, colour, line style)
     ("ft0_zup",       "f_t = 0, mason top, z-up frame", "pushover_results_v5zup_ft0_TopMason", "#111827", ":"),
     # z-up frame, pockets at the test heights (Geo_Prep_zup_pk2.dat): against ft0_zup = the pocket-height effect
     ("ft0_zup_pk2",   "f_t = 0, mason top, z-up, pockets at test heights", "pushover_results_v5zup_pk2_ft0_TopMason", "#0EA5E9", "-"),
+    ("char_zup_pk2",  "char. strengths (0.344 / 0.75 MPa), z-up, pockets at test heights", "pushover_results_v5zup_pk2_char_TopMason", "#B45309", "-"),
 ]
 BILINEAR_JSON = "bilinear_idealisation_ft0p15/bilinear_periods.json"
 BILINEAR_CASE = "ft015_mason"            # the case the bilinear idealisation was made from

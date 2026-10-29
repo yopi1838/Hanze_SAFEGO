@@ -6,6 +6,8 @@ route2_Tm_ihsan_full25_3dec_zup.py -- route2_Tm_ihsan_full25_3dec.py for the Z-U
     * BUILD picks the save, the pushover, the joist-support contact ranges and the joist-probe heights:
         "zup_pk2" : Part_I_MASON_v8_LargeStrain_springforce_zup_pk2 (pockets at the test heights, f_t = 0)
         "zup"     : Part_I_MASON_v8_LargeStrain_springforce_zup     (old pocket heights, f_t = 0)
+        "zup_pk2_char" : Part_I_MASON_v8_LargeStrain_springforce_zup_pk2_char (test pocket heights, characterisation
+                    strengths on every joint: tension 0.344 MPa, cohesion 0.75 MPa; the material of the char Strategy F)
     * table and top-beam drive along Y (was the old z); S freed in Y
     * spring-force check: the vertical (z) component of the T_B applied force (was y)
     * Joist_S1/S2_contact ranges: pos-z (height) / pos-y (OOP)
@@ -111,12 +113,14 @@ except ImportError:
 # ============================ CONFIG =================================
 PREFLIGHT_ONLY = False            # True: targets + tables only, no 3DEC
 
-BUILD        = "zup_pk2"          # "zup_pk2" | "zup"   (see the header)
+BUILD        = "zup_pk2"          # "zup_pk2" | "zup_pk2_char" | "zup"   (see the header)
 _BUILDS = {   # save, pushover folder, joist bottoms Z (support contacts), joist centres Z (slip probes)
     "zup_pk2": ("Part_I_MASON_v8_LargeStrain_springforce_zup_pk2.sav", "pushover_results_v5zup_pk2_ft0_TopMason",
                 (0.23455, 2.11091), (0.32250, 2.19886)),
     "zup":     ("Part_I_MASON_v8_LargeStrain_springforce_zup.sav", "pushover_results_v5zup_ft0_TopMason",
                 (0.29318, 2.05227), (0.38114, 2.14023)),
+    "zup_pk2_char": ("Part_I_MASON_v8_LargeStrain_springforce_zup_pk2_char.sav", "pushover_results_v5zup_pk2_char_TopMason",
+                (0.23455, 2.11091), (0.32250, 2.19886)),
 }
 OUT_DIR      = "r2tm_TpTm_full25_LS_maxwell_" + BUILD
 RESUME_AFTER = 0
