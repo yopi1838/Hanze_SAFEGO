@@ -1,0 +1,250 @@
+; =====================================================================
+; ANALYSIS_PART_I_MASON_zup_pk2.dat -- ANALYSIS_PART_I_MASON_zup.dat (f_t = 0, z-up) on GEO_WALL_zup_pk2:
+;   joists Z 0.23455-0.41045 and 2.11091-2.28682 (test heights; were 0.29318-0.46909, 2.05227-2.22818);
+;   joist supports moved with them (Joist_S1 Z 0.14137-0.23455, Joist_S2 Z 2.01773-2.11091, same 93.2 mm).
+;   The geometry also has no collar joint across the wall in the pocket courses (Geo_Prep_zup_pk2.dat).
+;   Everything else as ANALYSIS_PART_I_MASON_zup.dat. Output: Part_I_MASON_v8_LargeStrain_springforce_zup_pk2.sav
+; =====================================================================
+model new 
+model restore 'GEO_WALL_zup_pk2'
+
+block create brick 0.8882 0.9690 0.105 1.355 0.23455 0.41045 group 'Joist'
+block create brick 0.8882 0.9690 0.105 1.355 2.11091 2.28682 group 'Joist'
+
+block create brick 0.3230 0.4037 0.105 1.355 0.23455 0.41045 group 'Joist'
+block create brick 0.3230 0.4037 0.105 1.355 2.11091 2.28682 group 'Joist'
+
+; 3 meters long
+block create brick 0 1.292 1 1.5 0.14137 0.23455 group 'Joist_S1'
+block create brick 0 1.292 1 1.5 2.01773 2.11091 group 'Joist_S2'
+
+block face triangulate radial-8 range group "Masonry"
+block face triangulate edge-max [0.05] range group "Masonry" not
+
+;MATERIAL PROPERTIES
+block property density 1885 range group "Masonry"
+block property density 7850 range group "S" or "T_B" or "Joist_S1" or "Joist_S2"
+block property density [5510*1.034] range group "Joist"
+
+call 'mat_case.dat'
+;CONTACT PROPERTIES
+block contact generate-subcontacts
+block contact jmodel assign mason_v12
+block contact prop stiffness-normal @kn stiffness-initial @kn  stiffness-shear @ks ...
+    tension @tension cohesion @cohesion friction @friction ...
+    friction-residual @friction cohesion-residual [0.1*cohesion] ...
+    G_I @Gt G_II @Gs G_c @Gc compression @fc_comp ...
+    comp-residual [fc_comp*0.2] Cn [Cn] Cnn [Cnn] Css [Css] peak_ratio [n]
+
+;Timber Support Properties
+block contact jmodel assign mohr range group-intersection 'Joist' 'Joist_S1'
+block contact property stiffness-normal [kn*0.1] stiffness-shear 1 ...
+    tension 1 cohesion 1 friction 1 ...
+    range group-intersection 'Joist' 'Joist_S1'
+
+block contact jmodel assign mohr range group-intersection 'Joist' 'Joist_S2'
+block contact property stiffness-normal [kn*0.1] stiffness-shear 1 ...
+    tension 1 cohesion 1 friction 1 ...
+    range group-intersection 'Joist' 'Joist_S2'
+
+block contact	material-table	default	jmodel mason_v12
+block contact material-table default prop stiffness-normal @kn stiffness-initial @kn ...
+    stiffness-shear @ks tension 0 cohesion 0 friction @friction ...
+    friction-residual @friction cohesion-residual 0 G_I @Gt G_II @Gs ...
+    G_c @Gc compression @fc_comp comp-residual [0] Cn [0] Cnn [1] Css [9] ...
+    peak_ratio [3.0]
+
+;BOUNDARY CONDITIONS
+block fix range group 'S'
+block fix range group 'Joist_S1'
+block fix range group 'Joist_S2'
+
+;HISTORIES
+fish def Record_Disp
+   monitoring_point = block.gp.near(0.644, 0.21, 2.68)
+   monitoring_point_1 = block.gp.near(0.644, 0.21, 0.6)
+   monitoring_point_2 = block.gp.near(0.644, 0.21, 1.26)
+   monitoring_point_3a = block.gp.near(1.184, 0.21, 2.06)
+   monitoring_point_3b = block.gp.near(0.104, 0.21, 2.06)
+   Record_Disp = block.gp.disp.y(monitoring_point)
+   Bot_Quarter_Disp = block.gp.disp.y(monitoring_point_1)
+   Mid_Disp = block.gp.disp.y(monitoring_point_2)
+   Top_Quarter_A_Disp = block.gp.disp.y(monitoring_point_3a)
+   Top_Quarter_B_Disp = block.gp.disp.y(monitoring_point_3b)
+end
+fish history Record_Disp
+fish history Bot_Quarter_Disp
+fish history Mid_Disp
+fish history Top_Quarter_A_Disp
+fish history Top_Quarter_B_Disp
+[Record_Disp]
+
+block apply velocity-x 0 range group 'T_B' 
+block apply velocity-y 0 range group 'T_B'   ; OOP (was velocity-z) 
+
+block initialize rvelocity-z 0 range group 'T_B'   ; rotation about the vertical (was rvelocity-y)
+block initialize rvelocity-y 0 range group 'T_B'   ; rotation about the OOP axis (was rvelocity-z)
+block fix rotation-z range group 'T_B'   ; was rotation-y
+block fix rotation-y range group 'T_B'   ; was rotation-z
+block face group "Comp_apply" range pos-z 2.68
+block hide off
+; "Reaction" (default slot) = base + joist supports, as cstav has always used.
+; The check groups live in their own slot so they do not overwrite "Reaction".
+block contact group "Reaction" range pos-z -0.01 0.01 
+block contact group "Reaction_base" slot "vcheck" range pos-z -0.01 0.01
+block hide range group "Masonry" or "S" or "T_B"
+block contact group "Reaction" range pos-x -1 1
+block contact group "Reaction_joist" slot "vcheck" range pos-x -1 1
+block hide off
+; T_B-masonry contacts (top joint) and masonry-masonry contacts, for the pushover diagnostics
+block contact group "Reaction_topTB" slot "vcheck" range group-intersection 'T_B' 'Masonry'
+block hide range group 'Masonry' not
+block contact group "MasJ" slot "vcheck" range position-x -1 2
+block hide off
+
+fish define contactList
+    local allpts = list(block.contact.list) ; A list of pointers to scalars
+    local check = block.contact.isgroup(::block.contact.list,'Reaction')     
+    ; List of booleans
+    contactList = allpts(check) ; List of scalars in 'surface'    
+end
+@contactList
+fish define cstav
+    contactList
+    local scstav_vec = 0.0
+    ncstav = 0.0
+    ncjdisp = 0.0
+    local scjdisp_vec = 0.0
+    local jarea = 0.0
+    negFlag = 0.0
+    loop foreach cx contactList
+        scx = block.contact.subcontactlist(cx)
+        loop foreach sc scx
+             ; weight by area
+             local area_ = block.subcontact.area(sc)
+             scstav_vec = scstav_vec + block.subcontact.force.shear.y(sc)   ; OOP
+             ncstav = ncstav + block.subcontact.force.norm(sc)
+             ncjdisp = ncjdisp + block.subcontact.disp.norm(sc)*area_
+             scjdisp_vec = scjdisp_vec + block.subcontact.disp.shear.y(sc)*area_   ; OOP
+             jarea = jarea + area_
+        endloop
+    endloop
+    if jarea > 0 then
+        ncstav = ncstav/jarea
+        sstop = 0.0
+        cstav = scstav_vec/1000
+    endif        
+end
+@cstav
+fish history cstav
+fish history ncstav
+
+; ----------------------------------------------------------------------
+; VERTICAL-LOAD CHECK (forces, not stresses)
+; ----------------------------------------------------------------------
+[global spring_total = 10350.0]        ; N, both springs, group's sheet / Table 1
+fish define sum_norm_group(gname, gslot)
+    local f = 0.0
+    loop foreach local cx block.contact.list
+        if block.contact.isgroup(cx, gname, gslot)
+            loop foreach local sc block.contact.subcontactlist(cx)
+                f = f + block.subcontact.force.norm(sc)
+            endloop
+        endif
+    endloop
+    sum_norm_group = f
+end
+fish define mass_group(gname)
+    local m = 0.0
+    loop foreach local b block.list
+        if block.isgroup(b, gname)
+            m = m + block.mass(b)
+        endif
+    endloop
+    mass_group = m
+end
+fish define applied_force_y_group(gname)
+    local f = 0.0
+    loop foreach local b block.list
+        if block.isgroup(b, gname)
+            f = f + comp.z(block.force.app(b))   ; vertical is z (function name kept)
+        endif
+    endloop
+    applied_force_y_group = f
+end
+fish define check_vertical_loads
+    local g0 = 9.81
+    local m_mas = mass_group('Masonry')
+    local m_joi = mass_group('Joist')
+    local m_tb  = mass_group('T_B')
+    local f_app = applied_force_y_group('T_B')          ; should be -spring_total
+    local f_base  = sum_norm_group('Reaction_base',  'vcheck')
+    local f_joist = sum_norm_group('Reaction_joist', 'vcheck')
+    local f_all   = sum_norm_group('Reaction', 'Default')
+    local w_total = g0 * (m_mas + m_joi + m_tb) - f_app  ; weight + applied downward force
+    local joist_into_wall = g0 * m_joi - f_joist
+    local f_base_exp = g0 * (m_mas + m_tb) - f_app + joist_into_wall
+    io.out(' ')
+    io.out('==== VERTICAL LOAD CHECK (forces in N) ====')
+    io.out('masonry mass        = ' + string(m_mas) + ' kg   (sheet: 1340 kg)')
+    io.out('joist mass (4 blk)  = ' + string(m_joi) + ' kg')
+    io.out('T_B mass            = ' + string(m_tb)  + ' kg   [CHECK: steel only, ~213 kg]')
+    io.out('applied force on T_B (vertical, z) = ' + string(f_app) + ' N   [CHECK: -' + string(spring_total) + ']')
+    io.out('weight + applied, all free = ' + string(w_total))
+    io.out('sum force.norm, Reaction (base+joist supports) = ' + string(f_all))
+    if f_all > 0 then
+        io.out('   -> (weight+applied) / Reaction sum         = ' + string(w_total / f_all) + '   [CHECK ~1.00]')
+    else
+        io.out('   -> Reaction group is EMPTY')
+    endif
+    io.out('sum force.norm, base contacts only             = ' + string(f_base))
+    io.out('expected base force                            = ' + string(f_base_exp))
+    if f_base_exp > 0 then
+        io.out('   -> base / expected                          = ' + string(f_base / f_base_exp) + '   [CHECK ~1.00]')
+    endif
+    io.out('base stress = base force / (0.21*1.292)        = ' + string(f_base / (0.21*1.292) / 1e6) + ' MPa   [sheet: 0.1008; density build gave 0.096]')
+    io.out('sum force.norm, joist supports                 = ' + string(f_joist))
+    io.out('joist weight carried by the WALL               = ' + string(joist_into_wall / g0) + ' kg   [density build: 76 kg]')
+    io.out('===========================================')
+end
+fish define nbase_stress
+    local f = 0.0
+    local a = 0.0
+    loop foreach local cx block.contact.list
+        if block.contact.isgroup(cx, 'Reaction_base', 'vcheck')
+            loop foreach local sc block.contact.subcontactlist(cx)
+                f = f + block.subcontact.force.norm(sc)
+                a = a + block.subcontact.area(sc)
+            endloop
+        endif
+    endloop
+    nbase_stress = f / a
+end
+fish history nbase_stress
+model large-strain on
+model gravity 0 0 -9.81
+model solve ratio 1e-6
+[io.out('--- after gravity only (no spring force yet) ---')]
+[check_vertical_loads]
+
+; ----------------------------------------------------------------------
+; SPRING PRECOMPRESSION AS AN APPLIED FORCE ON THE RIGID BEAM
+; Global direction, acts at the centroid: no follower moment (the face
+; traction failed in large strain for that reason) and no added mass
+; (the equivalent density put ~1055 kg of inertia on the beam).
+; ----------------------------------------------------------------------
+fish define apply_spring_force
+    loop foreach local b block.list
+        if block.isgroup(b, 'T_B')
+            block.force.app(b) = vector(0.0, 0.0, -spring_total)
+        endif
+    endloop
+end
+[apply_spring_force]
+block property density 7850 range group 'T_B'
+model solve ratio 5e-8
+[io.out('--- after spring force, settled ---')]
+[check_vertical_loads]
+
+model save 'Part_I_MASON_v8_LargeStrain_springforce_zup_pk2'
+;;call "sinus_wave_analysis.dat"

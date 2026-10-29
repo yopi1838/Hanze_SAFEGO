@@ -1,0 +1,68 @@
+; =====================================================================
+; Geo_Prep_zup_pk2.dat -- Z-UP frame, joist pockets at the TEST heights, split only where a pocket is (29 Oct 2026).
+; FRAME: X in-plane, Y out-of-plane (+Y towards the joists), Z up (Geo_Prep_zup.dat; X = 1.292 - x of the old frame).
+; POCKET HEIGHTS (Moshfeghi et al. 2024, Fig. 5: joist tops 425 mm and 2280 mm above the masonry base), moved one
+;   course each onto existing bed joints, joist depth kept at three courses (175.9 mm, real section not confirmed):
+;     lower pocket  Z 0.23455 - 0.41045   (was 0.29318 - 0.46909)
+;     upper pocket  Z 2.11091 - 2.28682   (was 2.05227 - 2.22818)
+;   plan position and depth as before: X 0.3230-0.4037 and 0.8882-0.9690, Y 0.105-0.210 (joist half).
+; CUT AT Y = 0.105 ONLY IN THE BRICKS A POCKET CUTS INTO. Geo_Prep.dat split the two stretcher courses of each pocket
+;   band across the WHOLE wall (a collar joint the one-brick wall does not have) and the header course near the
+;   pockets. Here the split is limited to the 14 bricks that overlap a pocket, selected course by course (header and
+;   stretcher courses are offset). Checked offline on the brick boxes (centroid range semantics): 14 split, none
+;   missed, none extra; pocket voids exact (0.005966 m3); masonry behind and beside each pocket intact.
+; Output: GEO_WALL_zup_pk2.sav. Build with ANALYSIS_PART_I_MASON_zup_pk2.dat.
+; =====================================================================
+model new
+model config dynamic
+model dynamic active off
+model large-strain off
+
+call 'Groningen_zup.dec'
+
+;SUPPORT BLOCK
+block create brick 0 1.292 0.0 0.210 -0.05 0 group 'S'
+
+;TOP BEAM
+block create brick 0 1.292 0.0 0.210 2.58 2.68 group 'T_B'
+
+; ---- split at Y = 0.105, header courses of the bands (12 bricks per course): the brick over each pocket -----
+block hide
+block hide off range pos-z 0.24 0.29
+block hide off range pos-z 0.36 0.40
+block hide off range pos-z 2.12 2.16
+block hide off range pos-z 2.24 2.28
+block hide range pos-x -1 0.33
+block hide range pos-x 0.42 0.86
+block hide range pos-x 0.97 11
+block cut joint-set dip 90 dip-direction 0 origin 0 0.105 0
+
+; ---- split at Y = 0.105, stretcher courses of the bands (7 bricks): the bricks over each pocket ---------------
+block hide
+block hide off range pos-z 0.30 0.34
+block hide off range pos-z 2.18 2.22
+block hide range pos-x -1 0.33
+block hide range pos-x 0.42 0.76
+block hide range pos-x 1.07 11
+block cut joint-set dip 90 dip-direction 0 origin 0 0.105 0
+
+; ---- remove the pocket volume: bands, joist half (Y > 0.105), between the pocket faces -------------------------
+block hide off
+
+block hide range pos-z -10000 0.2346
+block hide range pos-z 0.4105 2.1109
+block hide range pos-z 2.2869 100000
+
+block hide range pos-y -1 0.105
+
+block cut joint-set dip 90 dip-direction 90 origin 0.9690 0 0
+block cut joint-set dip 90 dip-direction 90 origin 0.8882 0 0
+block delete range pos-x 0.8882 0.9690
+
+block cut joint-set dip 90 dip-direction 90 origin 0.4037 0 0
+block cut joint-set dip 90 dip-direction 90 origin 0.3230 0 0
+block delete range pos-x 0.3230 0.4037
+
+block hide off
+block group "Masonry" range group "S" or "T_B" not
+model save 'GEO_WALL_zup_pk2'
