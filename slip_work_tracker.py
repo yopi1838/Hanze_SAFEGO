@@ -22,6 +22,9 @@ REGIONS (contact groups in slot 'swt', set once at install with the same 'range 
 pushover driver uses; masonry joints are split by height):
     pocket_low   Joist - Masonry, y < 1.3 m            pocket_up   Joist - Masonry, y >= 1.3 m
     support      Joist - Joist_S1 / Joist_S2           base        y in [-0.01, 0.01]
+      (sub-regions: pocket faces top / bot / back / side; support_low / support_up per floor -- see REGIONS below)
+    + rot_* columns: joist and pocket-course rotations per floor and the joist's rotation relative to its pocket
+      (mrad, change since install; see ROT_POINTS)
     top          T_B - Masonry                         new         formed after install (large strain)
     mas_lowfloor masonry joints 0.25-0.55 m            mas_upfloor masonry joints 2.03-2.25 m
     mas_other    every other masonry joint
@@ -41,11 +44,26 @@ import os, math, time
 import itasca as it
 
 REGIONS = ("pocket_low", "pocket_up", "support", "base", "top", "mas_lowfloor", "mas_upfloor", "mas_other", "new",
-           "pocket_low_top", "pocket_low_bot", "pocket_low_side", "pocket_up_top", "pocket_up_bot", "pocket_up_side")
-# the last six are the pocket FACES (also counted in pocket_low / pocket_up): top = ceiling (masonry above the joist),
-# bot = floor, side = the vertical faces. Pocket heights in the build:
+           "pocket_low_top", "pocket_low_bot", "pocket_low_back", "pocket_low_side",
+           "pocket_up_top", "pocket_up_bot", "pocket_up_back", "pocket_up_side",
+           "support_low", "support_up")
+# sub-regions (also counted in their parent): the pocket FACES -- top = ceiling (masonry above the joist), bot = floor,
+# back = the back face the joist end bears on (z = 0.105), side = the two lateral faces; and the joist supports PER
+# FLOOR -- support_low = Joist - Joist_S1 (y 0.29 m), support_up = Joist - Joist_S2 (y 2.05 m). For the supports only
+# N is meaningful (their k_s = 1 Pa/m makes the slip-work columns meaningless).
 POCKET_Y = {"pocket_low": (0.29318, 0.46909), "pocket_up": (2.05227, 2.22818)}
+POCKET_BACK_Z = 0.105
 FACE_TOL = 0.012
+# ROTATIONS (rad -> logged in mrad): slope of the vertical displacement along +z, i.e. positive = the point further out
+# along +z (away from the wall, towards the joist's far support) moves UP. Joist: two gridpoints on its top face, outside
+# the wall (z 0.40 and 1.30); masonry: the pocket course beside the pocket, its two faces (z 0.21 and 0.0). The joist's
+# rotation relative to its pocket = joist - masonry.
+ROT_POINTS = {   # name: ((x, y, z) near, (x, y, z) far)
+    "joist_low": ((0.3634, 0.46909, 0.40), (0.3634, 0.46909, 1.30)),
+    "joist_up":  ((0.3634, 2.22818, 0.40), (0.3634, 2.22818, 1.30)),
+    "mas_low":   ((0.20, 0.38, 0.0), (0.20, 0.38, 0.21)),
+    "mas_up":    ((0.20, 2.14, 0.0), (0.20, 2.14, 0.21)),
+}
 SLOT = "swt"
 Y_POCKET_SPLIT = 1.3
 LOWFLOOR = (0.25, 0.55)
@@ -102,7 +120,7 @@ def _region(sc, installed):
     if g == "swt_pocket":
         return "pocket_low" if y < Y_POCKET_SPLIT else "pocket_up"
     if g == "swt_support":
-        return "support"
+        return "support"            # the floor goes into the sub-region (_sub)
     if g == "swt_base":
         return "base"
     if g == "swt_top":
@@ -118,7 +136,11 @@ def _region(sc, installed):
     return "new" if installed else None
 
 
-def _face(region, y):
+def _sub(region, sc):
+    """sub-region: pocket face, or the floor of a joist support (None otherwise)"""
+    y = float(sc.pos_y())
+    if region == "support":
+        return "support_low" if y < Y_POCKET_SPLIT else "support_up"
     lo, hi = POCKET_Y.get(region, (None, None))
     if lo is None:
         return None
@@ -126,7 +148,58 @@ def _face(region, y):
         return region + "_top"
     if abs(y - lo) < FACE_TOL:
         return region + "_bot"
+    try:
+        if abs(float(sc.pos_z()) - POCKET_BACK_Z) < FACE_TOL:
+            return region + "_back"
+    except Exception:
+        pass
     return region + "_side"
+
+
+_rot_ok = {"ok": None}
+
+
+def define_rotation_fish():
+    """FISH: globals swt_<name>_n / _f (gridpoints) and a function swt_rot that sets swt_phi_<name> (rad)"""
+    lines = ["fish define swt_rot_init"]
+    for k, (a, b) in ROT_POINTS.items():
+        lines.append("    global swt_{}_n = block.gp.near({}, {}, {})".format(k, *a))
+        lines.append("    global swt_{}_f = block.gp.near({}, {}, {})".format(k, *b))
+    lines.append("end")
+    it.command("\n".join(lines))
+    it.command("[swt_rot_init]")
+    lines = ["fish define swt_rot"]
+    for k in ROT_POINTS:
+        lines.append("    global swt_phi_{k} = (block.gp.disp.y(swt_{k}_f) - block.gp.disp.y(swt_{k}_n)) / "
+                     "(block.gp.pos.z(swt_{k}_f) - block.gp.pos.z(swt_{k}_n))".format(k=k))
+    lines.append("end")
+    it.command("\n".join(lines))
+
+
+def rotations():
+    """dict name -> rotation (mrad), plus rel_low / rel_up = joist - masonry; nan if the FISH is not available"""
+    out = dict((k, float("nan")) for k in list(ROT_POINTS) + ["rel_low", "rel_up"])
+    if _rot_ok["ok"] is False:
+        return out
+    try:
+        if _rot_ok["ok"] is None:
+            define_rotation_fish()
+            pos = []
+            for k in ROT_POINTS:
+                for e in ("n", "f"):
+                    it.command("[global _swt_q = block.gp.pos(swt_{}_{})]".format(k, e))
+                    pos.append("{}_{} {}".format(k, e, it.fish.get("_swt_q")))
+            print("[slip_work_tracker] rotation gridpoints: " + "; ".join(pos))
+            _rot_ok["ok"] = True
+        it.command("[swt_rot]")
+        for k in ROT_POINTS:
+            out[k] = float(it.fish.get("swt_phi_" + k)) * 1e3
+        out["rel_low"] = out["joist_low"] - out["mas_low"]
+        out["rel_up"] = out["joist_up"] - out["mas_up"]
+    except Exception as e:
+        print("[slip_work_tracker] WARNING: rotations not available ({}); columns stay nan".format(e))
+        _rot_ok["ok"] = False
+    return out
 
 
 def _ksA(sc):
@@ -149,6 +222,7 @@ def _snapshot(sc):
 def install(csv_path, note=""):
     global _csv, _t0
     _S.clear(); _acc.clear(); _sign["pos"] = _sign["neg"] = 0.0
+    _acc.clear()
     for r in REGIONS:
         _acc[r] = dict(W=0.0, gone=0.0, E0=0.0)
     _set_groups()
@@ -158,9 +232,12 @@ def install(csv_path, note=""):
         if r is None:
             continue
         F, u = _snapshot(sc)
-        _S[sc.id()] = [r, F[0], F[1], F[2], u[0], u[1], u[2], _ksA(sc), 0.0, _face(r, float(sc.pos_y()))]
+        _S[sc.id()] = [r, F[0], F[1], F[2], u[0], u[1], u[2], _ksA(sc), 0.0, _sub(r, sc)]
         n += 1
-    cols = ["time_s", "tag", "d_ctrl_mm", "sign"]
+    _rot_ok["ok"] = None
+    rot0 = rotations()
+    _acc["_rot0"] = rot0
+    cols = ["time_s", "tag", "d_ctrl_mm", "sign"] + ["rot_{}_mrad".format(k) for k in rot0]
     for r in REGIONS:
         cols += [r + "_Wslip_J", r + "_Wshear_J", r + "_Eel_J", r + "_N_kN", r + "_n", r + "_path_max_mm"]
     d = os.path.dirname(csv_path)
@@ -201,7 +278,7 @@ def update(d_ctrl_mm=float("nan"), tag="chunk"):
             if r is None:
                 continue
             F, u = _snapshot(sc)
-            st = _S[i] = [r, F[0], F[1], F[2], u[0], u[1], u[2], _ksA(sc), 0.0, _face(r, float(sc.pos_y()))]
+            st = _S[i] = [r, F[0], F[1], F[2], u[0], u[1], u[2], _ksA(sc), 0.0, _sub(r, sc)]
         r = st[0]
         F, u = _snapshot(sc)
         du = (u[0] - st[4], u[1] - st[5], u[2] - st[6])
@@ -237,6 +314,8 @@ def update(d_ctrl_mm=float("nan"), tag="chunk"):
                     _acc[k]["gone"] += f ** 2 / (2.0 * st[7])
     s = 1.0 if _sign["pos"] > _sign["neg"] else -1.0         # no evidence yet: -1 (3DEC, confirmed by the probe)
     row = ["{:.1f}".format(time.time() - _t0), tag, "{:.4f}".format(d_ctrl_mm), "{:+.0f}".format(s)]
+    rot = rotations()                                         # change since install (mrad)
+    row += ["{:.4f}".format(rot[k] - _acc["_rot0"].get(k, 0.0)) for k in rot]
     for r in REGIONS:
         Wsh = s * _acc[r]["W"]
         row += ["{:.4f}".format(Wsh - (E[r] - _acc[r]["E0"])), "{:.4f}".format(Wsh), "{:.4f}".format(E[r]),
