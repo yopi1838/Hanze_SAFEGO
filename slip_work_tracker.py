@@ -12,7 +12,7 @@ WHAT IT ACCUMULATES, per subcontact, between two updates (old -> new):
          (elastic loading) F_mid . du must be positive in the right convention; s = sign of that sum.
     W_shear (region) = sum dW                                total shear work done on the contacts (J)
     E_el (region)    = sum |F|^2 / (2 k_s A)                 shear energy stored elastically NOW (J), k_s = stiffness-shear
-    W_slip           = W_shear - E_el                        dissipated by slip (friction / softening) (J)
+    W_slip           = W_shear - (E_el - E_el at install)    dissipated by slip since install (friction / softening) (J)
   and, at each update, per region: N = sum of the normal forces (kN), the number of live subcontacts, and the largest
   accumulated shear-path length of a subcontact (mm).
   Subcontacts that disappear (large strain) keep what they accumulated; their last elastic energy is counted as
@@ -40,7 +40,12 @@ Accuracy: midpoint rule per update interval; exact for monotonic slip between up
 import os, math, time
 import itasca as it
 
-REGIONS = ("pocket_low", "pocket_up", "support", "base", "top", "mas_lowfloor", "mas_upfloor", "mas_other", "new")
+REGIONS = ("pocket_low", "pocket_up", "support", "base", "top", "mas_lowfloor", "mas_upfloor", "mas_other", "new",
+           "pocket_low_top", "pocket_low_bot", "pocket_low_side", "pocket_up_top", "pocket_up_bot", "pocket_up_side")
+# the last six are the pocket FACES (also counted in pocket_low / pocket_up): top = ceiling (masonry above the joist),
+# bot = floor, side = the vertical faces. Pocket heights in the build:
+POCKET_Y = {"pocket_low": (0.29318, 0.46909), "pocket_up": (2.05227, 2.22818)}
+FACE_TOL = 0.012
 SLOT = "swt"
 Y_POCKET_SPLIT = 1.3
 LOWFLOOR = (0.25, 0.55)
@@ -113,6 +118,17 @@ def _region(sc, installed):
     return "new" if installed else None
 
 
+def _face(region, y):
+    lo, hi = POCKET_Y.get(region, (None, None))
+    if lo is None:
+        return None
+    if abs(y - hi) < FACE_TOL:
+        return region + "_top"
+    if abs(y - lo) < FACE_TOL:
+        return region + "_bot"
+    return region + "_side"
+
+
 def _ksA(sc):
     try:
         ks = float(sc.prop("stiffness-shear"))
@@ -134,7 +150,7 @@ def install(csv_path, note=""):
     global _csv, _t0
     _S.clear(); _acc.clear(); _sign["pos"] = _sign["neg"] = 0.0
     for r in REGIONS:
-        _acc[r] = dict(W=0.0, gone=0.0)
+        _acc[r] = dict(W=0.0, gone=0.0, E0=0.0)
     _set_groups()
     n = 0
     for sc in it.block.subcontact.list():
@@ -142,7 +158,7 @@ def install(csv_path, note=""):
         if r is None:
             continue
         F, u = _snapshot(sc)
-        _S[sc.id()] = [r, F[0], F[1], F[2], u[0], u[1], u[2], _ksA(sc), 0.0]
+        _S[sc.id()] = [r, F[0], F[1], F[2], u[0], u[1], u[2], _ksA(sc), 0.0, _face(r, float(sc.pos_y()))]
         n += 1
     cols = ["time_s", "tag", "d_ctrl_mm", "sign"]
     for r in REGIONS:
@@ -157,7 +173,11 @@ def install(csv_path, note=""):
     _t0 = time.time()
     counts = {}
     for v in _S.values():
-        counts[v[0]] = counts.get(v[0], 0) + 1
+        for k in (v[0], v[9]):
+            if k:
+                counts[k] = counts.get(k, 0) + 1
+                if v[7]:
+                    _acc[k]["E0"] += (v[1] ** 2 + v[2] ** 2 + v[3] ** 2) / (2.0 * v[7])
     print("[slip_work_tracker] installed: {} subcontacts; per region {}; k_s read {} / failed {}".format(
         n, counts, _ks_ok["n"], _ks_ok["fail"]))
     if counts.get("pocket_low", 0) == 0:
@@ -181,7 +201,7 @@ def update(d_ctrl_mm=float("nan"), tag="chunk"):
             if r is None:
                 continue
             F, u = _snapshot(sc)
-            st = _S[i] = [r, F[0], F[1], F[2], u[0], u[1], u[2], _ksA(sc), 0.0]
+            st = _S[i] = [r, F[0], F[1], F[2], u[0], u[1], u[2], _ksA(sc), 0.0, _face(r, float(sc.pos_y()))]
         r = st[0]
         F, u = _snapshot(sc)
         du = (u[0] - st[4], u[1] - st[5], u[2] - st[6])
@@ -191,29 +211,35 @@ def update(d_ctrl_mm=float("nan"), tag="chunk"):
         f_new = math.sqrt(F[0] ** 2 + F[1] ** 2 + F[2] ** 2)
         if f_new > 1.01 * f_old and f_new > 1.0:            # elastic loading -> sign convention
             _sign["pos" if dw > 0 else "neg"] += abs(dw)
-        _acc[r]["W"] += dw
         st[8] += math.sqrt(du[0] ** 2 + du[1] ** 2 + du[2] ** 2)
         st[1], st[2], st[3], st[4], st[5], st[6] = F[0], F[1], F[2], u[0], u[1], u[2]
         live.add(i)
-        cnt[r] += 1
         try:
-            N[r] += float(sc.force_norm())
+            fn = float(sc.force_norm())
         except Exception:
-            pass
-        if st[7]:
-            E[r] += f_new ** 2 / (2.0 * st[7])
-        if st[8] > pmax[r]:
-            pmax[r] = st[8]
+            fn = 0.0
+        for k in (r, st[9]):
+            if not k:
+                continue
+            _acc[k]["W"] += dw
+            cnt[k] += 1
+            N[k] += fn
+            if st[7]:
+                E[k] += f_new ** 2 / (2.0 * st[7])
+            if st[8] > pmax[k]:
+                pmax[k] = st[8]
     for i in [k for k in _S if k not in live]:               # subcontacts that disappeared
         st = _S.pop(i)
         if st[7]:
             f = math.sqrt(st[1] ** 2 + st[2] ** 2 + st[3] ** 2)
-            _acc[st[0]]["gone"] += f ** 2 / (2.0 * st[7])
-    s = 1.0 if _sign["pos"] >= _sign["neg"] else -1.0
+            for k in (st[0], st[9]):
+                if k:
+                    _acc[k]["gone"] += f ** 2 / (2.0 * st[7])
+    s = 1.0 if _sign["pos"] > _sign["neg"] else -1.0         # no evidence yet: -1 (3DEC, confirmed by the probe)
     row = ["{:.1f}".format(time.time() - _t0), tag, "{:.4f}".format(d_ctrl_mm), "{:+.0f}".format(s)]
     for r in REGIONS:
         Wsh = s * _acc[r]["W"]
-        row += ["{:.4f}".format(Wsh - E[r]), "{:.4f}".format(Wsh), "{:.4f}".format(E[r]),
+        row += ["{:.4f}".format(Wsh - (E[r] - _acc[r]["E0"])), "{:.4f}".format(Wsh), "{:.4f}".format(E[r]),
                 "{:.4f}".format(N[r] / 1e3), str(cnt[r]), "{:.4f}".format(pmax[r] * 1e3)]
     _csv.write(",".join(row) + "\n"); _csv.flush()
 

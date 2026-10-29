@@ -4,7 +4,8 @@ postprocess_slipwork.py -- slip work per contact region (run_pushover_slipwork.p
 
 Reads <DIR>/slipwork_pos.csv and slipwork_neg.csv (slip_work_tracker.py) and draws, per direction:
     (a) slip work per region vs the sensor displacement (J)
-    (b) the lower pocket's clamp: sum of its normal forces (kN) vs d, with the model's N
+    (b) the lower pocket's clamp: normal force on its ceiling, floor, back and sides (kN) vs d, with the model's N;
+        and, from the 29 Oct tracker on, the far-support load of each floor (the joist lever's reaction)
         (rigid_two_block_vw.pocket_clamp_N: about 23.4 kN pushed towards the joists, 0 the other way)
     (c) the lower pocket's slip work vs d, with the model's mu N (0.088 m) |dphi(d)| for the 0 and 0.30 m pivots
 Writes slipwork_summary.csv (values at 20 / 40 / 80 mm) and fig_slipwork.png into DIR.
@@ -23,8 +24,9 @@ M_TOT, SPRING_KN, TB_KG = 1308.3, 10.35, 212.986
 REGIONS  = [("pocket_low", "lower pocket", "#0F766E"), ("pocket_up", "upper pocket", "#14B8A6"),
             ("mas_lowfloor", "joints 0.25-0.55 m", "#2B5F8A"), ("mas_upfloor", "joints 2.03-2.25 m (hinge)", "#7C3AED"),
             ("base", "base joint", "#CA8A04"), ("top", "top joint", "#DC2626"),
-            ("mas_other", "other joints", "#9CA3AF"), ("support", "joist supports (shear only)", "#6B7280"),
-            ("new", "contacts formed later", "#DB2777")]
+            ("mas_other", "other joints", "#9CA3AF"), ("new", "contacts formed later", "#DB2777")]
+# NOT drawn or summed: 'support'. The joist supports have stiffness-shear 1 Pa/m, so |F|^2 / (2 k_s A) is meaningless
+# there (10^7 J); their slip work is not measurable this way (and their drag acts through normal forces anyway).
 INK, GRID = "#1f2937", "#e5e7eb"
 
 
@@ -38,6 +40,13 @@ def read(path):
     if out:
         out["tag"] = np.array([r["tag"] for r in rows])
         out["d"] = np.abs(out["d_ctrl_mm"])
+        # slip work since install, recomputed from the logged columns: W_shear - (E_el - E_el at the first row).
+        # Same as the tracker's own column from 28 Oct 15:50 on; corrects the earlier tracker, which subtracted the
+        # full E_el (including what gravity had stored before install).
+        for k in list(out):
+            if k.endswith("_Wshear_J"):
+                r = k[:-len("_Wshear_J")]
+                out[r + "_Wslip_J"] = out[k] - (out[r + "_Eel_J"] - out[r + "_Eel_J"][0])
     return out
 
 
@@ -87,11 +96,25 @@ def main():
             N, mod = model_curves(side)
         except Exception as e:
             print("  ! mechanical model not drawn: {}".format(e)); N, mod = None, {}
-        ax_b.plot(d, c["pocket_low_N_kN"][o], color="#0F766E", lw=1.8, label="DEM: lower pocket, sum of normal forces")
-        ax_b.plot(d, c["pocket_up_N_kN"][o], color="#14B8A6", lw=1.2, label="DEM: upper pocket")
+        if "pocket_low_top_N_kN" in c:           # faces (tracker of 28 Oct 15:50 on)
+            ax_b.plot(d, c["pocket_low_top_N_kN"][o], color="#0F766E", lw=2.0, label="DEM: lower pocket, ceiling (top face)")
+            ax_b.plot(d, c["pocket_low_bot_N_kN"][o], color="#0F766E", lw=1.4, ls="--", label="DEM: lower pocket, floor")
+            ax_b.plot(d, c["pocket_low_side_N_kN"][o], color="#0F766E", lw=1.0, ls=":", label="DEM: lower pocket, side faces")
+            ax_b.plot(d, c["pocket_up_top_N_kN"][o], color="#14B8A6", lw=1.2, label="DEM: upper pocket, ceiling")
+            if "pocket_low_back_N_kN" in c:      # joist end and per-floor far supports (tracker of 29 Oct on)
+                ax_b.plot(d, c["pocket_low_back_N_kN"][o], color="#0F766E", lw=1.0, ls="-.", label="DEM: lower pocket, back face (joist end)")
+            if "support_low_N_kN" in c:
+                ax_b.plot(d, c["support_low_N_kN"][o], color="#CA8A04", lw=1.4, label="DEM: far support, lower floor")
+                ax_b.plot(d, c["support_up_N_kN"][o], color="#CA8A04", lw=1.0, ls="--", label="DEM: far support, upper floor")
+        else:
+            ax_b.plot(d, c["pocket_low_N_kN"][o], color="#0F766E", lw=1.8, label="DEM: lower pocket, all faces")
+            ax_b.plot(d, c["pocket_up_N_kN"][o], color="#14B8A6", lw=1.2, label="DEM: upper pocket, all faces")
         if N is not None:
             ax_b.axhline(N, color=INK, ls=":", lw=1.4, label="model clamp N = {:.1f} kN".format(N))
-        ax_c.plot(d, c["pocket_low_Wslip_J"][o], color="#0F766E", lw=2.0, label="DEM: lower pocket slip work")
+        ax_c.plot(d, c["pocket_low_Wslip_J"][o], color="#0F766E", lw=2.0, label="DEM: lower pocket slip work, all faces")
+        if "pocket_low_top_Wslip_J" in c:
+            ax_c.plot(d, c["pocket_low_top_Wslip_J"][o], color="#0F766E", lw=1.2, ls="-.", label="DEM: ceiling only")
+            ax_c.plot(d, c["pocket_low_bot_Wslip_J"][o], color="#0F766E", lw=1.2, ls="--", label="DEM: floor only")
         for yb, ls in ((0.0, "--"), (0.30, "-")):
             if yb in mod:
                 ax_c.plot(mod[yb][0], mod[yb][1], color=INK, ls=ls, lw=1.2,
@@ -99,6 +122,11 @@ def main():
         for x in (20, 40, 80):
             if d.size and x <= d.max():
                 r = dict(branch=br, d_mm=x, pocket_low_N_kN=float(np.interp(x, d, c["pocket_low_N_kN"][o])))
+                for f in ("top", "bot", "side"):
+                    k = "pocket_low_{}_N_kN".format(f)
+                    if k in c:
+                        r[k] = float(np.interp(x, d, c[k][o]))
+                        r["pocket_low_{}_Wslip_J".format(f)] = float(np.interp(x, d, c["pocket_low_{}_Wslip_J".format(f)][o]))
                 for key, _, _ in REGIONS:
                     r[key + "_Wslip_J"] = float(np.interp(x, d, c[key + "_Wslip_J"][o]))
                 for yb in mod:
@@ -125,9 +153,10 @@ def main():
             for r in summ:
                 w.writerow([round(r[k], 3) if isinstance(r.get(k), float) else r.get(k, "") for k in keys])
         for r in summ:
-            print("{} {:3d} mm: lower pocket N {:6.2f} kN, W {:7.1f} J (model {}) | upper pocket {:6.1f} J | hinge course "
+            print("{} {:3d} mm: lower pocket N {:6.2f} kN (ceiling {}), W {:7.1f} J (model {}) | upper pocket {:6.1f} J | hinge course "
                   "{:6.1f} J | base {:6.1f} J | top {:6.1f} J".format(
-                      r["branch"], r["d_mm"], r["pocket_low_N_kN"], r["pocket_low_Wslip_J"],
+                      r["branch"], r["d_mm"], r["pocket_low_N_kN"],
+                      "{:.2f}".format(r["pocket_low_top_N_kN"]) if "pocket_low_top_N_kN" in r else "-", r["pocket_low_Wslip_J"],
                       " / ".join("{:.1f}".format(r[k]) for k in r if k.startswith("model_")) or "-",
                       r["pocket_up_Wslip_J"], r["mas_upfloor_Wslip_J"], r["base_Wslip_J"], r["top_Wslip_J"]))
     print("-> {}".format(os.path.join(DIR, "fig_slipwork.png")))
