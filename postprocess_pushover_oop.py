@@ -77,6 +77,8 @@ CASES = [   # (key, label, folder, colour, line style)
     ("ft0p05_mason",  "f_t = 0.05 MPa, mason top",  "pushover_results_v5_ft_0p050_TopMason", "#16A34A", "-"),
     ("ft0p075_mason", "f_t = 0.075 MPa, mason top", "pushover_results_v5_ft_0p075_TopMason", "#CA8A04", "-"),
     ("ft0p10_mason",  "f_t = 0.10 MPa, mason top",  "pushover_results_v5_ft_0p100_TopMason", "#DC2626", "-"),
+    # z-up frame (pushover_oop_3dec_v5_zup.py on ..._springforce_zup): must lie on "f_t = 0, mason top"
+    ("ft0_zup",       "f_t = 0, mason top, z-up frame", "pushover_results_v5zup_ft0_TopMason", "#111827", ":"),
 ]
 BILINEAR_JSON = "bilinear_idealisation_ft0p15/bilinear_periods.json"
 BILINEAR_CASE = "ft015_mason"            # the case the bilinear idealisation was made from
