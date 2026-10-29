@@ -1,0 +1,65 @@
+; =====================================================================
+; Geo_Prep_zup.dat -- Geo_Prep.dat in the Z-UP frame (29 Oct 2026). Same wall, same pockets (old heights).
+; FRAME (old -> new), a proper rotation, so faces keep their orientation and +Y is still "towards the joists":
+;     X = 1.292 - x   in-plane (mirrored along the wall: the two pockets swap places, the wall is symmetric)
+;     Y = z           out-of-plane (joist side +Y)
+;     Z = y           vertical (up)
+; 3DEC's dip / dip-direction are z-up: 'dip 0' is a horizontal plane, 'dip 90 dip-direction 0' a vertical plane
+; normal to Y, 'dip 90 dip-direction 90' a vertical plane normal to X.
+;   old plane z = 0.105 (dip 0)            -> Y = 0.105 (dip 90 dip-direction 0)
+;   old planes x = 0.3230 / 0.4038         -> X = 0.9690 / 0.8882
+;   old planes x = 0.8883 / 0.9690         -> X = 0.4037 / 0.3230
+; Output: GEO_WALL_zup.sav. Build with ANALYSIS_PART_I_MASON_zup.dat.
+; =====================================================================
+model new
+model config dynamic
+model dynamic active off
+model large-strain off
+
+call 'Groningen_zup.dec'
+
+;SUPPORT BLOCK
+block create brick 0 1.292 0.0 0.210 -0.05 0 group 'S'
+
+;TOP BEAM
+block create brick 0 1.292 0.0 0.210 2.58 2.68 group 'T_B'
+
+block hide range pos-z -10000 0.2932
+block hide range pos-z 0.4691 2.0523
+block hide range pos-z 2.2282 100000
+
+block hide range pos-z 0.35 0.40
+block hide range pos-z 2.10 2.16
+
+block cut joint-set dip 90 dip-direction 0 origin 0 0.105 0
+
+block hide
+
+block hide off range pos-z 0.35 0.40
+block hide off range pos-z 2.10 2.16
+
+; Geo_Prep.dat kept x in [0.32, 0.43] and [0.85, 0.96] visible -> mirrored X in [0.862, 0.972] and [0.332, 0.442]
+block hide pos-x -1 0.332
+block hide pos-x 0.972 11
+block hide pos-x 0.442 0.862
+block cut joint-set dip 90 dip-direction 0 origin 0 0.105 0
+
+block hide off
+
+block hide range pos-z -10000 0.2932
+block hide range pos-z 0.4691 2.0523
+block hide range pos-z 2.2282 100000
+
+block hide range pos-y -1 0.105
+
+block cut joint-set dip 90 dip-direction 90 origin 0.9690 0 0
+block cut joint-set dip 90 dip-direction 90 origin 0.8882 0 0
+block delete range pos-x 0.8882 0.9690
+
+block cut joint-set dip 90 dip-direction 90 origin 0.4037 0 0
+block cut joint-set dip 90 dip-direction 90 origin 0.3230 0 0
+block delete range pos-x 0.3230 0.4037
+
+block hide off
+block group "Masonry" range group "S" or "T_B" not
+model save 'GEO_WALL_zup'

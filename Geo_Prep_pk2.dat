@@ -1,0 +1,63 @@
+; =====================================================================
+; Geo_Prep_pk2.dat -- Geo_Prep.dat with the joist pockets at the TEST heights (29 Oct 2026).
+; Moshfeghi et al. (2024), Structures 66, 106815, Fig. 5: joist tops 425 mm and 425 + 1855 = 2280 mm above the masonry
+; base. Pockets moved one course each, on existing bed joints of Groningen.dec (course pitch 58.64 mm), joist depth
+; kept at three courses (175.9 mm; the real section is not confirmed):
+;     lower pocket  y 0.23455 - 0.41045   (courses 4-6; was 0.29318 - 0.46909)   top 15 mm below the test's 425
+;     upper pocket  y 2.11091 - 2.28682   (courses 36-38; was 2.05227 - 2.22818) top  7 mm above the test's 2280
+; Pocket plan position and depth unchanged: x 0.3230-0.4038 and 0.8883-0.9690, z 0.105-0.210 (half the thickness,
+; joist side).
+; The second z = 0.105 cut is applied to EVERY course of each band near the pockets. Geo_Prep.dat applied it to the
+; middle course only, which in the old bands was the header course (12 bricks); the new bands hold two header courses
+; each (4 and 6, 36 and 38). Where a block is already split the cut does nothing.
+; Output: GEO_WALL_pk2.sav (GEO_WALL.sav is not touched). Build with ANALYSIS_PART_I_MASON_pk2.dat.
+; =====================================================================
+model new
+model config dynamic
+model dynamic active off
+model large-strain off
+
+call 'Groningen.dec'
+
+;SUPPORT BLOCK
+block create brick 0 1.292 -0.05 0 0.0 0.210 group 'S'
+
+;TOP BEAM
+block create brick 0 1.292 2.58 2.68 0.0 0.210 group 'T_B'
+
+; ---- pocket bands visible only -------------------------------------------------------------
+block hide range pos-y -10000 0.2346
+block hide range pos-y 0.4105 2.1109
+block hide range pos-y 2.2869 100000
+
+block cut joint-set dip 0 dip-direction 0 origin 0 0 0.105
+
+; ---- second cut at z = 0.105: every course of both bands, near the pockets only -------------
+block hide
+block hide off range pos-y 0.2346 0.4105
+block hide off range pos-y 2.1109 2.2869
+block hide pos-x 0 0.32
+block hide pos-x 0.96 11
+block hide pos-x 0.43 0.85
+block cut joint-set dip 0 dip-direction 0 origin 0 0 0.105
+
+; ---- remove the pocket volume: bands, joist half (z > 0.105), between the pocket faces -------
+block hide off
+
+block hide range pos-y -10000 0.2346
+block hide range pos-y 0.4105 2.1109
+block hide range pos-y 2.2869 100000
+
+block hide range pos-z -1 0.105
+
+block cut joint-set dip 90 dip-direction 90 origin 0.3230 0 0
+block cut joint-set dip 90 dip-direction 90 origin 0.4038 0 0
+block delete range pos-x 0.3230 0.4038
+
+block cut joint-set dip 90 dip-direction 90 origin 0.8883 0 0
+block cut joint-set dip 90 dip-direction 90 origin 0.9690 0 0
+block delete range pos-x 0.8883 0.9690
+
+block hide off
+block group "Masonry" range group "S" or "T_B" not
+model save 'GEO_WALL_pk2'
