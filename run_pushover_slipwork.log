@@ -8,3 +8,10 @@
 [15:39:36] ft0p05 dir +1: Part_I_MASON_v8_LargeStrain_springforce_ft_0p050 -> pushover_results_v5_ft_0p050_TopMason_slipwork_probe (driver pushover_oop_3dec_v4.py, patched and compiled)
 [15:42:06]   done in 2.5 min -> pushover_results_v5_ft_0p050_TopMason_slipwork_probe
 [15:42:06] finished
+[15:59:11] ======================================================================
+[15:59:11] run_pushover_slipwork  MODE run
+[15:59:11] ft0p05 dir +1: Part_I_MASON_v8_LargeStrain_springforce_ft_0p050 -> pushover_results_v5_ft_0p050_TopMason_slipwork (driver pushover_oop_3dec_v4.py, patched and compiled)
+[23:26:05]   done in 446.9 min -> pushover_results_v5_ft_0p050_TopMason_slipwork
+[23:26:05] ft0p05 dir -1: Part_I_MASON_v8_LargeStrain_springforce_ft_0p050_n -> pushover_results_v5_ft_0p050_TopMason_slipwork (driver pushover_oop_3dec_v4.py, patched and compiled)
+[05:59:18]   done in 393.2 min -> pushover_results_v5_ft_0p050_TopMason_slipwork
+[05:59:18] finished
