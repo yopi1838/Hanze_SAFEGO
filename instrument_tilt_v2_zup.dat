@@ -1,0 +1,251 @@
+; instrument_tilt_v2_zup.dat -- instrument_tilt_v2.dat for the Z-UP frame (29 Oct 2026), called by
+;   instrument_history_new_zup.dat. Positions (x, y, z) -> (1.292 - x, z, y), OOP .z -> .y. The variable names
+;   keep their old meaning (bot_sensor_y, incl_y_*, jy_* = HEIGHT, now Z; z_face, jz_probe = OOP, now Y).
+;   Joist probes at the zup_pk2 joists (test pocket heights): lower Z 0.23455-0.41045, upper 2.11091-2.28682.
+;   For the old-pocket z-up build set [jy_lower = 0.38114] [jy_upper = 2.14023] after calling (the Route 2 zup
+;   driver does this from its POCKET_Z setting).
+; =====================================================================
+; TILT INSTRUMENTATION v2  --  experiment-matched
+; =====================================================================
+; Call this AFTER instrument_history_new.dat. It adds tilt channels
+; whose definitions match the physical instrumentation, and leaves the
+; original tilt_* channels untouched so old comparisons still work.
+;
+; WHY THIS EXISTS
+; ---------------
+; Two different quantities were both being called "tilt":
+;
+;   (1) CHORD TILT     - derived from displacement transducers, i.e.
+;                        atan(dz_top / height). This is what
+;                        exp_Test9_tilt.csv / exp_Test12_tilt.csv hold.
+;                        The original FISH tilt_* channels are this.
+;
+;   (2) LOCAL ROTATION - what the inclinometer ("sensor 18",
+;                        exp_US1_tiltmeter.csv) measures. Its settled value
+;                        cannot be the wall's chord rotation: 2.77 deg over
+;                        the 2.06 m chord would be 99 mm of permanent top
+;                        displacement, while the absolute transducer records
+;                        -1.18 mm. It must therefore be a LOCAL rotation --
+;                        but of what, exactly, is NOT documented in the data
+;                        available here. The tiltmeter does not appear in
+;                        Test9_Info.xlsx or Test12_Info.xlsx.
+;
+; These differ by roughly two orders of magnitude in the US-1 data
+; (run 21: chord tilt -0.029 deg, inclinometer +2.768 deg), so the model
+; must output BOTH or the comparison is meaningless. It previously
+; output only (1) and it was being plotted against (2).
+;
+; Note also that the raw inclinometer PEAK values are unusable. The device
+; is gravity-referenced (its logger file carries 3-axis accelerometer packs
+; whose resting vector is constant at 16750 counts, 16745 of it on z), so
+; during shaking it reads horizontal acceleration as apparent tilt; and both
+; its tilt channel (+/-25.75 deg) and its accelerometers (+/-1.96 g) clip in
+; the strong runs. Only the settled/quiet-window value is a rotation.
+; See tilt_experiment_match.py and MODELLING_DISCREPANCIES.md section 1.
+;
+; WHAT CHANGES vs instrument_history_new.dat
+; ------------------------------------------
+;   a) d_top is the MEAN of the two top quarter points (x=0.106 and
+;      x=1.186), matching the experiment, which averages channels 3
+;      and 4. The original used the centreline gridpoint (x=0.646).
+;      On the existing v6 run set this changes results by <0.6% -- the
+;      wall spans one-way, so the centreline barely bulges relative to
+;      the quarter chord -- but it removes a definitional objection.
+;   b) The bottom sensor elevation is a variable, because it differs
+;      between specimens: 0.66 m for US-1 (Test 9), 0.60 m for US-2
+;      (Test 12). The original hard-coded 0.66, so every model-vs-US-2
+;      segment-tilt comparison was using the wrong chord.
+;   c) Adds tilt_local_incl, the rotation of the instrumented unit.
+;
+; SET THESE BEFORE CALLING
+; ------------------------
+;   [bot_sensor_y]  0.66 to compare against US-1, 0.60 against US-2
+;   [incl_y_lo] / [incl_y_hi]  the extent of whatever the inclinometer is
+;                    mounted on. THESE ARE PLACEHOLDERS AND CANNOT BE
+;                    VERIFIED FROM THE DATA IN THIS REPO -- the tiltmeter is
+;                    absent from Test9_Info.xlsx and Test12_Info.xlsx.
+;                    Recover the mounting from the test report, the
+;                    instrumentation photographs, or the lab before trusting
+;                    tilt_local_incl. A wrong height gives a plausible but
+;                    wrong number, which is worse than no number.
+; =====================================================================
+
+[bot_sensor_y = 0.66]      ; 0.66 = US-1 (Test 9) ; 0.60 = US-2 (Test 12)
+[incl_y_lo    = 2.33]      ; Table 3 of the paper puts the tiltmeter (sensor 18) at
+[incl_y_hi    = 2.53]      ; X=0, Z=2.43 m. This 0.20 m chord (~3 courses) is centred on
+                           ; it and is the LOCAL rotation to compare against
+                           ; exp_US{1,2}_tiltmeter.csv settled values. The existing
+                           ; tilt_beam_seg (2.06 -> 2.68) also brackets 2.43 and is a
+                           ; usable coarser proxy.
+[x_centre     = 0.646]
+[x_qleft      = 1.186]     ; = Channel_3 X (z-up: X = 1.292 - x)
+[x_qright     = 0.106]     ; = Channel_4 X
+[z_face       = 0.21]
+
+fish define tilt_exp_match
+    ; ---- reference points -------------------------------------------
+    ; Table reference. The wall transducers are frame-mounted, so they
+    ; already read wall-relative-to-table; subtracting the table
+    ; gridpoint here reproduces that.
+    local gp_table = block.gp.near(x_centre, z_face, 0.00)
+    local gp_bot   = block.gp.near(x_centre, z_face, bot_sensor_y)
+    local gp_mid   = block.gp.near(x_centre, z_face, 1.26)
+    ; top: MEAN of the two quarter points, as the experiment does
+    local gp_tl    = block.gp.near(x_qleft, z_face, 2.06)
+    local gp_tr    = block.gp.near(x_qright, z_face, 2.06)
+    local gp_beam  = block.gp.near(x_centre, z_face, 2.68)
+
+    local dz_table = block.gp.disp.y(gp_table)
+    local dz_bot   = block.gp.disp.y(gp_bot)
+    local dz_mid   = block.gp.disp.y(gp_mid)
+    local dz_top   = 0.5 * (block.gp.disp.y(gp_tl) + block.gp.disp.y(gp_tr))
+    local dz_beam  = block.gp.disp.y(gp_beam)
+
+    local rad2deg  = 180.0 / math.pi
+
+    ; ---- chord tilts, experiment definition --------------------------
+    tiltx_bot_seg   = math.atan((dz_bot  - dz_table) / bot_sensor_y)        * rad2deg
+    tiltx_low_seg   = math.atan((dz_mid  - dz_bot)   / (1.26 - bot_sensor_y)) * rad2deg
+    tiltx_up_seg    = math.atan((dz_top  - dz_mid)   / 0.80)               * rad2deg
+    tiltx_beam_seg  = math.atan((dz_beam - dz_top)   / 0.62)               * rad2deg
+    tiltx_full_wall = math.atan((dz_top  - dz_table) / 2.06)               * rad2deg
+
+    ; ---- relative top displacement, experiment definition ------------
+    ; mean of Ch3/Ch4 minus table, in mm
+    rel_disp_top_exp_mm = (dz_top - dz_table) * 1000.0
+
+    ; ---- LOCAL rotation of the instrumented unit ---------------------
+    ; This is the counterpart of the bonded inclinometer. It is a chord
+    ; INSIDE one masonry unit, so it captures the unit's own rotation
+    ; rather than the wall's overall lean. Compare its settled value to
+    ; residual_deg in exp_US1_tiltmeter.csv / exp_US2_tiltmeter.csv --
+    ; never to the inclinometer's peak columns.
+    local gp_il = block.gp.near(x_centre, z_face, incl_y_lo)
+    local gp_ih = block.gp.near(x_centre, z_face, incl_y_hi)
+    local dz_il = block.gp.disp.y(gp_il)
+    local dz_ih = block.gp.disp.y(gp_ih)
+    tilt_local_incl = math.atan((dz_ih - dz_il) / (incl_y_hi - incl_y_lo)) * rad2deg
+
+    ; ---- diagnostic: how much does the centreline bulge? --------------
+    ; centreline minus quarter-point mean at the top, in mm. If this
+    ; grows, the wall has started spanning two-way and the single-chord
+    ; tilt definition is no longer adequate for either model or test.
+    local gp_tc  = block.gp.near(x_centre, z_face, 2.06)
+    bulge_top_mm = (block.gp.disp.y(gp_tc) - dz_top) * 1000.0
+
+    ; Return a value so this function can itself be registered as a history.
+    ; See the note by the registration block below -- without that, none of
+    ; the variables assigned above ever update during stepping.
+    tilt_exp_match = rel_disp_top_exp_mm
+end
+
+@tilt_exp_match
+
+; ---------------------------------------------------------------------
+; Register the histories. Indices continue after the 16 already used by
+; instrument_history_new.dat, so nothing is renumbered.
+; NOTE: instrument_history_export_new.dat exports FISH histories BY
+; NUMERIC INDEX. If you add these, extend that export file to match, or
+; they will simply not be written out.
+; ---------------------------------------------------------------------
+fish history tiltx_bot_seg          ;17
+fish history tiltx_low_seg          ;18
+fish history tiltx_up_seg           ;19
+fish history tiltx_beam_seg         ;20
+fish history tiltx_full_wall        ;21
+fish history rel_disp_top_exp_mm    ;22
+fish history tilt_local_incl        ;23
+fish history bulge_top_mm           ;24
+; ---------------------------------------------------------------------
+; Index 25 is what makes 17-24 live.
+; A `fish history` on a VARIABLE only samples that variable; it does not
+; re-run the function that assigns it. Because tilt_exp_match was invoked
+; once via @tilt_exp_match above and never registered, histories 17-24 were
+; frozen at their registration values for the whole run -- verified on
+; NODAMP_v8 run 24, where rel_disp_top_exp_mm held the single value
+; 1.090493 across all 8461 samples.
+; instrument_history_new.dat gets this right by registering the FUNCTION
+; tilt_angles as index 10, ahead of the variables it feeds, which is why
+; tilt_full_wall and rel_disp_top_mm do update.
+; Appended rather than inserted so no existing export index shifts. The
+; cost is that 17-24 report the previous evaluation, i.e. a lag of one
+; sampling interval (~0.4 ms), which is negligible here.
+; ---------------------------------------------------------------------
+fish history tilt_exp_match         ;25
+
+; =====================================================================
+; JOIST POCKET SLIP  (indices 26-31)
+; =====================================================================
+; WHY. Moshfeghi et al. (2024) section 3.3 reports, for the UNSTRENGTHENED
+; specimens:
+;
+;   "the joists slipped towards the positive direction (i.e. far from the wall
+;    surface) 8 to 12 mm cumulatively at the end of all the tests, which means
+;    that the joists are not able to pull the wall totally in the positive
+;    direction when the inertia of the slabs acting as horizontal force."
+;
+; and describes the bow ties of ST-2-HB as connecting "otherwise sliding timber
+; joists to the wall", changing the mechanism "completely by fully coupling
+; joists to the wall".
+;
+; That 8-12 mm is a MEASURED quantity the model can be scored against, and it
+; is independent of both the displacement and the period comparisons. It turns
+; the pocket friction angle from an assumption into something calibrated: near
+; zero cumulative slip means the pocket is still too tight, tens of mm means it
+; is too loose.
+;
+; DEFINITION
+;   slip(t) = dz(joist block, well outside the wall) - dz(wall at the same
+;             elevation, on the centreline)
+;
+; The joist reference point sits at z = 0.70 m, which is beyond the wall's
+; 0.21 m thickness, so block.near() cannot resolve onto masonry. The wall
+; reference is the centreline at the joist's own elevation, so the quantity is
+; joist-relative-to-wall rather than joist-relative-to-table.
+;
+; SIGN: +z points away from the wall face, on the floor side, so a POSITIVE
+; value is the joist withdrawing from its pocket -- the same sense as the
+; paper's "positive direction (i.e. far from the wall surface)".
+;
+; CUMULATIVE, not per-run: 3DEC block displacements are not reset between runs,
+; so the value at the end of run N is the slip accumulated since Part I. In
+; postprocess_stratC.py the `residual` column of these channels is therefore
+; the cumulative slip, directly comparable to the paper's 8-12 mm. The `peak`
+; column is the within-run excursion and is a different quantity.
+
+[jx_left      = 0.9286]    ; joist centre, X 0.8882-0.9690 (old x 0.364)
+[jx_right     = 0.3634]    ; joist centre, X 0.3230-0.4037 (old x 0.929)
+[jy_lower     = 0.32250]   ; lower joists, Z 0.23455-0.41045 (zup_pk2)
+[jy_upper     = 2.19886]   ; upper joists, Z 2.11091-2.28682 (zup_pk2)
+[jz_probe     = 0.70]      ; Y inside the joist, clear of the wall (t = 0.21 m)
+
+fish define joist_slip_probe
+    local wall_lo = block.gp.disp.y(block.gp.near(x_centre, z_face, jy_lower))
+    local wall_up = block.gp.disp.y(block.gp.near(x_centre, z_face, jy_upper))
+
+    joist_slip_L1 = (block.disp.y(block.near(jx_left, jz_probe, jy_lower)) - wall_lo) * 1000.0
+    joist_slip_L2 = (block.disp.y(block.near(jx_right, jz_probe, jy_lower)) - wall_lo) * 1000.0
+    joist_slip_U1 = (block.disp.y(block.near(jx_left, jz_probe, jy_upper)) - wall_up) * 1000.0
+    joist_slip_U2 = (block.disp.y(block.near(jx_right, jz_probe, jy_upper)) - wall_up) * 1000.0
+
+    local a = math.abs(joist_slip_L1)
+    local b = math.abs(joist_slip_L2)
+    local c = math.abs(joist_slip_U1)
+    local d = math.abs(joist_slip_U2)
+    joist_slip_max = math.max(math.max(a, b), math.max(c, d))
+
+    joist_slip_probe = joist_slip_max
+end
+
+@joist_slip_probe
+
+; The FUNCTION is registered FIRST so the variables below actually update.
+; A `fish history` on a VARIABLE only samples it; it does not re-run the
+; function that assigns it. Indices 17-24 above were frozen for a whole run set
+; for exactly this reason -- see the note at index 25.
+fish history joist_slip_probe        ;26
+fish history joist_slip_L1           ;27
+fish history joist_slip_L2           ;28
+fish history joist_slip_U1           ;29
+fish history joist_slip_U2           ;30
+fish history joist_slip_max          ;31
