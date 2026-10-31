@@ -1,0 +1,28 @@
+branch,model,F_at_mm,pivot0_kN,pivot030_kN
+pos,mech. rigid model,20,8.545,10.164
+pos,mech. rigid model,40,7.135,8.513
+pos,mech. rigid model,80,4.337,5.234
+pos,mech. + pocket friction + elastic branch,20,9.945,12.003
+pos,mech. + pocket friction + elastic branch,40,8.54,10.354
+pos,mech. + pocket friction + elastic branch,80,5.752,7.078
+pos,"DEM old frame, old pockets",20,10.461,
+pos,"DEM old frame, old pockets",40,9.775,
+pos,"DEM old frame, old pockets",80,6.901,
+pos,"DEM z-up, old pockets",20,11.157,
+pos,"DEM z-up, old pockets",40,10.83,
+pos,"DEM z-up, old pockets",80,7.616,
+pos,"DEM z-up, pockets at test heights (pk2)",20,11.122,
+pos,"DEM z-up, pockets at test heights (pk2)",40,10.159,
+pos,"DEM z-up, pockets at test heights (pk2)",80,6.145,
+neg,mech. rigid model,20,8.441,10.053
+neg,mech. rigid model,40,7.031,8.403
+neg,mech. rigid model,80,4.234,5.125
+neg,mech. + elastic branch (no pocket clamp this way),20,8.441,10.053
+neg,mech. + elastic branch (no pocket clamp this way),40,7.031,8.403
+neg,mech. + elastic branch (no pocket clamp this way),80,4.234,5.125
+neg,"DEM old frame, old pockets",20,10.232,
+neg,"DEM old frame, old pockets",40,9.511,
+neg,"DEM old frame, old pockets",80,6.282,
+neg,"DEM z-up, pockets at test heights (pk2)",20,10.678,
+neg,"DEM z-up, pockets at test heights (pk2)",40,9.854,
+neg,"DEM z-up, pockets at test heights (pk2)",80,6.093,

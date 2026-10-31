@@ -8,6 +8,10 @@ route2_Tm_ihsan_full25_3dec_zup.py -- route2_Tm_ihsan_full25_3dec.py for the Z-U
         "zup"     : Part_I_MASON_v8_LargeStrain_springforce_zup     (old pocket heights, f_t = 0)
         "zup_pk2_char" : Part_I_MASON_v8_LargeStrain_springforce_zup_pk2_char (test pocket heights, characterisation
                     strengths on every joint: tension 0.344 MPa, cohesion 0.75 MPa; the material of the char Strategy F)
+        "zup_pk2_ft0p05" : Part_I_MASON_v8_LargeStrain_springforce_zup_pk2_ft0p05 (test pocket heights, f_t = 0.05 MPa,
+                    cohesion 0.2 MPa on every joint: the f_t sweep's 0.05 build on the pk2 geometry)
+    * DAMP_PCT picks the Maxwell set (the optimised 1-25 Hz sets of the Strategy F runners); default 5 %, the level whose
+      equivalent damping matched the tests' elastic runs (Strategy F char 5 %, runs 1-3: 5.5-6.0 % vs 3.4-8.6 %).
     * table and top-beam drive along Y (was the old z); S freed in Y
     * spring-force check: the vertical (z) component of the T_B applied force (was y)
     * Joist_S1/S2_contact ranges: pos-z (height) / pos-y (OOP)
@@ -113,7 +117,8 @@ except ImportError:
 # ============================ CONFIG =================================
 PREFLIGHT_ONLY = False            # True: targets + tables only, no 3DEC
 
-BUILD        = "zup_pk2"          # "zup_pk2" | "zup_pk2_char" | "zup"   (see the header)
+BUILD        = "zup_pk2_ft0p05"   # "zup_pk2_ft0p05" | "zup_pk2" | "zup_pk2_char" | "zup"   (see the header)
+DAMP_PCT     = 5.0                # Maxwell damping (%): a key of MAXWELL_SETS below
 _BUILDS = {   # save, pushover folder, joist bottoms Z (support contacts), joist centres Z (slip probes)
     "zup_pk2": ("Part_I_MASON_v8_LargeStrain_springforce_zup_pk2.sav", "pushover_results_v5zup_pk2_ft0_TopMason",
                 (0.23455, 2.11091), (0.32250, 2.19886)),
@@ -121,8 +126,10 @@ _BUILDS = {   # save, pushover folder, joist bottoms Z (support contacts), joist
                 (0.29318, 2.05227), (0.38114, 2.14023)),
     "zup_pk2_char": ("Part_I_MASON_v8_LargeStrain_springforce_zup_pk2_char.sav", "pushover_results_v5zup_pk2_char_TopMason",
                 (0.23455, 2.11091), (0.32250, 2.19886)),
+    "zup_pk2_ft0p05": ("Part_I_MASON_v8_LargeStrain_springforce_zup_pk2_ft0p05.sav", "pushover_results_v5zup_pk2_ft0p05_TopMason",
+                (0.23455, 2.11091), (0.32250, 2.19886)),
 }
-OUT_DIR      = "r2tm_TpTm_full25_LS_maxwell_" + BUILD
+OUT_DIR      = "r2tm_TpTm_full25_LS_MAXWELL{:02d}_{}".format(int(round(DAMP_PCT * 10)), BUILD)   # e.g. r2tm_TpTm_full25_LS_MAXWELL50_zup_pk2_ft0p05
 RESUME_AFTER = 0
 RESUME_SAVE  = ""
 STOP_AFTER   = 25
@@ -166,9 +173,11 @@ LEAK_MAX      = 1.25
 
 # ---- model -----------------------------------------------------------------------------
 LARGE_STRAIN   = True
-MAXWELL_CMD    = "block mech damp maxwell 0.0112 1.0005 0.0081 7.4315 0.0096 25.0004"   # 1.5 % flat 1-25 Hz
-# MAXWELL_CMD  = "block mech damp maxwell 0.0224 1.0005 0.0162 7.4315 0.0192 25.0004"   # 3 %  (fractions x 2, check on the free tails)
-# MAXWELL_CMD  = "block mech damp maxwell 0.0373 1.0005 0.0270 7.4315 0.0320 25.0004"   # 5 %  (fractions x 3.33, check on the free tails)
+MAXWELL_SETS   = {                # optimised 1-25 Hz sets (ratio, freq) x 3, as run_stratf_char_mx15_tr.py
+    1.5: (0.0112, 1.0005, 0.0081, 7.4315, 0.0096, 25.0004),
+    5.0: (0.0388, 1.0008, 0.0230, 5.4866, 0.0473, 24.9990),
+}
+MAXWELL_CMD    = "block mech damp maxwell {:.4f} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}".format(*MAXWELL_SETS[DAMP_PCT])
 DRIVE_GROUPS   = ["S", "T_B"]
 SPRING_FORCE_N = 10350.0
 # ---- build integrity: this driver never assigns joint properties -----------------------------------------------
@@ -235,7 +244,7 @@ def read_backbone(path, m_push=None):
     """|d|, |F| of a pushover CSV ('#' lines skipped), monotone in |d| (unloading / repeated rows dropped).
     Works for either push direction: the signs of d and F are discarded. Rows with converged == 0 (the runaway
     step that ends the force-controlled ascent) are skipped."""
-    rows = [r for r in open(path) if r.strip() and not r.lstrip().startswith("#")]
+    rows = [r for r in open(path) if r.strip() and not r.lstrip().lstrip('"').startswith("#")]   # z-up CSVs: '"# ...' (quoted comment)
     d, F = [], []
     for r in csv.DictReader(rows):
         if str(r.get("converged", "1")).strip() in ("0", "0.0", "False", "false"):

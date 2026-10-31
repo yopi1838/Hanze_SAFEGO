@@ -332,7 +332,7 @@ HEADER = ["phase", "a_mps2", "d_ctrl_mm", "F_base_kN", "F_top_kN", "F_tot_kN",
 def flush():
     with open(csv_path, "w", newline="") as f:
         w = csv.writer(f)
-        w.writerow(["# push: applied force a*m on masonry only (block.force.app y, zup frame); gravity vertical; "
+        w.writerow(["# push: applied force a*m on masonry only (block.force.app y; zup frame); gravity vertical; "
                     "m_tot {:.1f} kg; save {}; top joint {}".format(m_tot, RESTORE_SAV, TOP_JOINT)])
         w.writerow(HEADER); w.writerows(rows)
 

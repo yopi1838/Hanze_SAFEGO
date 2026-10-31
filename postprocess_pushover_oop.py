@@ -82,6 +82,7 @@ CASES = [   # (key, label, folder, colour, line style)
     # z-up frame, pockets at the test heights (Geo_Prep_zup_pk2.dat): against ft0_zup = the pocket-height effect
     ("ft0_zup_pk2",   "f_t = 0, mason top, z-up, pockets at test heights", "pushover_results_v5zup_pk2_ft0_TopMason", "#0EA5E9", "-"),
     ("char_zup_pk2",  "char. strengths (0.344 / 0.75 MPa), z-up, pockets at test heights", "pushover_results_v5zup_pk2_char_TopMason", "#B45309", "-"),
+    ("ft005_zup_pk2", "f_t = 0.05 MPa, mason top, z-up, pockets at test heights", "pushover_results_v5zup_pk2_ft0p05_TopMason", "#16A34A", "--"),
 ]
 BILINEAR_JSON = "bilinear_idealisation_ft0p15/bilinear_periods.json"
 BILINEAR_CASE = "ft015_mason"            # the case the bilinear idealisation was made from
@@ -138,8 +139,10 @@ def read_v5(path):
         return None
     with open(path) as f:
         lines = f.readlines()
-    head = " ".join(l for l in lines if l.lstrip().startswith("#"))
-    rows = list(csv.DictReader(io.StringIO("".join(l for l in lines if l.strip() and not l.lstrip().startswith("#")))))
+    # comment lines start with '#'; the z-up driver's comment holds a comma, so csv quoted it: '"# ...'
+    iscom = lambda l: l.lstrip().lstrip('"').startswith("#")
+    head = " ".join(l for l in lines if iscom(l))
+    rows = list(csv.DictReader(io.StringIO("".join(l for l in lines if l.strip() and not iscom(l)))))
     if not rows:
         return None
     m_tot = M_TOT_DEFAULT
@@ -151,7 +154,7 @@ def read_v5(path):
     meta = {}
     for key in ("save", "top joint"):
         if key in head:
-            meta[key] = head.split(key, 1)[1].split(";")[0].strip()
+            meta[key] = head.split(key, 1)[1].split(";")[0].strip().strip('"').strip()
 
     def col(name, default=np.nan):
         out = []
