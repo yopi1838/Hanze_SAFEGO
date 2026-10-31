@@ -1,0 +1,7 @@
+[14:35:56] ======================================================================
+[14:35:56] run_pushover_zup_pk2_queue  MODE run
+[14:35:56] zup_pk2 +: Part_I_MASON_v8_LargeStrain_springforce_zup_pk2 -> pushover_results_v5zup_pk2_ft0_TopMason\pushover_pos.csv
+[23:27:53]   done in 532.0 min
+[23:27:53] zup_pk2 -: Part_I_MASON_v8_LargeStrain_springforce_zup_pk2 -> pushover_results_v5zup_pk2_ft0_TopMason\pushover_neg.csv
+[06:04:55]   done in 397.0 min
+[06:04:55] finished
