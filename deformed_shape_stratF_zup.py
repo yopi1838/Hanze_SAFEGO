@@ -56,6 +56,7 @@ RUN_DIR  = "stratF_full_LS_MAXWELL50_zup_pk2_ft0p05_tr"                 # the St
 REF_SAV  = "Part_I_MASON_v8_LargeStrain_springforce_zup_pk2_ft0p05"      # the save the run started from
 RUNS     = None            # None = every stratC_run_NN.sav found in RUN_DIR; or a list, e.g. [12, 17, 18, 19, 20, 21]
 OUT_DIR  = os.path.join(RUN_DIR, "deformed_shape")
+DMG      = "tension"     # set in main() from DAMAGE_PROP
 REDUMP   = False           # True: dump again even when _dump_<tag>.log exists
 EXTRA_PROPS = ["stiffness-initial"]   # further joint-model properties / state variables to dump, probed first
 
@@ -65,7 +66,9 @@ FLOOR_Z       = (0.32250, 2.19886)    # m, joist centres of the pk2 build (drawn
 FLOOR_SPLIT_Z = 1.26       # m, pockets below = lower floor
 OPEN_MM       = 0.01       # a subcontact counts as open above this residual opening
 HINGE_MM      = 0.5        # residual opening that flags a hinge on its own
-DAMAGED_RATIO = 0.5        # damaged subcontact: tension property < this x the build tension
+DAMAGE_PROP   = "auto"     # property that carries the joint damage: "tension", "stiffness-normal", or "auto" (tension
+                           # if any bed joint's tension ever changes, else stiffness-normal -- MASON degrades kn, 2 Nov)
+DAMAGED_RATIO = 0.5        # damaged subcontact: DAMAGE_PROP < this x its build value
 HINGE_DMG_FRAC = 0.5       # damaged area fraction that flags a hinge
 COURSE_GAP    = 0.02       # m, centroid-height gap that separates two courses / two joints
 BED_NZ_MIN    = 0.8        # |normal_z| above this = bed joint
@@ -392,6 +395,7 @@ def post(tag, run_no, ref_blocks, bv, blocks, subs, P):
     # ---- joints ----
     ft = bv.get("tension", float("nan")); kn = bv.get("kn", float("nan"))
     has_t = any("tension" in s for s in subs)
+    dref = ft if DMG == "tension" else kn
 
     def joint_stats(sub, label):
         A = sum(s["area"] for s in sub) or 1.0
@@ -404,19 +408,20 @@ def post(tag, run_no, ref_blocks, bv, blocks, subs, P):
         r = dict(run=run_no, kind=label, z0=zc, n_sub=len(sub), max_open_mm=smax["un"] * 1e3, open_frac=Aop / A,
                  open_face=("" if not op else ("+Y" if yw > 0 else "-Y")), N_kN=-sum(s["fn"] for s in sub) / 1e3)
         if has_t and ft == ft:
-            isnew = lambda s: s.get("tension", 1) == 0.0 and s.get("cohesion", 1) == 0.0 and ft > 0
-            new = [s for s in sub if isnew(s)]
-            old = [s for s in sub if not isnew(s)]
+            iszero = lambda s: s.get("tension", 1) == 0.0 and s.get("cohesion", 1) == 0.0 and ft > 0
+            zero = [s for s in sub if iszero(s)]
+            old = [s for s in sub if not iszero(s)]
             Ao = sum(s["area"] for s in old) or 1.0
-            if ft > 0:
-                dmg = [s for s in old if s["tension"] < DAMAGED_RATIO * ft]
+            if dref == dref and dref > 0 and old and DMG in old[0]:
+                dmg = [s for s in old if s[DMG] < DAMAGED_RATIO * dref]
                 r["dmg_frac"] = sum(s["area"] for s in dmg) / Ao
-                r["t_ratio_mean"] = sum(s["tension"] * s["area"] for s in old) / Ao / ft
             else:
-                r["dmg_frac"] = float("nan"); r["t_ratio_mean"] = float("nan")
-            r["n_new"] = len(new)
-            if "stiffness-normal" in sub[0] and kn == kn and kn > 0:
-                r["kn_ratio_min"] = min(s["stiffness-normal"] for s in old) / kn if old else float("nan")
+                r["dmg_frac"] = float("nan")
+            r["t_ratio_mean"] = (sum(s["tension"] * s["area"] for s in old) / Ao / ft) if (ft > 0 and old) else float("nan")
+            r["n_zero"] = len(zero)
+            if "stiffness-normal" in sub[0] and kn == kn and kn > 0 and old:
+                r["kn_ratio_min"] = min(s["stiffness-normal"] for s in old) / kn
+                r["kn_ratio_mean"] = sum(s["stiffness-normal"] * s["area"] for s in old) / Ao / kn
         return r
 
     mj = [s for s in subs if s["g"] == "MasJ"]
@@ -445,19 +450,19 @@ def post(tag, run_no, ref_blocks, bv, blocks, subs, P):
         w = csv.DictWriter(f, fieldnames=keys); w.writeheader()
         [w.writerow({k: round(v, 4) if isinstance(v, float) else v for k, v in r.items()}) for r in jrows]
     P("")
-    P("  joint         z0 (m)  res. open (mm)  open frac  face   damaged  t/t_build  kn_min/kn  new   N (kN)")
+    P("  joint         z0 (m)  res. open (mm)  open frac  face   damaged  kn_mean/kn  kn_min/kn  zero  N (kN)")
     for r in jrows:
         P("  {:12s} {:6.3f} {:10.3f}      {:6.2f}     {:3s}   {:6s}   {:6s}     {:6s}   {:4s} {:8.2f}{}".format(
             r["kind"], r["z0"], r["max_open_mm"], r["open_frac"], r["open_face"],
-            _f(r.get("dmg_frac"), "{:.2f}"), _f(r.get("t_ratio_mean"), "{:.2f}"), _f(r.get("kn_ratio_min"), "{:.2f}"),
-            _f(r.get("n_new"), "{:d}"), r["N_kN"], "  <- HINGE" if r["hinge"] else ""))
+            _f(r.get("dmg_frac"), "{:.2f}"), _f(r.get("kn_ratio_mean"), "{:.2f}"), _f(r.get("kn_ratio_min"), "{:.2f}"),
+            _f(r.get("n_zero"), "{:d}"), r["N_kN"], "  <- HINGE" if r["hinge"] else ""))
     hinges = [r for r in jrows if r["hinge"]]
     P("HINGES ({}): ".format(tag) + (", ".join("{:.3f} m ({})".format(r["z0"], r["kind"]) for r in hinges) or "none"))
     return dict(tag=tag, run=run_no, crs=crs, joints=jrows, d_sens=d_sens)
 
 
 JKEYS = ("run", "kind", "z0", "n_sub", "max_open_mm", "open_frac", "open_face", "dmg_frac", "t_ratio_mean",
-         "kn_ratio_min", "n_new", "N_kN", "hinge")
+         "kn_ratio_mean", "kn_ratio_min", "n_zero", "N_kN", "hinge")
 
 
 def _f(v, fmt):
@@ -485,8 +490,8 @@ def damage_onset(results, P):
     hit = [r for r in rows if r["first_run_10pct"] != ""]
     P("")
     P("=" * 96)
-    P("DAMAGE ONSET (bed / base / top joints that reach >= 10 % damaged area; damaged = tension < {:.0%} of build)".format(
-        DAMAGED_RATIO))
+    P("DAMAGE ONSET (bed / base / top joints that reach >= 10 % damaged area; damaged = {} < {:.0%} of build)".format(
+        DMG, DAMAGED_RATIO))
     P("  z0 (m)   kind        >=10 % in run   >=50 % in run   damaged, last run   res. open, last run (mm)")
     for r in sorted(hit, key=lambda r: r["z0"]):
         P("  {:6.3f}   {:10s}  {:>8}        {:>8}          {:6.2f}             {:7.3f}".format(
@@ -494,6 +499,55 @@ def damage_onset(results, P):
     if not hit:
         P("  none: no bed joint has softened in the runs read")
     return rows
+
+
+def zero_report(ref_subs, bv, P):
+    """where the masonry subcontacts with tension 0 AND cohesion 0 sit in the BUILD save (material-table default:
+    contacts that formed after the property assignment)"""
+    if not ref_subs or "tension" not in ref_subs[0] or not (bv["tension"] > 0):
+        return
+    mj = [s for s in ref_subs if s["g"] in ("MasJ", "Pocket", "Base", "TopTB")]
+    z = [s for s in mj if s["tension"] == 0.0 and s["cohesion"] == 0.0]
+    P("")
+    P("ZERO-STRENGTH SUBCONTACTS IN THE BUILD SAVE (tension 0 and cohesion 0): {} of {} ({:.1%} of the area)".format(
+        len(z), len(mj), sum(s["area"] for s in z) / (sum(s["area"] for s in mj) or 1)))
+    if not z:
+        return
+    by_g = {}
+    for s in z:
+        by_g[s["g"]] = by_g.get(s["g"], 0) + 1
+    P("  by class: " + ", ".join("{} {}".format(k, v) for k, v in sorted(by_g.items())))
+    bed = [s for s in z if s["nz"] > -2 and abs(s["nz"]) >= BED_NZ_MIN]
+    head = [s for s in z if s["nz"] > -2 and abs(s["nz"]) < BED_NZ_MIN]
+    P("  bed-joint orientation {}, head-joint orientation {}".format(len(bed), len(head)))
+    cids = {}
+    for s in mj:
+        c = cids.setdefault(s["cid"], [0, 0]); c[0] += 1
+    zc = {}
+    for s in z:
+        zc[s["cid"]] = zc.get(s["cid"], 0) + 1
+    whole = sum(1 for c, n in zc.items() if n == cids[c][0])
+    P("  in {} contacts: {} entirely zero, {} partly zero".format(len(zc), whole, len(zc) - whole))
+    xs = sorted(s["x"] for s in z); ys = sorted(s["y"] for s in z)
+    q = lambda v, f: v[min(len(v) - 1, int(f * len(v)))]
+    P("  X (in-plane, 0-1.292 m): min {:.3f}  10% {:.3f}  median {:.3f}  90% {:.3f}  max {:.3f}".format(
+        xs[0], q(xs, .1), q(xs, .5), q(xs, .9), xs[-1]))
+    P("  Y (OOP, 0-{:.3f} m):     min {:.3f}  10% {:.3f}  median {:.3f}  90% {:.3f}  max {:.3f}".format(
+        T_WALL, ys[0], q(ys, .1), q(ys, .5), q(ys, .9), ys[-1]))
+    edge_x = sum(1 for s in z if s["x"] < 0.02 or s["x"] > 1.272)
+    face_y = sum(1 for s in z if s["y"] < 0.01 or s["y"] > T_WALL - 0.01)
+    mid_y = sum(1 for s in z if abs(s["y"] - T_WALL / 2) < 0.01)
+    P("  within 20 mm of a wall end: {}; within 10 mm of a face: {}; within 10 mm of mid-thickness (leaf split): {}".format(
+        edge_x, face_y, mid_y))
+    hz = {}
+    for s in z:
+        k = round(s["z"] / 0.0586)
+        hz[k] = hz.get(k, 0) + 1
+    P("  per height band (Z, count): " + "  ".join("{:.2f}:{}".format(k * 0.0586, v) for k, v in sorted(hz.items())))
+    with open(os.path.join(OUT_DIR, "zero_strength_subcontacts_ref.csv"), "w", newline="") as f:
+        w = csv.writer(f); w.writerow(["class", "contact_id", "x", "y", "z", "normal_z", "area", "b1", "b2"])
+        [w.writerow([s["g"], s["cid"], round(s["x"], 4), round(s["y"], 4), round(s["z"], 4), round(s["nz"], 3),
+                     s["area"], s["b1"], s["b2"]]) for s in z]
 
 
 # ============================ PLOT ===================================
@@ -536,7 +590,7 @@ def plot(results, onset):
     ax[1].set_xlabel("run")
     sm = plt.cm.ScalarMappable(cmap="inferno_r", norm=plt.Normalize(0, 1 if has_d else 2.0))
     cb = fig.colorbar(sm, ax=ax[1], pad=0.01)
-    cb.set_label("damaged area fraction (tension < {:.0%} build)".format(DAMAGED_RATIO) if has_d
+    cb.set_label("damaged area fraction ({} < {:.0%} build)".format(DMG, DAMAGED_RATIO) if has_d
                  else "residual opening (mm)")
     ax[1].set_title("Bed-joint damage by run (blue ring: residual opening > {} mm)".format(HINGE_MM), loc="left",
                     fontsize=10)
@@ -623,6 +677,18 @@ def main():
         off = [s for s in ref_subs if s["g"] == "MasJ" and abs(s["tension"] - bv["tension"]) > 1e-3 * max(bv["tension"], 1)]
         P("reference check: {} of {} masonry-masonry subcontacts off the build tension".format(
             len(off), sum(1 for s in ref_subs if s["g"] == "MasJ")))
+    global DMG
+    DMG = DAMAGE_PROP
+    if DMG == "auto":
+        DMG = "stiffness-normal"
+        if logs and bv["tension"] == bv["tension"] and bv["tension"] > 0:
+            last = read_dump(logs[max(logs)])[1]
+            if any(s["g"] == "MasJ" and 0 < s.get("tension", bv["tension"]) < (1 - 1e-6) * bv["tension"] for s in last):
+                DMG = "tension"
+    P("damage measure: '{}' below {:.0%} of its build value{}".format(
+        DMG, DAMAGED_RATIO, "" if DAMAGE_PROP != "auto" else " (auto: the tension property of the last run is unchanged)"
+        if DMG != "tension" else " (auto)"))
+    zero_report(ref_subs, bv, P)
     results = []
     for rn in sorted(logs):
         blocks, subs, _, _ = read_dump(logs[rn])
@@ -631,12 +697,6 @@ def main():
             results.append(r)
     if not results:
         P("no run dumps processed"); return
-    tr = [j.get("t_ratio_mean", float("nan")) for r in results for j in r["joints"] if j["kind"] == "bed"]
-    if not any(v == v and v < 1 - 1e-6 for v in tr):
-        P("")
-        P("NOTE: no bed-joint tension property differs from the build value in any run read. Either nothing cracked,")
-        P("      or the joint model keeps its softened strength in a state variable rather than in 'tension'. Name that")
-        P("      variable in EXTRA_PROPS and re-dump (REDUMP = True); until then read hinges from residual openings/kinks.")
     with open(os.path.join(OUT_DIR, "joints_by_run.csv"), "w", newline="") as f:
         rows = [j for r in results for j in r["joints"]]
         keys = sorted({k for j in rows for k in j}, key=lambda k: list(JKEYS).index(k) if k in JKEYS else 99)
