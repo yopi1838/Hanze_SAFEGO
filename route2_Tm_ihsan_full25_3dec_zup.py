@@ -10,6 +10,19 @@ route2_Tm_ihsan_full25_3dec_zup.py -- route2_Tm_ihsan_full25_3dec.py for the Z-U
                     strengths on every joint: tension 0.344 MPa, cohesion 0.75 MPa; the material of the char Strategy F)
         "zup_pk2_ft0p05" : Part_I_MASON_v8_LargeStrain_springforce_zup_pk2_ft0p05 (test pocket heights, f_t = 0.05 MPa,
                     cohesion 0.2 MPa on every joint: the f_t sweep's 0.05 build on the pk2 geometry)
+    * T_EFF_RULE (2 Nov 2026) "model_du_secant" (default): d_u FROM THE MODEL'S PUSHOVER, T_eff the SECANT there:
+        per branch, d_u = the displacement on the post-peak branch where the force has dropped to DU_DROP (0.80) of the
+        PEAK force (DU_REFERENCE "peak": the usual 20 % strength-drop definition); F_du = the force at d_u;
+        with BACKBONE_COMBINE "mean", d_u and F_du are the means of the two branches;  T_eff = 2 pi sqrt(L d_u / F_du).
+        A brittle peak whose loss of strength happens inside the runaway jump that ends the ascent (no equilibrium
+        between) gives d_u = the first equilibrium point after the jump, and F_du = the force measured there.
+        DU_REFERENCE "post_crack" instead measures the drop from the highest force AFTER such a jump (the rocking
+        capacity), which leaves a brittle cracking spike out.  Force = |a| x m_push (F_SOURCE "applied": the load the
+        servo applies; F_tot carries an unexplained excess after the peak).
+      Wave B stays at the record's T_m (PERIOD_B "Tm", decided 2 Nov). With a model d_u, T_eff lies beyond T_m for HU12
+      and FR76, and a T_m cycle sized to Sd(T_eff) can already exceed Sd(T1) on its own; the fit then drops wave A for
+      that run (flag leakA, GATE "flag": the run goes ahead with wave B only; fig_route2_carriers.py shows why).
+      "test_du_peak" is the earlier rule: d_u = D_U_MM (end of the US-1 envelope), F_y = peak force.
     * DAMP_PCT picks the Maxwell set (the optimised 1-25 Hz sets of the Strategy F runners); default 5 %, the level whose
       equivalent damping matched the tests' elastic runs (Strategy F char 5 %, runs 1-3: 5.5-6.0 % vs 3.4-8.6 %).
     * table and top-beam drive along Y (was the old z); S freed in Y
@@ -129,7 +142,7 @@ _BUILDS = {   # save, pushover folder, joist bottoms Z (support contacts), joist
     "zup_pk2_ft0p05": ("Part_I_MASON_v8_LargeStrain_springforce_zup_pk2_ft0p05.sav", "pushover_results_v5zup_pk2_ft0p05_TopMason",
                 (0.23455, 2.11091), (0.32250, 2.19886)),
 }
-OUT_DIR      = "r2tm_TpTm_full25_LS_MAXWELL{:02d}_{}".format(int(round(DAMP_PCT * 10)), BUILD)   # e.g. r2tm_TpTm_full25_LS_MAXWELL50_zup_pk2_ft0p05
+OUT_DIR      = "r2_Tp{}_du80_full25_LS_MAXWELL{:02d}_{}"   # e.g. r2_TpTeff_du80_full25_LS_MAXWELL50_zup_pk2_ft0p05 (set below)
 RESUME_AFTER = 0
 RESUME_SAVE  = ""
 STOP_AFTER   = 25
@@ -141,21 +154,37 @@ PUSHOVER_CSV     = _BUILDS[BUILD][1] + "/pushover_pos.csv"
 PUSHOVER_CSV_NEG = _BUILDS[BUILD][1] + "/pushover_neg.csv"   # "" for positive only
 BACKBONE_COMBINE = "mean"         # "mean" | "pos" | "neg"   (see the docstring)
 D_COL, F_COL     = "d_ctrl_mm", "F_tot_kN"
-F_SOURCE         = "column"       # "column": F_COL | "applied": |A_COL| x M_PUSH_KG
+F_SOURCE         = "applied"      # "column": F_COL | "applied": |A_COL| x M_PUSH_KG   (z-up driver: applied, see the header)
 A_COL            = "a_mps2"
 M_PUSH_KG        = 1308.0         # mass the positive push loads: masonry 1308 kg (masonry-only push) / all blocks (gravity tilt)
 M_PUSH_KG_NEG    = None           # same for the negative push; None = M_PUSH_KG. Check: F_tot / a on the ascent = this mass
 M_EFF_KG       = 1200.0           # L = sum m_j phi_j (US-1 1202, US-2 1195 kg)
 K_EL_RANGE_MM  = (0.1, 1.5)
-D_U_MM         = 27.4             # end of the US-1 envelope; see the docstring
+T_EFF_RULE     = "model_du_secant"   # "model_du_secant" (d_u and F from the model's pushover) | "test_du_peak" (D_U_MM, peak)
+DU_DROP        = 0.80             # model_du_secant: d_u where the force has dropped to this fraction of the reference (DU_REFERENCE)
+DU_REFERENCE   = "peak"           # "peak": DU_DROP x the peak force (default) | "post_crack": x the highest force after a brittle jump
+GAP_MM         = 5.0              # an ascent that ends in a jump larger than this = a brittle cracking peak
+D_U_MM         = 27.4             # test_du_peak only: end of the US-1 envelope; see the docstring
 D_CUT_MM       = 17.0             # F_y taken before this d: the gravity-tilt push loses the joist at 17.4 mm (harmless on v5: peak at 12 mm)
 T1_S_OVERRIDE  = None             # s, or None to compute
 TEFF_S_OVERRIDE = None            # s, or None to compute
 
 # ---- signal ----------------------------------------------------------------------------
 PERIOD_A   = "Tp"                 # "Tm" | "Tp" | "T1" | "Teff" | number (s)   -- default: record T_p (preflight 22 Oct)
-PERIOD_B   = "Tm"                 #   default: record T_m. ("Tm","Tm") collapses to one wave; ("Tp","Tp") needs 3x PGA on HU12
+PERIOD_B   = "Tm"                 #   wave B at the record's T_m. "Tp": Ihsan's T_p/T_p pair; "Teff": see the header
 CYCLES_A, CYCLES_B = 1, 1
+FIT_MODE   = "separate"           # "separate" (2 Nov, default): each wave sized ON ITS OWN to its own target -- wave A to
+                                  #   Sd(T1), wave B to Sd(T_eff) -- then joined (A, then B); the combined signal's Sd at
+                                  #   T1 and T_eff is logged (SdA_over_tgtA / SdB_over_tgtB) but not corrected.
+                                  # "joint": both amplitudes solved together on the joined signal (the earlier driver),
+                                  #   collapsing to one wave when one wave alone covers the other's target.
+if "{}" in OUT_DIR:                # the default name, completed now that PERIOD_B and the d_u rule are known
+    OUT_DIR = OUT_DIR.format(PERIOD_B, int(round(DAMP_PCT * 10)), BUILD)
+    if FIT_MODE == "separate":
+        OUT_DIR = OUT_DIR.replace("r2_", "r2sep_", 1)    # e.g. r2sep_TpTp_du80_full25_LS_MAXWELL50_zup_pk2_ft0p05
+    if T_EFF_RULE != "model_du_secant" or abs(DU_DROP - 0.8) > 1e-9 or DU_REFERENCE != "peak":
+        OUT_DIR = OUT_DIR.replace("_du80_", "_{}_".format("testdu" if T_EFF_RULE != "model_du_secant" else
+                                                          "du{:02d}{}".format(int(round(DU_DROP * 100)), "pc" if DU_REFERENCE != "peak" else "")))
 PHASE_B    = +1.0
 XI         = 0.05                 # damping of the target spectra AND of the signal calibration (same, deliberately)
 TM_BAND_HZ = (0.25, 20.0)         # Rathje et al. (2004)
@@ -267,11 +296,32 @@ def branch_props(d, F):
         m = np.zeros(len(d), bool); m[0] = True
     mc = d <= D_CUT_MM if D_CUT_MM else np.ones(len(d), bool)
     iy = int(np.argmax(F[mc]))
-    return dict(d_el=d[m], F_el=F[m], K=float(np.sum(d[m] * F[m]) / np.sum(d[m] ** 2)),
-                Fy=float(F[mc][iy]), Dy=float(d[mc][iy]), dmax=float(d[-1]))
-def periods_of(K, Fy):
+    out = dict(d_el=d[m], F_el=F[m], K=float(np.sum(d[m] * F[m]) / np.sum(d[m] ** 2)),
+               Fy=float(F[mc][iy]), Dy=float(d[mc][iy]), dmax=float(d[-1]))
+    if T_EFF_RULE == "model_du_secant":
+        out.update(model_du(d, F))
+    return out
+def model_du(d, F):
+    """d_u where F has dropped to DU_DROP x the reference force (DU_REFERENCE), and the force there (see T_EFF_RULE)"""
+    jumps = np.where(np.diff(d) > GAP_MM)[0]
+    k0 = int(jumps[0]) + 1 if (len(jumps) and DU_REFERENCE == "post_crack") else 0
+    ip = k0 + int(np.argmax(F[k0:]))
+    Fref = float(F[ip]); target = DU_DROP * Fref
+    for k in range(ip + 1, len(d)):
+        if F[k] <= target:
+            x0, x1, f0, f1 = d[k - 1], d[k], F[k - 1], F[k]
+            if x1 - x0 > GAP_MM:                             # crossed inside a runaway jump: no equilibrium in between
+                return dict(du=float(x1), Fdu=float(f1), Fref=Fref, dref=float(d[ip]), brittle=True, in_jump=True)
+            du = float(x0 + (target - f0) * (x1 - x0) / (f1 - f0)) if f1 != f0 else float(x1)
+            return dict(du=du, Fdu=float(target), Fref=Fref, dref=float(d[ip]), brittle=bool(len(jumps)), in_jump=False)
+    raise RuntimeError("model d_u: the curve never drops to {:.0f} % of {:.2f} kN (ends at {:.1f} mm) -- push further "
+                       "or use T_EFF_RULE 'test_du_peak'".format(100 * DU_DROP, Fref, d[-1]))
+def periods_of(K, Fy, du=None, Fdu=None):
     T1 = 2 * math.pi * math.sqrt(M_EFF_KG / (K * 1e6))
-    Te = 2 * math.pi * math.sqrt(M_EFF_KG * D_U_MM * 1e-3 / (Fy * 1e3))
+    if T_EFF_RULE == "model_du_secant":
+        Te = 2 * math.pi * math.sqrt(M_EFF_KG * du * 1e-3 / (Fdu * 1e3))
+    else:
+        Te = 2 * math.pi * math.sqrt(M_EFF_KG * D_U_MM * 1e-3 / (Fy * 1e3))
     return T1, Te
 BRANCHES = {}
 if T1_S_OVERRIDE is not None and TEFF_S_OVERRIDE is not None:
@@ -286,7 +336,8 @@ else:
                 raise RuntimeError("missing pushover CSV ({} branch): {}".format(lab, path))
             BRANCHES[lab] = branch_props(*read_backbone(path, mp))
             BRANCHES[lab]["m_push"] = mp
-            BRANCHES[lab]["T1"], BRANCHES[lab]["Teff"] = periods_of(BRANCHES[lab]["K"], BRANCHES[lab]["Fy"])
+            BRANCHES[lab]["T1"], BRANCHES[lab]["Teff"] = periods_of(BRANCHES[lab]["K"], BRANCHES[lab]["Fy"],
+                                                                    BRANCHES[lab].get("du"), BRANCHES[lab].get("Fdu"))
     mode = BACKBONE_COMBINE if (BACKBONE_COMBINE != "mean" or len(BRANCHES) == 2) else "pos"
     if mode != "mean" and mode not in BRANCHES:
         raise RuntimeError("BACKBONE_COMBINE='{}' but that branch was not given".format(BACKBONE_COMBINE))
@@ -295,20 +346,31 @@ else:
         ff = np.concatenate([BRANCHES[b]["F_el"] for b in ("pos", "neg")])
         K_EL = float(np.sum(dd * ff) / np.sum(dd * dd))
         F_Y = 0.5 * (BRANCHES["pos"]["Fy"] + BRANCHES["neg"]["Fy"]); D_Y = 0.5 * (BRANCHES["pos"]["Dy"] + BRANCHES["neg"]["Dy"])
+        DU = 0.5 * (BRANCHES["pos"].get("du", np.nan) + BRANCHES["neg"].get("du", np.nan))
+        FDU = 0.5 * (BRANCHES["pos"].get("Fdu", np.nan) + BRANCHES["neg"].get("Fdu", np.nan))
     else:
         K_EL, F_Y, D_Y = BRANCHES[mode]["K"], BRANCHES[mode]["Fy"], BRANCHES[mode]["Dy"]
-    T1c, Tec = periods_of(K_EL, F_Y)
+        DU, FDU = BRANCHES[mode].get("du", np.nan), BRANCHES[mode].get("Fdu", np.nan)
+    if T_EFF_RULE != "model_du_secant":
+        DU, FDU = D_U_MM, F_Y
+    T1c, Tec = periods_of(K_EL, F_Y, DU, FDU)
     T1_S = float(T1_S_OVERRIDE) if T1_S_OVERRIDE is not None else T1c
     TEFF_S = float(TEFF_S_OVERRIDE) if TEFF_S_OVERRIDE is not None else Tec
-    PERIOD_NOTE = "{} [{}{}]: K_el {:.3f} kN/mm, F_y {:.2f} kN at {:.1f} mm, d_u {:.1f} mm, L {:.0f} kg -> T1 {:.4f} s, T_eff {:.4f} s (mu {:.2f})".format(
-        "+".join(sorted(BRANCHES)), mode, ", applied a*m_push" if F_SOURCE == "applied" else "",
-        K_EL, F_Y, D_Y, D_U_MM, M_EFF_KG, T1_S, TEFF_S, D_U_MM / D_Y)
+    PERIOD_NOTE = "{} [{}{}] rule {}: K_el {:.3f} kN/mm, peak {:.2f} kN at {:.1f} mm, d_u {:.1f} mm, F(d_u) {:.2f} kN, L {:.0f} kg -> T1 {:.4f} s, T_eff {:.4f} s".format(
+        "+".join(sorted(BRANCHES)), mode, ", applied a*m_push" if F_SOURCE == "applied" else "", T_EFF_RULE,
+        K_EL, F_Y, D_Y, DU, FDU, M_EFF_KG, T1_S, TEFF_S)
     for lab in sorted(BRANCHES):
         b = BRANCHES[lab]
         print("  branch {}: K_el {:.3f} kN/mm, F_y {:.2f} kN at {:.1f} mm, curve to {:.1f} mm -> T1 {:.4f} s, T_eff {:.4f} s{}".format(
             lab, b["K"], b["Fy"], b["Dy"], b["dmax"], b["T1"], b["Teff"],
             "   [force = |a| x {:.0f} kg]".format(b["m_push"]) if F_SOURCE == "applied" else ""))
-        if D_U_MM > b["dmax"]:
+        if "du" in b:
+            print("    d_u {:.1f} mm: force {:.2f} kN ({:.0f} % of the {} {:.2f} kN at {:.1f} mm){}".format(
+                b["du"], b["Fdu"], 100 * b["Fdu"] / b["Fref"], "peak" if DU_REFERENCE == "peak" else "post-crack maximum",
+                b["Fref"], b["dref"],
+                "  [the drop below {:.0f} % happens inside the runaway jump: d_u = first equilibrium after it]".format(
+                    100 * DU_DROP) if b.get("in_jump") else ""))
+        elif D_U_MM > b["dmax"]:
             print("    (d_u {:.1f} mm is beyond this branch's last point {:.1f} mm: F_y is taken as the plateau)".format(D_U_MM, b["dmax"]))
 
 # ============================ RECORDS: spectra, T_m, T_p, PGA/PGV =====
@@ -367,7 +429,9 @@ def build_signal(rec, scale):
     sA = sd_signal(uA, Ts) * 1e3; sB = sd_signal(uB, Ts) * 1e3          # mm per unit amplitude, at (T1, T_eff)
     VA0 = tA / sA[0]; VB0 = tB / sB[1]
     stages, it_n, resid = "A+B", 0, 0.0
-    if VA0 * sA[1] >= tB * (1 - 1e-6):          # wave A alone covers the T_eff target
+    if FIT_MODE == "separate":                   # each wave to its own target, no joint correction
+        VA, VB, stages = VA0, VB0, "A+B sep"
+    elif VA0 * sA[1] >= tB * (1 - 1e-6):        # wave A alone covers the T_eff target
         VA, VB, stages = VA0, 0.0, "A"
     elif VB0 * sB[0] >= tA * (1 - 1e-6):        # wave B alone covers the T1 target
         VA, VB, stages = 0.0, VB0, "B"
@@ -714,7 +778,7 @@ def save_ckpt(last, summary):
         json.dump({"last_run": last, "summary": summary, "resume_after": RESUME_AFTER, "resume_save": RESUME_SAVE,
                    "base_save": BASE_SAVE, "large_strain": LARGE_STRAIN, "damping": MAXWELL_CMD,
                    "periods": PERIOD_NOTE, "T1_s": T1_S, "Teff_s": TEFF_S, "period_A": str(PERIOD_A), "period_B": str(PERIOD_B),
-                   "branches": {k: {q: v[q] for q in ("K", "Fy", "Dy", "dmax", "T1", "Teff")} for k, v in BRANCHES.items()},
+                   "branches": {k: {q: v[q] for q in ("K", "Fy", "Dy", "dmax", "T1", "Teff", "du", "Fdu") if q in v} for k, v in BRANCHES.items()},
                    "backbone_combine": BACKBONE_COMBINE, "f_source": F_SOURCE,
                    "cycles": [CYCLES_A, CYCLES_B], "xi": XI, "Tm_s": {k: REC[k]["Tm"] for k in REC}}, f, indent=1)
 
