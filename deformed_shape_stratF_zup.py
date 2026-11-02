@@ -137,7 +137,7 @@ fish define dfm_contacts
             local nz = NORMAL_EXPR
             loop foreach local sc block.contact.subcontactlist(cx)
                 local p = block.subcontact.pos(sc)
-                io.out('@@C,' + g + ',' + string(block.contact.id(cx)) + ',' + string(nz) + ',' + string(comp.x(p)) + ',' + string(comp.y(p)) + ',' + string(comp.z(p)) + ',' + string(block.subcontact.disp.norm(sc)) + ',' + string(block.subcontact.force.norm(sc)) + ',' + string(block.subcontact.area(sc)) + BIDS_EXPR + PROPS_EXPR)
+                io.out('@@C,' + g + ',' + string(block.contact.id(cx)) + ',' + string(nz) + ',' + string(comp.x(p)) + ',' + string(comp.y(p)) + ',' + string(comp.z(p)) + ',' + string(block.subcontact.disp.norm(sc)) + ',' + string(block.subcontact.force.norm(sc)) + ',' + string(block.subcontact.area(sc)) BIDS_EXPR PROPS_EXPR)
             endloop
         endif
     endloop
