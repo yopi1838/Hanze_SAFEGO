@@ -1,0 +1,3 @@
+# case F_branch_r17_MAXWELL15_zup_pk2_ft0p05_tr | start Part_I_MASON_v8_LargeStrain_springforce_zup_pk2_ft0p05.sav | large-strain on | block mech damp maxwell 0.0112 1.0005 0.0081 7.4315 0.0096 25.0004 | T1_init 0.091
+run,record,scale,table_file,record_dur_s,peak_rel_OOP_mm,residual_OOP_mm,peak_baseshear_exp_kN,T_end,T_end_over_Tinit
+18,HU12,4.5,vel_HU_tr.txt,3.3452,4.152,0.0216,78.536,0.075489,0.8296
