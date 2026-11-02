@@ -8,6 +8,8 @@ Run from the Hanze_SAFEGO project root (needs postprocess_r2tm_full25.py next to
     python postprocess_stratF_full25.py --runs "f_t 0, 1.5 %=stratF_full_LS_MAXWELL15_v12" \\
                                            --runs "f_t 0, 1.5 %, _bc tables=stratF_full_LS_MAXWELL15_bc"
     python postprocess_stratF_full25.py --loop-runs 1,15,18,21,23,24
+    python postprocess_stratF_full25.py --runs "pk2 f_t 0.05=stratF_full_LS_MAXWELL50_zup_pk2_ft0p05_tr" --run-max 21
+                                           # only runs 1-21 (e.g. while run 22 is still being computed)
 
 READ, per Strategy F folder: RunNN_*/ channel CSVs (missing runs are skipped) and strategy_C_log.csv (its '#' line
 gives damping and start save, its rows the table file of each run).
@@ -103,6 +105,8 @@ def args_():
     p.add_argument("--th-runs", default="1,10,15,18,21,23",
                    help="runs for the displacement time-history figure (fig_stratF_timehistory.png)")
     p.add_argument("--table-dir", default=".", help="folder with the vel_*.txt tables named in strategy_C_log.csv")
+    p.add_argument("--run-max", type=int, default=25,
+                   help="last run to read (default 25); runs after it are ignored even if their folder exists")
     p.add_argument("--out", default="stratF_postproc")
     return p.parse_args()
 
@@ -154,10 +158,15 @@ def record_props(path):
     return out
 
 
+RUN_MAX = 25
+
+
 def variant(label, folder, masses, table_dir):
     info, tables = read_log(folder)
     runs = {}
     for n, rec, sc in R.PROTOCOL:
+        if n > RUN_MAX:
+            continue
         r = R.model_run(folder, n, (0.0, 0.0, 0.0) if isinstance(masses, dict) else masses, None, None)
         if r is None:
             continue
@@ -604,8 +613,12 @@ def plot_damping(path, variants, tests):
 
 # ============================ main ===================================
 def main():
+    global RUN_MAX
     a = args_()
+    RUN_MAX = a.run_max
     os.makedirs(a.out, exist_ok=True)
+    if RUN_MAX < 25:
+        print("runs 1-{} only (--run-max)".format(RUN_MAX))
     masses = MASS_SETS[a.mass_set]
     print("force: mass set '{}': {}".format(a.mass_set, masses))
     specs = discover(a.runs)
