@@ -1,0 +1,56 @@
+== stratF_full_LS_MAXWELL50_zup_pk2_ft0p05_tr
+-rw-r--r-- 1 yopi1 197611  66981809 2026-10-31T16:15:43 stratF_full_LS_MAXWELL50_zup_pk2_ft0p05_tr/stratC_run_01.sav
+-rw-r--r-- 1 yopi1 197611  68141818 2026-10-31T17:40:52 stratF_full_LS_MAXWELL50_zup_pk2_ft0p05_tr/stratC_run_02.sav
+-rw-r--r-- 1 yopi1 197611 117701473 2026-10-31T23:29:34 stratF_full_LS_MAXWELL50_zup_pk2_ft0p05_tr/stratC_run_03.sav
+-rw-r--r-- 1 yopi1 197611  77604129 2026-11-01T00:56:45 stratF_full_LS_MAXWELL50_zup_pk2_ft0p05_tr/stratC_run_04.sav
+-rw-r--r-- 1 yopi1 197611  79821929 2026-11-01T02:22:48 stratF_full_LS_MAXWELL50_zup_pk2_ft0p05_tr/stratC_run_05.sav
+-rw-r--r-- 1 yopi1 197611 134772236 2026-11-01T07:04:05 stratF_full_LS_MAXWELL50_zup_pk2_ft0p05_tr/stratC_run_06.sav
+-rw-r--r-- 1 yopi1 197611  95786921 2026-11-01T08:11:13 stratF_full_LS_MAXWELL50_zup_pk2_ft0p05_tr/stratC_run_07.sav
+-rw-r--r-- 1 yopi1 197611 157491506 2026-11-01T12:44:32 stratF_full_LS_MAXWELL50_zup_pk2_ft0p05_tr/stratC_run_08.sav
+-rw-r--r-- 1 yopi1 197611 119357213 2026-11-01T13:52:12 stratF_full_LS_MAXWELL50_zup_pk2_ft0p05_tr/stratC_run_09.sav
+-rw-r--r-- 1 yopi1 197611 123956420 2026-11-01T14:59:03 stratF_full_LS_MAXWELL50_zup_pk2_ft0p05_tr/stratC_run_10.sav
+-rw-r--r-- 1 yopi1 197611 197138239 2026-11-01T19:34:15 stratF_full_LS_MAXWELL50_zup_pk2_ft0p05_tr/stratC_run_11.sav
+-rw-r--r-- 1 yopi1 197611 161207036 2026-11-01T20:41:58 stratF_full_LS_MAXWELL50_zup_pk2_ft0p05_tr/stratC_run_12.sav
+-rw-r--r-- 1 yopi1 197611 168675900 2026-11-01T21:48:49 stratF_full_LS_MAXWELL50_zup_pk2_ft0p05_tr/stratC_run_13.sav
+-rw-r--r-- 1 yopi1 197611 179880662 2026-11-01T22:55:56 stratF_full_LS_MAXWELL50_zup_pk2_ft0p05_tr/stratC_run_14.sav
+-rw-r--r-- 1 yopi1 197611 198205225 2026-11-02T00:03:08 stratF_full_LS_MAXWELL50_zup_pk2_ft0p05_tr/stratC_run_15.sav
+-rw-r--r-- 1 yopi1 197611 224336995 2026-11-02T01:10:25 stratF_full_LS_MAXWELL50_zup_pk2_ft0p05_tr/stratC_run_16.sav
+-rw-r--r-- 1 yopi1 197611 250916386 2026-11-02T02:18:09 stratF_full_LS_MAXWELL50_zup_pk2_ft0p05_tr/stratC_run_17.sav
+-rw-r--r-- 1 yopi1 197611 271952852 2026-11-02T03:25:58 stratF_full_LS_MAXWELL50_zup_pk2_ft0p05_tr/stratC_run_18.sav
+-rw-r--r-- 1 yopi1 197611 293233332 2026-11-02T04:33:56 stratF_full_LS_MAXWELL50_zup_pk2_ft0p05_tr/stratC_run_19.sav
+-rw-r--r-- 1 yopi1 197611 319113318 2026-11-02T05:42:29 stratF_full_LS_MAXWELL50_zup_pk2_ft0p05_tr/stratC_run_20.sav
+-rw-r--r-- 1 yopi1 197611 350530307 2026-11-02T06:51:39 stratF_full_LS_MAXWELL50_zup_pk2_ft0p05_tr/stratC_run_21.sav
+-rw-r--r-- 1 yopi1 197611 381721449 2026-11-02T09:27:22 stratF_full_LS_MAXWELL50_zup_pk2_ft0p05_tr/stratC_run_22.sav
+-rw-r--r-- 1 yopi1 197611 419278144 2026-11-02T12:23:40 stratF_full_LS_MAXWELL50_zup_pk2_ft0p05_tr/stratC_run_23.sav
+-rw-r--r-- 1 yopi1 197611 470597529 2026-11-02T15:47:27 stratF_full_LS_MAXWELL50_zup_pk2_ft0p05_tr/stratC_run_24.sav
+-rw-r--r-- 1 yopi1 197611 542831557 2026-11-02T19:16:38 stratF_full_LS_MAXWELL50_zup_pk2_ft0p05_tr/stratC_run_25.sav
+6.5G	stratF_full_LS_MAXWELL50_zup_pk2_ft0p05_tr
+1.4G	stratF_full_LS_MAXWELL50_zup_pk2_ft0p05_tr
+== r2sep_TpTm_du80_full25_LS_MAXWELL50_zup_pk2_ft0p05
+-rw-r--r-- 1 yopi1 197611  60125676 2026-11-02T08:24:21 r2sep_TpTm_du80_full25_LS_MAXWELL50_zup_pk2_ft0p05/r2tm_run_01.sav
+-rw-r--r-- 1 yopi1 197611  62436977 2026-11-02T09:07:13 r2sep_TpTm_du80_full25_LS_MAXWELL50_zup_pk2_ft0p05/r2tm_run_02.sav
+-rw-r--r-- 1 yopi1 197611  64271690 2026-11-02T09:53:11 r2sep_TpTm_du80_full25_LS_MAXWELL50_zup_pk2_ft0p05/r2tm_run_03.sav
+-rw-r--r-- 1 yopi1 197611  66338613 2026-11-02T10:33:52 r2sep_TpTm_du80_full25_LS_MAXWELL50_zup_pk2_ft0p05/r2tm_run_04.sav
+-rw-r--r-- 1 yopi1 197611  70006177 2026-11-02T11:13:11 r2sep_TpTm_du80_full25_LS_MAXWELL50_zup_pk2_ft0p05/r2tm_run_05.sav
+-rw-r--r-- 1 yopi1 197611  72501664 2026-11-02T12:01:42 r2sep_TpTm_du80_full25_LS_MAXWELL50_zup_pk2_ft0p05/r2tm_run_06.sav
+-rw-r--r-- 1 yopi1 197611  76036607 2026-11-02T12:52:30 r2sep_TpTm_du80_full25_LS_MAXWELL50_zup_pk2_ft0p05/r2tm_run_07.sav
+-rw-r--r-- 1 yopi1 197611  79243218 2026-11-02T13:55:18 r2sep_TpTm_du80_full25_LS_MAXWELL50_zup_pk2_ft0p05/r2tm_run_08.sav
+-rw-r--r-- 1 yopi1 197611  83464934 2026-11-02T14:36:11 r2sep_TpTm_du80_full25_LS_MAXWELL50_zup_pk2_ft0p05/r2tm_run_09.sav
+-rw-r--r-- 1 yopi1 197611  89433759 2026-11-02T15:17:11 r2sep_TpTm_du80_full25_LS_MAXWELL50_zup_pk2_ft0p05/r2tm_run_10.sav
+-rw-r--r-- 1 yopi1 197611  93548643 2026-11-02T16:16:41 r2sep_TpTm_du80_full25_LS_MAXWELL50_zup_pk2_ft0p05/r2tm_run_11.sav
+-rw-r--r-- 1 yopi1 197611  99720773 2026-11-02T17:05:56 r2sep_TpTm_du80_full25_LS_MAXWELL50_zup_pk2_ft0p05/r2tm_run_12.sav
+-rw-r--r-- 1 yopi1 197611 107770719 2026-11-02T17:54:06 r2sep_TpTm_du80_full25_LS_MAXWELL50_zup_pk2_ft0p05/r2tm_run_13.sav
+-rw-r--r-- 1 yopi1 197611 117019435 2026-11-02T18:43:25 r2sep_TpTm_du80_full25_LS_MAXWELL50_zup_pk2_ft0p05/r2tm_run_14.sav
+-rw-r--r-- 1 yopi1 197611 127753825 2026-11-02T19:29:40 r2sep_TpTm_du80_full25_LS_MAXWELL50_zup_pk2_ft0p05/r2tm_run_15.sav
+-rw-r--r-- 1 yopi1 197611 143564200 2026-11-02T20:09:24 r2sep_TpTm_du80_full25_LS_MAXWELL50_zup_pk2_ft0p05/r2tm_run_16.sav
+-rw-r--r-- 1 yopi1 197611 163399303 2026-11-02T20:49:41 r2sep_TpTm_du80_full25_LS_MAXWELL50_zup_pk2_ft0p05/r2tm_run_17.sav
+-rw-r--r-- 1 yopi1 197611 193462827 2026-11-02T21:30:46 r2sep_TpTm_du80_full25_LS_MAXWELL50_zup_pk2_ft0p05/r2tm_run_18.sav
+-rw-r--r-- 1 yopi1 197611 223895208 2026-11-02T22:12:03 r2sep_TpTm_du80_full25_LS_MAXWELL50_zup_pk2_ft0p05/r2tm_run_19.sav
+-rw-r--r-- 1 yopi1 197611 256278092 2026-11-02T22:53:39 r2sep_TpTm_du80_full25_LS_MAXWELL50_zup_pk2_ft0p05/r2tm_run_20.sav
+-rw-r--r-- 1 yopi1 197611 286153105 2026-11-02T23:35:19 r2sep_TpTm_du80_full25_LS_MAXWELL50_zup_pk2_ft0p05/r2tm_run_21.sav
+-rw-r--r-- 1 yopi1 197611 288853547 2026-11-03T00:19:13 r2sep_TpTm_du80_full25_LS_MAXWELL50_zup_pk2_ft0p05/r2tm_run_22.sav
+-rw-r--r-- 1 yopi1 197611 331814511 2026-11-03T01:06:56 r2sep_TpTm_du80_full25_LS_MAXWELL50_zup_pk2_ft0p05/r2tm_run_23.sav
+-rw-r--r-- 1 yopi1 197611 379197837 2026-11-03T01:56:22 r2sep_TpTm_du80_full25_LS_MAXWELL50_zup_pk2_ft0p05/r2tm_run_24.sav
+-rw-r--r-- 1 yopi1 197611 432746987 2026-11-03T02:46:03 r2sep_TpTm_du80_full25_LS_MAXWELL50_zup_pk2_ft0p05/r2tm_run_25.sav
+4.1G	r2sep_TpTm_du80_full25_LS_MAXWELL50_zup_pk2_ft0p05
+375M	r2sep_TpTm_du80_full25_LS_MAXWELL50_zup_pk2_ft0p05
