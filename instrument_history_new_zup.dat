@@ -4,6 +4,7 @@
 ;   velocity-z histories -> -y. Channel names, history indices and signs unchanged (+Y = +z of the old frame).
 ;   The left/right quarter points swap X (Ch3 'Left' old x = 0.106 -> X = 1.186), as Record_Disp in
 ;   ANALYSIS_PART_I_MASON_zup.dat. Calls instrument_tilt_v2_zup.dat.
+;   3 Nov 2026: Channel_8..11 are now JOIST-TO-WALL SLIP in mm (see the block before Channel_12), not wall points.
 [bLength=1.292]
 history delete
 ;HISTORIES
@@ -154,10 +155,80 @@ block history name "Channel_2_DispMid" displacement-y position ([bLength/2],0.21
 block history name "Channel_3_DispTopQLeft" displacement-y position ([bLength/2+0.54],0.21,2.06)
 block history name "Channel_4_DispTopQRight" displacement-y position ([bLength/2-0.54],0.21,2.06)
 block history name "Channel_5_DispTable" displacement-y position ([bLength/2],0.21,0.0)
-block history name "Channel_8_LeftJoistBelowSlab1" displacement-y position ([bLength/2+0.54],0.22,0.56)
-block history name "Channel_9_LeftJoistAboveSlab1" displacement-y position ([bLength/2+0.54],0.22,0.66)
-block history name "Channel_10_LeftJoistBelowSlab2" displacement-y position ([bLength/2+0.54],0.22,2.35)
-block history name "Channel_11_LeftJoistBelowSlab2" displacement-y position ([bLength/2+0.54],0.22,2.45)
+;
+; ---------------------------------------------------------------------
+; CHANNELS 8-11: JOIST-TO-WALL SLIP, as the test's potentiometers (changed 3 Nov 2026)
+; ---------------------------------------------------------------------
+; Test (Moshfeghi et al. 2024, Fig. 8): potentiometers 8/9 at the lower LEFT joist, 10/11 at the upper
+; LEFT joist, below (8, 10) and above (9, 11) it, reading the joist's out-of-plane movement relative to
+; the wall. US-1 run 24 leaves ch10 10.5 mm and ch11 11.8 mm of permanent slip (the paper's 8-12 mm).
+; BEFORE this change the four histories below were WALL points at the old pocket heights
+; (0.56 / 0.66 / 2.35 / 2.45 m, in m): Channel_8..11 files written before 3 Nov 2026 are NOT slip.
+; DEFINITION (mm): slip = u_y(joist, at the wall face) - u_y(wall, JS_OFF below / above the
+;   joist), averaged over the joist's two vertical edges (X 0.8882 and 0.9690). The joist point is the
+;   joist's own edge vertex at Y = JY_OUT, outside the 0.21 m wall, so block.gp.near cannot land on
+;   masonry; for a rigid joist u_y does not vary along Y, so it is the joist's movement at the wall face.
+;   +Y points to the joists: POSITIVE = joist withdrawing from its pocket (the paper's positive direction).
+;   The wall point is taken on the FRONT face (Y = JY_WALL = 0), far from the joist vertices inside the
+;   pocket (Y >= 0.105), so it cannot resolve onto the joist; bricks are rigid, so u_y is the same
+;   through the thickness.
+; CUMULATIVE: block displacements are not reset between runs; per-run slip = end - start of the run.
+; ORDER: these come after FISH histories 1-31 (instrument_tilt_v2_zup.dat) and are exported BY NAME, so
+;   no numbered export in instrument_history_export_v2.dat shifts. jy_lower / jy_upper (joist centres)
+;   are read at every sample, so the driver's per-build override applies.
+[jh_half = 0.08795]    ; half joist height (0.1759 m)
+[js_off  = 0.03]       ; wall reference distance below / above the joist
+[jx_e1   = 0.8882]     ; left joist edges, X
+[jx_e2   = 0.9690]
+[jy_out  = 0.255]      ; Y of the joist reference vertices (wall back face at 0.21)
+[jy_wall = 0.0]        ; Y of the wall reference points (front face)
+fish define ch_joist_slip
+    local zlb = jy_lower - jh_half
+    local zlt = jy_lower + jh_half
+    local zub = jy_upper - jh_half
+    local zut = jy_upper + jh_half
+    local jlb = 0.5 * (block.gp.disp.y(block.gp.near(jx_e1, jy_out, zlb)) + block.gp.disp.y(block.gp.near(jx_e2, jy_out, zlb)))
+    local jlt = 0.5 * (block.gp.disp.y(block.gp.near(jx_e1, jy_out, zlt)) + block.gp.disp.y(block.gp.near(jx_e2, jy_out, zlt)))
+    local jub = 0.5 * (block.gp.disp.y(block.gp.near(jx_e1, jy_out, zub)) + block.gp.disp.y(block.gp.near(jx_e2, jy_out, zub)))
+    local jut = 0.5 * (block.gp.disp.y(block.gp.near(jx_e1, jy_out, zut)) + block.gp.disp.y(block.gp.near(jx_e2, jy_out, zut)))
+    local wlb = 0.5 * (block.gp.disp.y(block.gp.near(jx_e1, jy_wall, zlb - js_off)) + block.gp.disp.y(block.gp.near(jx_e2, jy_wall, zlb - js_off)))
+    local wlt = 0.5 * (block.gp.disp.y(block.gp.near(jx_e1, jy_wall, zlt + js_off)) + block.gp.disp.y(block.gp.near(jx_e2, jy_wall, zlt + js_off)))
+    local wub = 0.5 * (block.gp.disp.y(block.gp.near(jx_e1, jy_wall, zub - js_off)) + block.gp.disp.y(block.gp.near(jx_e2, jy_wall, zub - js_off)))
+    local wut = 0.5 * (block.gp.disp.y(block.gp.near(jx_e1, jy_wall, zut + js_off)) + block.gp.disp.y(block.gp.near(jx_e2, jy_wall, zut + js_off)))
+    ch8_slip  = (jlb - wlb) * 1000.0
+    ch9_slip  = (jlt - wlt) * 1000.0
+    ch10_slip = (jub - wub) * 1000.0
+    ch11_slip = (jut - wut) * 1000.0
+    ch_joist_slip = ch11_slip
+end
+fish define ch_joist_slip_check
+    ; once, at registration: the joist reference vertices must lie outside the wall, i.e. more than
+    ; 0.215 m behind the wall's front face
+    local nbad = 0
+    local p1 = block.gp.pos(block.gp.near(jx_e1, jy_out, jy_lower - jh_half))
+    local p2 = block.gp.pos(block.gp.near(jx_e2, jy_out, jy_upper + jh_half))
+    local w1 = block.gp.pos(block.gp.near(jx_e1, jy_wall, jy_lower - jh_half - js_off))
+    io.out('joist slip channels: joist vertex ' + string(p1) + ' / ' + string(p2) + ', wall point ' + string(w1))
+    if comp.y(p1) - comp.y(w1) < 0.215 then
+        nbad = nbad + 1
+    endif
+    if comp.y(p2) - comp.y(w1) < 0.215 then
+        nbad = nbad + 1
+    endif
+    if nbad > 0 then
+        io.out('** WARNING joist slip channels: a joist reference point resolved onto the wall -- Channel_8..11 are not slip')
+    endif
+    ch_joist_slip_check = nbad
+end
+@ch_joist_slip_check
+@ch_joist_slip
+fish history ch_joist_slip
+fish history name "Channel_8_LeftJoistBelowSlab1" ch8_slip
+fish history name "Channel_9_LeftJoistAboveSlab1" ch9_slip
+fish history name "Channel_10_LeftJoistBelowSlab2" ch10_slip
+fish history name "Channel_11_LeftJoistBelowSlab2" ch11_slip
+; (Channel_11 keeps its old, mistyped name so the export file needs no change: it is ABOVE the upper joist)
+; ---------------------------------------------------------------------
 
 ; =====================================================================
 ; VELOCITY CHANNELS (for acceleration derivation)
