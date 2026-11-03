@@ -1,0 +1,56 @@
+; =====================================================================
+; ANALYSIS_PART_I_MASON_zup_pk2_ft0p05_pK11.dat -- the zup_pk2_ft0p05 build with the JOIST POCKETS given a
+;   timber-mortar interface instead of the brick-mortar joint set (3 Nov 2026). Variant pK11: ks 1.1e8 Pa/m.
+;   WHY: the joists are mortared into their pockets (US-1 photos) but the contacts carried the masonry bed-joint set
+;   (ks 2.5e9 Pa/m, tension 0.05 MPa, cohesion 0.2 MPa, friction 36 deg): about 135 kN/mm pull-out stiffness per
+;   joist over the embedded faces (0.054 m2) and ~11 kN of cohesion. The joists barely moved, while US-1's upper joist
+;   slipped ~11 mm permanently in runs 23-24 (ch10/ch11) with reversible slip of ~15-30 % of the wall displacement.
+;   POCKET SET (Joist-Masonry contacts only; every other contact unchanged):
+;     stiffness-shear 1.1e8 Pa/m  <- Arslan et al. (2024, Structures, Part 1): initial stiffness of mortared pocket
+;                                       connections 6.1-19.5 kN/mm per joist (J1, J3, J5) / 0.054 m2 = 1.1e8-3.6e8 Pa/m.
+;                                       Variants pK11 and pK36 are the two ends of that range.
+;     cohesion 0.1 MPa                <- Arslan et al. (2024, Part 2): 0.08-0.11 MPa, 0.1 recommended
+;     friction 31 deg (mu 0.6)        <- Arslan et al. (2024, Part 2); mortar-timber 0.63-0.81 (Almeida et al.)
+;     tension 0, cohesion-residual 0  <- no adhesion measured; both studies treat the interface as Coulomb friction
+;     stiffness-normal / -initial kn  <- unchanged: timber across the grain over half the joist height ~4e9 Pa/m
+;   Built FROM the zup_pk2_ft0p05 save (same geometry, same settled state); a static settle follows the change.
+;   Output: Part_I_MASON_v8_LargeStrain_springforce_zup_pk2_ft0p05_pK11.sav   (FISH 'tension' stays 0.05e6)
+; =====================================================================
+model restore 'Part_I_MASON_v8_LargeStrain_springforce_zup_pk2_ft0p05'
+[global ks_pocket = 1.1e8]
+[global c_pocket = 0.1e6]
+[global phi_pocket = 31.0]
+block contact group 'PocketJM' slot 'pocket' range group-intersection 'Joist' 'Masonry'
+fish define pocket_report
+    local n = 0
+    local kmin = 1e30
+    local kmax = -1e30
+    local cmin = 1e30
+    local cmax = -1e30
+    loop foreach local cx block.contact.list
+        if block.contact.isgroup(cx, 'PocketJM', 'pocket') then
+            loop foreach local sc block.contact.subcontactlist(cx)
+                n = n + 1
+                local ks_ = block.subcontact.prop(sc, 'stiffness-shear')
+                local co_ = block.subcontact.prop(sc, 'cohesion')
+                kmin = math.min(kmin, ks_)
+                kmax = math.max(kmax, ks_)
+                cmin = math.min(cmin, co_)
+                cmax = math.max(cmax, co_)
+            endloop
+        endif
+    endloop
+    io.out('POCKET joist-masonry subcontacts ' + string(n) + ': stiffness-shear ' + string(kmin) + '-' + string(kmax) + ' Pa/m, cohesion ' + string(cmin) + '-' + string(cmax) + ' Pa')
+    pocket_report = n
+end
+[io.out('--- pocket contacts BEFORE ---')]
+[pocket_report]
+block contact prop stiffness-shear @ks_pocket tension 0 cohesion @c_pocket friction @phi_pocket ...
+    friction-residual @phi_pocket cohesion-residual 0 ...
+    range group-intersection 'Joist' 'Masonry'
+[io.out('--- pocket contacts AFTER (stiffness-shear must read ' + string(ks_pocket) + ', cohesion 1e5) ---')]
+[pocket_report]
+model solve ratio 5e-8
+[io.out('--- after the static settle ---')]
+[pocket_report]
+model save 'Part_I_MASON_v8_LargeStrain_springforce_zup_pk2_ft0p05_pK11'
