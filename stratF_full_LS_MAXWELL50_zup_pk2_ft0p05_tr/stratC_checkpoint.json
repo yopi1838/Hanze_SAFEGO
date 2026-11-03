@@ -1,6 +1,6 @@
 {
-  "last_completed_run": 23,
-  "T_current": 0.065352,
+  "last_completed_run": 25,
+  "T_current": 0.064854,
   "summary": [
     {
       "run": 1,
@@ -413,6 +413,42 @@
       "T_exp_psd": 0.065352,
       "T_exp_welch": 0.065552,
       "T_exp_ch_spread": 0.0002,
+      "T_exp_window_s": 3.9998,
+      "tid_source": "exp_psd_svd"
+    },
+    {
+      "run": 24,
+      "record": "FR76",
+      "scale": 1.75,
+      "table_file": "vel_FR_tr.txt",
+      "record_dur_s": 9.3455,
+      "peak_rel_OOP_mm": 5.0169,
+      "residual_OOP_mm": 0.05,
+      "peak_baseshear_exp_kN": 117.647,
+      "T_end": 0.066225,
+      "T_end_over_Tinit": 0.7277,
+      "T_legacy_disp": 0.065721,
+      "T_exp_psd": 0.066225,
+      "T_exp_welch": 0.021441,
+      "T_exp_ch_spread": 2.0915,
+      "T_exp_window_s": 3.9999,
+      "tid_source": "exp_psd_svd"
+    },
+    {
+      "run": 25,
+      "record": "FR76",
+      "scale": 2.0,
+      "table_file": "vel_FR_tr.txt",
+      "record_dur_s": 9.3455,
+      "peak_rel_OOP_mm": 6.8821,
+      "residual_OOP_mm": 0.1182,
+      "peak_baseshear_exp_kN": 159.371,
+      "T_end": 0.064854,
+      "T_end_over_Tinit": 0.7127,
+      "T_legacy_disp": 0.063913,
+      "T_exp_psd": 0.064854,
+      "T_exp_welch": 0.064935,
+      "T_exp_ch_spread": 0.0003,
       "T_exp_window_s": 3.9998,
       "tid_source": "exp_psd_svd"
     }
