@@ -1,29 +1,30 @@
 # -*- coding: ascii -*-
 """
-run_stratF_zup_pocket.py -- Strategy F (runs 1-25, recorded table motions, 5 % Maxwell, truncated tables + 4 s tail)
+run_stratF_zup_pocket.py -- Strategy F (runs 1-25, recorded table motions, 1.5 % Maxwell by default, truncated tables + 4 s tail)
 on a POCKET variant of the f_t 0.05 MPa pk2 build (3 Nov 2026).
 
 The build: ANALYSIS_PART_I_MASON_zup_pk2_ft0p05_<POCKET>.dat = the zup_pk2_ft0p05 save with the joist-pocket contacts given
 the timber-mortar set of Arslan et al. (2024): ks 1.1e8 (pK11) or 3.6e8 (pK36) Pa/m, cohesion 0.1 MPa, friction 31 deg,
-tension 0. Same case as stratF_full_LS_MAXWELL50_zup_pk2_ft0p05_tr in every other respect, so the runs differ by the
+tension 0. Same case as stratF_full_LS_MAXWELL15_zup_pk2_ft0p05_tr in every other respect, so the runs differ by the
 pocket only. Needs the NEW instrument_history_new_zup.dat (3 Nov): Channel_8..11 are then joist-to-wall slip in mm,
 to be scored against the test's ch8-11 (permanent slip only in runs 23-24, ~11 mm at the upper joist).
 
 HOW: reads run_stratF_zup.py (NOT edited), adds the build "zup_pk2_ft0p05_<POCKET>" to its _BUILDS table, sets
 BUILD / DAMP_PCT / DRY_RUN, and runs it (building the save from the .dat if it is missing).
-OUT_DIR: stratF_full_LS_MAXWELL50_zup_pk2_ft0p05_<POCKET>_tr
+OUT_DIR: stratF_full_LS_MAXWELL15_zup_pk2_ft0p05_<POCKET>_tr
 
+Superseded for parallel runs by run_pK11_stratF.py (pocket_jobs.py), which coordinates the save build.
 USAGE (3DEC 9, Hanze_SAFEGO folder): set POCKET, then
     DRY_RUN = True   -> program call 'run_stratF_zup_pocket.py'  (or plain python): patch + compile only
     DRY_RUN = False  -> program call 'run_stratF_zup_pocket.py'
-Post-processing: python postprocess_stratF_full25.py --runs "pocket <POCKET>, 5 %=stratF_full_LS_MAXWELL50_zup_pk2_ft0p05_<POCKET>_tr"
+Post-processing: python postprocess_stratF_full25.py --runs "pocket <POCKET>, 1.5 %=stratF_full_LS_MAXWELL15_zup_pk2_ft0p05_<POCKET>_tr"
 """
 import os, re
 
 # ============================ CONFIG =================================
 POCKET   = "pK11"                               # "pK11" (ks 1.1e8 Pa/m) | "pK36" (ks 3.6e8 Pa/m)
 DRY_RUN  = False
-DAMP_PCT = 5.0
+DAMP_PCT = 1.5                                  # 1.5 % (5 Nov 2026): closer to US-1 ring-down; was 5.0
 BASE     = "run_stratF_zup.py"
 NEW_KEY  = "zup_pk2_ft0p05_" + POCKET
 BUILD_DAT = "ANALYSIS_PART_I_MASON_zup_pk2_ft0p05_{}.dat".format(POCKET)
