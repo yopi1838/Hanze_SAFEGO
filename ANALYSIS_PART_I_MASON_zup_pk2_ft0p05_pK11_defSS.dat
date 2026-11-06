@@ -145,6 +145,70 @@ fish define defss_rigid_check
 end
 [defss_rigid_check]
 
+; ---- report: zoning, zone mass, fixed blocks, pocket set (DEFINED here, before any solve, so a FISH name error
+;      stops the build in seconds; CALLED after the save) ----
+; zone mass = zone volume x its block's density (block.mass / block.vol): 3DEC has no block.zone.density
+fish define defss_report
+    ; every local declared ONCE, at the top
+    local z = null
+    local cx = null
+    local sc = null
+    local nz = 0
+    local mz = 0.0
+    local npk = 0
+    local kmin = 1e30
+    local kmax = -1e30
+    local kk = 0.0
+    local gp = null
+    local no = 0
+    local ds = 0.0
+    local dx = 0.0
+    loop foreach z block.zone.list
+        if block.isgroup(block.zone.hostblock(z), 'Masonry') then
+            nz = nz + 1
+            mz = mz + block.zone.vol(z) * block.mass(block.zone.hostblock(z)) / block.vol(block.zone.hostblock(z))
+        endif
+        if block.isgroup(block.zone.hostblock(z), 'Masonry') = false then
+            no = no + 1
+        endif
+    endloop
+    loop foreach gp block.gp.list
+        if block.isgroup(block.gp.hostblock(gp), 'S') then
+            ds = math.max(ds, math.abs(block.gp.disp.x(gp)))
+            ds = math.max(ds, math.abs(block.gp.disp.y(gp)))
+            ds = math.max(ds, math.abs(block.gp.disp.z(gp)))
+        endif
+        if block.isgroup(block.gp.hostblock(gp), 'Joist_S1') then
+            ds = math.max(ds, math.abs(block.gp.disp.x(gp)))
+            ds = math.max(ds, math.abs(block.gp.disp.y(gp)))
+            ds = math.max(ds, math.abs(block.gp.disp.z(gp)))
+        endif
+        if block.isgroup(block.gp.hostblock(gp), 'Joist_S2') then
+            ds = math.max(ds, math.abs(block.gp.disp.x(gp)))
+            ds = math.max(ds, math.abs(block.gp.disp.y(gp)))
+            ds = math.max(ds, math.abs(block.gp.disp.z(gp)))
+        endif
+        if block.isgroup(block.gp.hostblock(gp), 'T_B') then
+            dx = math.max(dx, math.abs(block.gp.disp.x(gp)))
+        endif
+    endloop
+    loop foreach cx block.contact.list
+        if block.contact.isgroup(cx, 'PocketJM', 'pocket') then
+            loop foreach sc block.contact.subcontactlist(cx)
+                npk = npk + 1
+                kk = block.subcontact.prop(sc, 'stiffness-shear')
+                kmin = math.min(kmin, kk)
+                kmax = math.max(kmax, kk)
+            endloop
+        endif
+    endloop
+    io.out('DEFSS masonry zones ' + string(nz) + ', zone mass ' + string(mz) + ' kg (rigid build: 1308.3 kg); other zones ' + string(no))
+    io.out('DEFSS fixed blocks (S, Joist_S1, Joist_S2): max gridpoint displacement ' + string(ds) + ' m (must be 0)')
+    io.out('DEFSS T_B: max |x displacement| ' + string(dx) + ' m (must be 0)')
+    io.out('DEFSS pocket subcontacts ' + string(npk) + ', stiffness-shear ' + string(kmin) + '-' + string(kmax) + ' Pa/m (must be 1.1e8)')
+    defss_report = nz
+end
+
 ; (no face triangulation: every block is zoned, its faces are the zone faces)
 
 ;MATERIAL PROPERTIES
@@ -409,6 +473,11 @@ fish define nbase_stress
 end
 fish history nbase_stress
 model large-strain off
+; damping for the gravity and spring-force solves: GLOBAL (adaptive viscous, fac 0.5 = 3DEC's default), local off.
+; The drivers switch it off themselves: Strategy F / Route 2 set local 0 + global 0 before Maxwell; the pushover
+; (pocket_def_jobs.py) sets global 0 before its local 0.9.
+block mech damp local 0.0
+block mech damp global 0.5
 model gravity 0 0 -9.81
 model solve ratio 1e-6
 [io.out('--- after gravity only (no spring force yet) ---')]
@@ -444,61 +513,6 @@ model solve ratio 5e-8
 [io.out('--- after spring force, settled ---')]
 [check_vertical_loads]
 
-; ---- checks: zoning, zone mass, pocket set ----
-fish define defss_report
-    ; every local declared ONCE, at the top
-    local z = null
-    local cx = null
-    local sc = null
-    local nz = 0
-    local mz = 0.0
-    local npk = 0
-    local kmin = 1e30
-    local kmax = -1e30
-    local kk = 0.0
-    local gp = null
-    local no = 0
-    local ds = 0.0
-    local dx = 0.0
-    loop foreach z block.zone.list
-        if block.isgroup(block.zone.hostblock(z), 'Masonry') then
-            nz = nz + 1
-            mz = mz + block.zone.vol(z) * block.zone.density(z)
-        endif
-        if block.isgroup(block.zone.hostblock(z), 'Masonry') = false then
-            no = no + 1
-        endif
-    endloop
-    loop foreach gp block.gp.list
-        if block.isgroup(block.gp.hostblock(gp), 'S') then
-            ds = math.max(ds, math.mag(block.gp.disp(gp)))
-        endif
-        if block.isgroup(block.gp.hostblock(gp), 'Joist_S1') then
-            ds = math.max(ds, math.mag(block.gp.disp(gp)))
-        endif
-        if block.isgroup(block.gp.hostblock(gp), 'Joist_S2') then
-            ds = math.max(ds, math.mag(block.gp.disp(gp)))
-        endif
-        if block.isgroup(block.gp.hostblock(gp), 'T_B') then
-            dx = math.max(dx, math.abs(block.gp.disp.x(gp)))
-        endif
-    endloop
-    loop foreach cx block.contact.list
-        if block.contact.isgroup(cx, 'PocketJM', 'pocket') then
-            loop foreach sc block.contact.subcontactlist(cx)
-                npk = npk + 1
-                kk = block.subcontact.prop(sc, 'stiffness-shear')
-                kmin = math.min(kmin, kk)
-                kmax = math.max(kmax, kk)
-            endloop
-        endif
-    endloop
-    io.out('DEFSS masonry zones ' + string(nz) + ', zone mass ' + string(mz) + ' kg (rigid build: 1308.3 kg); other zones ' + string(no))
-    io.out('DEFSS fixed blocks (S, Joist_S1, Joist_S2): max gridpoint displacement ' + string(ds) + ' m (must be 0)')
-    io.out('DEFSS T_B: max |x displacement| ' + string(dx) + ' m (must be 0)')
-    io.out('DEFSS pocket subcontacts ' + string(npk) + ', stiffness-shear ' + string(kmin) + '-' + string(kmax) + ' Pa/m (must be 1.1e8)')
-    defss_report = nz
-end
 model save 'Part_I_MASON_v8_SmallStrain_springforce_zup_pk2_ft0p05_pK11_def'
 ; the report runs after the save, so a FISH name problem cannot cost the build
 block contact group 'PocketJM' slot 'pocket' range group-intersection 'Joist' 'Masonry'

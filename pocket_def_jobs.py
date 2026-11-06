@@ -9,7 +9,9 @@ DRIVER: pushover_oop_3dec_v5_zup.py, read and patched in memory (not edited):
     * model large-strain OFF (the driver forces it on);
     * the push a*m is applied to the masonry GRIDPOINTS (block.gp.force.app, a * zone mass / 4 on each of a zone's
       4 gridpoints) instead of block.force.app on rigid blocks;
-    * masonry mass, participating mass and largest velocity from the zones (mass) and their gridpoints (velocity);
+    * masonry mass, participating mass and largest velocity from the zones (mass = zone volume x block.mass/block.vol
+      of its block; 3DEC has no block.zone.density) and their gridpoints (velocity);
+    * damping: global 0 (the build's gravity/spring solves use global damping), then the driver's local 0.9;
     * RESTORE_SAV / OUT_DIR / PUSH_DIR / TOP_JOINT 'mason' / TENSION_MAX_PA 0.06e6.
     Everything else (stepping, servo, diagnostics, CSV) unchanged.
 OUTPUT: pushover_results_v5zup_pk2_ft0p05_pK11_defSS_TopMason/pushover_pos.csv, pushover_neg.csv (+ _end saves)
@@ -45,7 +47,7 @@ fish define po_push(a_push)
     endloop
     loop foreach z block.zone.list
         if block.isgroup(block.zone.hostblock(z), 'Masonry') then
-            fz = 0.25 * a_push * block.zone.vol(z) * block.zone.density(z)
+            fz = 0.25 * a_push * block.zone.vol(z) * block.mass(block.zone.hostblock(z)) / block.vol(block.zone.hostblock(z))
             loop i (1, 4)
                 gp = block.zone.gp(z, i)
                 block.gp.force.app(gp) = block.gp.force.app(gp) + vector(0.0, fz, 0.0)
@@ -66,7 +68,7 @@ fish define wall_mass_part
     global wall_maxvel = 0.0
     loop foreach z block.zone.list
         if block.isgroup(block.zone.hostblock(z), 'Masonry') then
-            mz = block.zone.vol(z) * block.zone.density(z)
+            mz = block.zone.vol(z) * block.mass(block.zone.hostblock(z)) / block.vol(block.zone.hostblock(z))
             vy = 0.0
             loop i (1, 4)
                 vy = vy + 0.25 * block.gp.vel.y(block.zone.gp(z, i))
@@ -151,6 +153,11 @@ def patched(direction):
     if src.count(old) != 1:
         raise RuntimeError("{}: large-strain line not found once".format(BASE))
     src = src.replace(old, 'it.command("model large-strain off")   ' + TAG)
+    # the build solves gravity and the spring force with GLOBAL damping: switch it off before the driver's local 0.9
+    old = 'it.command("block mech damp local 0.9")'
+    if src.count(old) != 1:
+        raise RuntimeError("{}: damping line not found once".format(BASE))
+    src = src.replace(old, 'it.command("block mech damp global 0.0"); ' + old + '   ' + TAG)
     src = replace_fish(src, "po_push(a_push)", PO_PUSH)
     src = replace_fish(src, "wall_mass_part", WALL_MASS)
     for k, v in (("RESTORE_SAV", SAVE), ("OUT_DIR", OUT), ("PUSH_DIR", direction), ("TOP_JOINT", "mason"),
