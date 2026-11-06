@@ -3,7 +3,8 @@
 ;   SMALL STRAIN, built FROM THE GEOMETRY (6 Nov 2026, v2): no restore of GEO_WALL_zup_pk2 or of any rigid save.
 ;   1. GEOMETRY: the commands of Geo_Prep_zup_pk2.dat, unchanged (Groningen_zup.dec, support, top beam, the Y = 0.105
 ;      cuts of the pocket bands, pocket voids, group 'Masonry'), without its save.
-;   2. ZONING straight after the geometry: masonry blocks -> elastic tetrahedral zones, edge ZONE_EDGE, E_UNIT / NU_UNIT,
+;   2. ZONING straight after the geometry: EVERY block except 'S' and 'T_B' (by exclusion; v3) -> elastic tetrahedral
+;      zones, edge ZONE_EDGE, E_UNIT / NU_UNIT; a check stops the build if any wall block is left unzoned (rigid);
 ;      density 1885 kg/m3. Joists, joist supports, base 'S' and top beam 'T_B' stay RIGID (spring force on T_B as before).
 ;   3. BUILD: ANALYSIS_PART_I_MASON_zup_pk2_ft0p05.dat from the joists on, with
 ;        large strain OFF throughout (mat_case.dat's properties copied inline, without its 'model large-strain on');
@@ -66,12 +67,45 @@ block delete range pos-x 0.3230 0.4037
 block hide off
 block group "Masonry" range group "S" or "T_B" not
 
-; ---- zoning, straight after the geometry ----
+; ---- zoning, straight after the geometry (v3) --------------------------------------------------------------------
+; Zone EVERY block present except the base 'S' and the top beam 'T_B', selected by exclusion rather than by the
+; 'Masonry' group (some cut pieces were missed by the group and left rigid, which crashed generate-subcontacts).
+; The joists and their supports are created after this, so they stay rigid by construction.
 [global ZONE_EDGE = 0.10]     ; m, tetrahedron edge length in the masonry
 [global E_UNIT = 5.0e9]       ; Pa  PLACEHOLDER
 [global NU_UNIT = 0.15]
-block zone generate edgelength [ZONE_EDGE] range group "Masonry"
-[io.out('DEFSS zoning done: edge ' + string(ZONE_EDGE) + ' m')]
+block zone generate edgelength [ZONE_EDGE] range group "S" or "T_B" not
+block group "Masonry" range group "S" or "T_B" not
+; CHECK: every wall block must now carry zones; stop here (before any contact work) if one does not
+fish define defss_rigid_check
+    loop foreach local b block.list
+        block.extra(b, 1) = 0
+    endloop
+    loop foreach local z block.zone.list
+        block.extra(block.zone.hostblock(z), 1) = 1
+    endloop
+    local nm = 0
+    local nr = 0
+    loop foreach local b block.list
+        if block.isgroup(b, 'S') = false then
+            if block.isgroup(b, 'T_B') = false then
+                nm = nm + 1
+                if block.extra(b, 1) = 0 then
+                    nr = nr + 1
+                    if nr <= 20 then
+                        io.out('DEFSS NOT zoned: block ' + string(block.id(b)) + ' at ' + string(block.pos(b)) + ', volume ' + string(block.vol(b)) + ' m3')
+                    endif
+                endif
+            endif
+        endif
+    endloop
+    io.out('DEFSS wall blocks ' + string(nm) + ', not zoned ' + string(nr) + ' (geometry: 442 masonry blocks)')
+    if nr > 0 then
+        system.error = 'DEFSS: ' + string(nr) + ' wall blocks were not zoned (listed above); stopping before the contacts'
+    endif
+    defss_rigid_check = nr
+end
+[defss_rigid_check]
 
 block create brick 0.8882 0.9690 0.105 1.355 0.23455 0.41045 group 'Joist'
 block create brick 0.8882 0.9690 0.105 1.355 2.11091 2.28682 group 'Joist'
