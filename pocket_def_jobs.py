@@ -31,18 +31,23 @@ LOG = "pocket_def_jobs.log"
 
 PO_PUSH = '''
 fish define po_push(a_push)
-    loop foreach local z block.zone.list
+    ; every local declared ONCE, at the top
+    local z = null
+    local gp = null
+    local i = 0
+    local fz = 0.0
+    loop foreach z block.zone.list
         if block.isgroup(block.zone.hostblock(z), 'Masonry') then
-            loop local i (1, 4)
+            loop i (1, 4)
                 block.gp.force.app(block.zone.gp(z, i)) = vector(0.0, 0.0, 0.0)
             endloop
         endif
     endloop
-    loop foreach local z block.zone.list
+    loop foreach z block.zone.list
         if block.isgroup(block.zone.hostblock(z), 'Masonry') then
-            local fz = 0.25 * a_push * block.zone.vol(z) * block.zone.density(z)
-            loop local i (1, 4)
-                local gp = block.zone.gp(z, i)
+            fz = 0.25 * a_push * block.zone.vol(z) * block.zone.density(z)
+            loop i (1, 4)
+                gp = block.zone.gp(z, i)
                 block.gp.force.app(gp) = block.gp.force.app(gp) + vector(0.0, fz, 0.0)
             endloop
         endif
@@ -51,14 +56,19 @@ end
 '''
 WALL_MASS = '''
 fish define wall_mass_part
+    ; every local declared ONCE, at the top
+    local z = null
+    local i = 0
+    local mz = 0.0
+    local vy = 0.0
     global m_tot = 0.0
     global m_part = 0.0
     global wall_maxvel = 0.0
-    loop foreach local z block.zone.list
+    loop foreach z block.zone.list
         if block.isgroup(block.zone.hostblock(z), 'Masonry') then
-            local mz = block.zone.vol(z) * block.zone.density(z)
-            local vy = 0.0
-            loop local i (1, 4)
+            mz = block.zone.vol(z) * block.zone.density(z)
+            vy = 0.0
+            loop i (1, 4)
                 vy = vy + 0.25 * block.gp.vel.y(block.zone.gp(z, i))
             endloop
             m_tot = m_tot + mz

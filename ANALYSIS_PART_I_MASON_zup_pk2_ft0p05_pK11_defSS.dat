@@ -78,15 +78,18 @@ block zone generate edgelength [ZONE_EDGE] range group "S" or "T_B" not
 block group "Masonry" range group "S" or "T_B" not
 ; CHECK: every wall block must now carry zones; stop here (before any contact work) if one does not
 fish define defss_rigid_check
-    loop foreach local b block.list
-        block.extra(b, 1) = 0
-    endloop
-    loop foreach local z block.zone.list
-        block.extra(block.zone.hostblock(z), 1) = 1
-    endloop
+    ; every local declared ONCE, at the top
+    local b = null
+    local z = null
     local nm = 0
     local nr = 0
-    loop foreach local b block.list
+    loop foreach b block.list
+        block.extra(b, 1) = 0
+    endloop
+    loop foreach z block.zone.list
+        block.extra(block.zone.hostblock(z), 1) = 1
+    endloop
+    loop foreach b block.list
         if block.isgroup(b, 'S') = false then
             if block.isgroup(b, 'T_B') = false then
                 nm = nm + 1
@@ -375,23 +378,29 @@ model solve ratio 5e-8
 
 ; ---- checks: zoning, zone mass, pocket set ----
 fish define defss_report
+    ; every local declared ONCE, at the top
+    local z = null
+    local cx = null
+    local sc = null
     local nz = 0
     local mz = 0.0
-    loop foreach local z block.zone.list
+    local npk = 0
+    local kmin = 1e30
+    local kmax = -1e30
+    local kk = 0.0
+    loop foreach z block.zone.list
         if block.isgroup(block.zone.hostblock(z), 'Masonry') then
             nz = nz + 1
             mz = mz + block.zone.vol(z) * block.zone.density(z)
         endif
     endloop
-    local npk = 0
-    local kmin = 1e30
-    local kmax = -1e30
-    loop foreach local cx block.contact.list
+    loop foreach cx block.contact.list
         if block.contact.isgroup(cx, 'PocketJM', 'pocket') then
-            loop foreach local sc block.contact.subcontactlist(cx)
+            loop foreach sc block.contact.subcontactlist(cx)
                 npk = npk + 1
-                kmin = math.min(kmin, block.subcontact.prop(sc, 'stiffness-shear'))
-                kmax = math.max(kmax, block.subcontact.prop(sc, 'stiffness-shear'))
+                kk = block.subcontact.prop(sc, 'stiffness-shear')
+                kmin = math.min(kmin, kk)
+                kmax = math.max(kmax, kk)
             endloop
         endif
     endloop
