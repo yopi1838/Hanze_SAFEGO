@@ -3,7 +3,7 @@
 pocket_def_jobs.py -- +/- pushover of the pK11 pocket build with DEFORMABLE masonry blocks in SMALL STRAIN (6 Nov 2026).
 Not called directly: run_pK11def_push_pos.py / _neg.py set JOB and exec this file; each runs in its own 3DEC session.
 
-BUILD: ANALYSIS_PART_I_MASON_zup_pk2_ft0p05_pK11_defSS.dat (built once, under a lock, by the first session that needs it)
+BUILD: ANALYSIS_PART_I_MASON_zup_pk2_ft0p05_pK11_defSS.dat, built by the + session only (the - session waits for the save)
     -> Part_I_MASON_v8_SmallStrain_springforce_zup_pk2_ft0p05_pK11_def.sav
 DRIVER: pushover_oop_3dec_v5_zup.py, read and patched in memory (not edited):
     * model large-strain OFF (the driver forces it on);
@@ -25,8 +25,7 @@ SAVE = "Part_I_MASON_v8_SmallStrain_springforce_zup_pk2_ft0p05_pK11_def"
 DAT = "ANALYSIS_PART_I_MASON_zup_pk2_ft0p05_pK11_defSS.dat"
 OUT = "pushover_results_v5zup_pk2_ft0p05_pK11_defSS_TopMason"
 BASE = "pushover_oop_3dec_v5_zup.py"
-LOCK = SAVE + ".building"
-LOCK_STALE_MIN = 240
+MAX_WAIT_MIN = 360
 TAG = "# [pocket_def_jobs {}]".format(JOB)
 LOG = "pocket_def_jobs.log"
 
@@ -87,36 +86,34 @@ def have_save():
 
 
 def ensure_save():
-    if have_save() and not os.path.isfile(LOCK):
-        log("save {} found".format(SAVE)); return
-    if not os.path.isfile(DAT):
-        raise RuntimeError("{} not found".format(DAT))
-    try:
-        fd = os.open(LOCK, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-        os.write(fd, "built by {} at {}\n".format(JOB, time.ctime()).encode()); os.close(fd)
-        builder = True
-    except FileExistsError:
-        builder = False
-    if builder:
+    """No lock file any more (a crashed build left one behind and the other session waited on it for ever).
+    The + session is the only one that builds; the - session only waits until the save exists and its size has
+    stopped changing for a minute."""
+    if JOB == "push+":
+        if have_save():
+            log("save {} found".format(SAVE)); return
+        if not os.path.isfile(DAT):
+            raise RuntimeError("{} not found".format(DAT))
         import itasca as it
-        try:
-            log("building the save: program call '{}'".format(DAT))
-            it.command("python-reset-state false")
-            it.command("program call '{}'".format(DAT))
-            it.command("python-reset-state false")
-        finally:
-            os.remove(LOCK)
+        log("building the save: program call '{}'".format(DAT))
+        it.command("python-reset-state false")
+        it.command("program call '{}'".format(DAT))
+        it.command("python-reset-state false")
         if not have_save():
             raise RuntimeError("{} did not write {}".format(DAT, SAVE))
         log("save built; check the DEFSS lines (zones, zone mass ~1308 kg, pocket stiffness-shear 1.1e8)")
         return
-    log("another session is building the save: waiting")
-    t0 = time.time()
-    while os.path.isfile(LOCK) or not have_save():
+    path = SAVE + ".sav" if os.path.isfile(SAVE + ".sav") or not os.path.isfile(SAVE) else SAVE
+    log("waiting for the save from the + session ({})".format(path))
+    t0, last, still = time.time(), -1, 0
+    while still < 3:
         time.sleep(20)
-        if os.path.isfile(LOCK) and time.time() - os.path.getmtime(LOCK) > LOCK_STALE_MIN * 60:
-            raise RuntimeError("{} is older than {} min: the build probably crashed. Delete it and start again."
-                               .format(LOCK, LOCK_STALE_MIN))
+        size = os.path.getsize(path) if os.path.isfile(path) else -1
+        still = still + 1 if (size > 0 and size == last) else 0
+        last = size
+        if time.time() - t0 > MAX_WAIT_MIN * 60:
+            raise RuntimeError("no save after {} min: start run_pK11def_push_pos.py first (it builds the save)"
+                               .format(MAX_WAIT_MIN))
     log("save ready after {:.1f} min".format((time.time() - t0) / 60.0))
 
 
