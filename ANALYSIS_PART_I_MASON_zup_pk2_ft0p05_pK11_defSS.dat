@@ -1,26 +1,77 @@
 ; =====================================================================
 ; ANALYSIS_PART_I_MASON_zup_pk2_ft0p05_pK11_defSS.dat -- the pK11 pocket build with DEFORMABLE masonry blocks, in
-;   SMALL STRAIN (6 Nov 2026). Everything else as ANALYSIS_PART_I_MASON_zup_pk2_ft0p05.dat + the pK11 pocket set.
-;   CHANGES against the rigid large-strain pK11 build:
-;     1. masonry blocks zoned (tetrahedra, edge length ZONE_EDGE) with an ELASTIC zone model, E_UNIT / NU_UNIT,
-;        density 1885 kg/m3 on the zones; joists, supports, base and top beam stay RIGID (the spring force is applied
-;        to the rigid top beam, as before). The face triangulation of the masonry is replaced by the zoning.
-;     2. model large-strain OFF (mat_case.dat switches it on; switched off again right after it, and at the settle).
-;     3. joist-masonry contacts: the pK11 timber-mortar set (ks 1.1e8 Pa/m, cohesion 0.1 MPa, friction 31 deg,
-;        tension 0), assigned straight after the global joint set, before gravity.
-;   NOT CHANGED: the joint set (kn = ks = 2.5e9 Pa/m, f_t 0.05 MPa, c 0.2 MPa, 36 deg, MASON v12). kn was set for RIGID
-;     units, i.e. it lumps the unit's deformability; with E_UNIT of a few GPa the units add ~3 % of flexibility on top
-;     (kn x course height = 2.5e9 x 0.059 = 146 MPa equivalent, against E_UNIT), so the elastic branch should move
-;     very little. The point of the run is the formulation (deformable units, small strain), not the stiffness.
-;   E_UNIT: PLACEHOLDER 5 GPa, nu 0.15 -- replace with the unit modulus of the material characterisation if you have it.
+;   SMALL STRAIN, built FROM THE GEOMETRY (6 Nov 2026, v2): no restore of GEO_WALL_zup_pk2 or of any rigid save.
+;   1. GEOMETRY: the commands of Geo_Prep_zup_pk2.dat, unchanged (Groningen_zup.dec, support, top beam, the Y = 0.105
+;      cuts of the pocket bands, pocket voids, group 'Masonry'), without its save.
+;   2. ZONING straight after the geometry: masonry blocks -> elastic tetrahedral zones, edge ZONE_EDGE, E_UNIT / NU_UNIT,
+;      density 1885 kg/m3. Joists, joist supports, base 'S' and top beam 'T_B' stay RIGID (spring force on T_B as before).
+;   3. BUILD: ANALYSIS_PART_I_MASON_zup_pk2_ft0p05.dat from the joists on, with
+;        large strain OFF throughout (mat_case.dat's properties copied inline, without its 'model large-strain on');
+;        the pK11 pocket set on the joist-masonry contacts (ks 1.1e8 Pa/m, cohesion 0.1 MPa, friction 31 deg, tension 0).
+;   NOT CHANGED: the joint set (kn = ks = 2.5e9 Pa/m, f_t 0.05 MPa, c 0.2 MPa, 36 deg, MASON v12). kn lumps the units'
+;     deformability (kn x course height ~ 146 MPa against E_UNIT of a few GPa), so the units add only ~3 % flexibility.
+;   E_UNIT: PLACEHOLDER 5 GPa, nu 0.15 -- replace with the characterisation's unit modulus if available.
 ;   Output: Part_I_MASON_v8_SmallStrain_springforce_zup_pk2_ft0p05_pK11_def.sav   (FISH 'tension' = 0.05e6)
 ; =====================================================================
-model new 
-model restore 'GEO_WALL_zup_pk2'
-; parameters AFTER the restore (model new / restore clear FISH globals)
-[global ZONE_EDGE = 0.10]     ; m, tetrahedron edge length in the masonry (0.10: a few zones per unit)
+model new
+model config dynamic
+model dynamic active off
+model large-strain off
+
+call 'Groningen_zup.dec'
+
+;SUPPORT BLOCK
+block create brick 0 1.292 0.0 0.210 -0.05 0 group 'S'
+
+;TOP BEAM
+block create brick 0 1.292 0.0 0.210 2.58 2.68 group 'T_B'
+
+; ---- split at Y = 0.105 as Geo_Prep.dat does it -------------------------------------------------------------
+; stretcher course of each pocket band (course 5, Z 0.2932-0.3518; course 37, Z 2.1697-2.2283): two leaves across
+; the whole wall -- a stretcher course of the one-brick wall is two rows of stretchers (Groningen.dec merges them)
+block hide
+block hide off range pos-z 0.30 0.34
+block hide off range pos-z 2.18 2.22
+block cut joint-set dip 90 dip-direction 0 origin 0 0.105 0
+
+; header courses of each pocket band (4, 6, 36, 38): headers run through the thickness, so only the brick over
+; each pocket is split (as Geo_Prep.dat's second cut)
+block hide
+block hide off range pos-z 0.24 0.29
+block hide off range pos-z 0.36 0.40
+block hide off range pos-z 2.12 2.16
+block hide off range pos-z 2.24 2.28
+block hide range pos-x -1 0.33
+block hide range pos-x 0.42 0.86
+block hide range pos-x 0.97 11
+block cut joint-set dip 90 dip-direction 0 origin 0 0.105 0
+
+; ---- remove the pocket volume: bands, joist half (Y > 0.105), between the pocket faces -------------------------
+block hide off
+
+block hide range pos-z -10000 0.2346
+block hide range pos-z 0.4105 2.1109
+block hide range pos-z 2.2869 100000
+
+block hide range pos-y -1 0.105
+
+block cut joint-set dip 90 dip-direction 90 origin 0.9690 0 0
+block cut joint-set dip 90 dip-direction 90 origin 0.8882 0 0
+block delete range pos-x 0.8882 0.9690
+
+block cut joint-set dip 90 dip-direction 90 origin 0.4037 0 0
+block cut joint-set dip 90 dip-direction 90 origin 0.3230 0 0
+block delete range pos-x 0.3230 0.4037
+
+block hide off
+block group "Masonry" range group "S" or "T_B" not
+
+; ---- zoning, straight after the geometry ----
+[global ZONE_EDGE = 0.10]     ; m, tetrahedron edge length in the masonry
 [global E_UNIT = 5.0e9]       ; Pa  PLACEHOLDER
 [global NU_UNIT = 0.15]
+block zone generate edgelength [ZONE_EDGE] range group "Masonry"
+[io.out('DEFSS zoning done: edge ' + string(ZONE_EDGE) + ' m')]
 
 block create brick 0.8882 0.9690 0.105 1.355 0.23455 0.41045 group 'Joist'
 block create brick 0.8882 0.9690 0.105 1.355 2.11091 2.28682 group 'Joist'
@@ -32,8 +83,7 @@ block create brick 0.3230 0.4037 0.105 1.355 2.11091 2.28682 group 'Joist'
 block create brick 0 1.292 1 1.5 0.14137 0.23455 group 'Joist_S1'
 block create brick 0 1.292 1 1.5 2.01773 2.11091 group 'Joist_S2'
 
-; masonry: deformable (replaces the radial-8 face triangulation of the rigid build)
-block zone generate edgelength [ZONE_EDGE] range group "Masonry"
+; (masonry already zoned right after the geometry; its faces are the zone faces)
 block face triangulate edge-max [0.05] range group "Masonry" not
 
 ;MATERIAL PROPERTIES
@@ -43,8 +93,23 @@ block zone property density 1885 young [E_UNIT] poisson [NU_UNIT] range group "M
 block property density 7850 range group "S" or "T_B" or "Joist_S1" or "Joist_S2"
 block property density [5510*1.034] range group "Joist"
 
-call 'mat_case.dat'
-model large-strain off          ; SMALL STRAIN (mat_case.dat switches it on)
+; mat_case.dat's property set, copied INLINE without its 'model large-strain on' (no switch to large strain at all)
+fish define properties
+    kn       = 2.5e9
+    ks       = 2.5e9
+    tension  = 0.0
+    cohesion = 0.2e6
+    friction = 36
+    fc_comp  = 20e6
+    Gt = 0.025*((2*tension*1e-6)^0.7)*1000
+    Gs = 100
+    Gc = (0.15+0.43*fc_comp*1e-6-0.0036*(fc_comp*1e-6)^2)*1000
+    n   = 2.0
+    Css = 9.0
+    Cnn = 1.0
+    Cn  = 0.0
+end
+@properties
 ; ---- f_t = 0.05 MPa, cohesion 0.2 MPa for every joint (overrides mat_case.dat; as the f_t sweep) ----
 [global tension  = 0.05e6]
 [global cohesion = 0.2e6]
