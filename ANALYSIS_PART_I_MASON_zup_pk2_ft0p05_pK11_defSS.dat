@@ -1,17 +1,21 @@
 ; =====================================================================
 ; ANALYSIS_PART_I_MASON_zup_pk2_ft0p05_pK11_defSS.dat -- the pK11 pocket build with DEFORMABLE masonry blocks, in
-;   SMALL STRAIN, built FROM THE GEOMETRY (6 Nov 2026, v4): no restore of GEO_WALL_zup_pk2 or of any rigid save.
+;   SMALL STRAIN, built FROM THE GEOMETRY (6 Nov 2026, v5): no restore of GEO_WALL_zup_pk2 or of any rigid save.
 ;   1. GEOMETRY: the commands of Geo_Prep_zup_pk2.dat, unchanged (Groningen_zup.dec, support, top beam, the Y = 0.105
 ;      cuts of the pocket bands, pocket voids, group 'Masonry'), without its save.
-;   2. ZONING straight after the geometry, before S, T_B and the joists exist: EVERY block, no range (v4) -> elastic tetrahedral
-;      zones, edge ZONE_EDGE, E_UNIT / NU_UNIT; a check stops the build if any wall block is left unzoned (rigid);
-;      density 1885 kg/m3. Joists, joist supports, base 'S' and top beam 'T_B' stay RIGID (spring force on T_B as before).
+;   2. ZONING, EVERY block (v5): the wall pieces first (tetrahedra, edge ZONE_EDGE, no range: only wall pieces exist
+;      then); then the base 'S', top beam 'T_B', joists and joist supports are created and zoned with hexahedra
+;      (regular grids, so the top beam has a gridpoint line on its axis). A check stops the build if any of the 450
+;      blocks is left without zones. Elastic zones: wall E_UNIT/NU_UNIT, joists E_TIMBER/NU_TIMBER, steel E_STEEL.
+;      Rigid-block commands replaced: spring force as gridpoint forces on T_B; T_B held as the rigid build held it
+;      (x fixed everywhere; y fixed on its axis line (Y 0.105, Z 2.63), so it can still rotate about that axis).
 ;   3. BUILD: ANALYSIS_PART_I_MASON_zup_pk2_ft0p05.dat from the joists on, with
 ;        large strain OFF throughout (mat_case.dat's properties copied inline, without its 'model large-strain on');
 ;        the pK11 pocket set on the joist-masonry contacts (ks 1.1e8 Pa/m, cohesion 0.1 MPa, friction 31 deg, tension 0).
 ;   NOT CHANGED: the joint set (kn = ks = 2.5e9 Pa/m, f_t 0.05 MPa, c 0.2 MPa, 36 deg, MASON v12). kn lumps the units'
 ;     deformability (kn x course height ~ 146 MPa against E_UNIT of a few GPa), so the units add only ~3 % flexibility.
-;   E_UNIT: PLACEHOLDER 5 GPa, nu 0.15 -- replace with the characterisation's unit modulus if available.
+;   PLACEHOLDERS: E_UNIT 5 GPa / nu 0.15 (replace with the characterisation's unit modulus if available);
+;     E_TIMBER 11 GPa / nu 0.3 (C24-type softwood, isotropic); E_STEEL 200 GPa / nu 0.3.
 ;   Output: Part_I_MASON_v8_SmallStrain_springforce_zup_pk2_ft0p05_pK11_def.sav   (FISH 'tension' = 0.05e6)
 ; =====================================================================
 model new
@@ -63,17 +67,48 @@ block delete range pos-x 0.3230 0.4037
 
 block hide off
 
-; ---- zoning, straight after the geometry (v4) --------------------------------------------------------------------
-; v4: only wall pieces exist at this point (S, T_B, joists and supports are created below), so EVERY block is
-; zoned and grouped with NO range. v3 selected by 'range group "S" or "T_B" not' and zoned nothing (all 442 blocks
-; reported unzoned); the check below now also counts the zones made, so an empty zoning cannot pass unnoticed.
+; ---- zoning, EVERY block (v5) -------------------------------------------------------------------------------------
+; Wall: only wall pieces exist at this point, so the wall is grouped and zoned with NO range (v3's exclusion range
+; zoned nothing). Then S, T_B, the joists and the supports are created and zoned with hexahedra, block by group.
 [global ZONE_EDGE = 0.10]     ; m, tetrahedron edge length in the masonry
 [global E_UNIT = 5.0e9]       ; Pa  PLACEHOLDER
 [global NU_UNIT = 0.15]
+[global E_TIMBER = 11.0e9]    ; Pa  PLACEHOLDER (joists)
+[global NU_TIMBER = 0.3]
+[global E_STEEL = 200.0e9]    ; Pa  (base S, top beam T_B, joist supports)
+[global NU_STEEL = 0.3]
 block group "Masonry"
 block zone generate edgelength [ZONE_EDGE]
-; CHECK: every wall block must now carry zones; stop here (before any contact work) if one does not.
-; The zoned blocks are collected in a FISH map keyed by block id (no block.extra: v3 relied on it).
+
+;SUPPORT BLOCK
+block create brick 0 1.292 0.0 0.210 -0.05 0 group 'S'
+
+;TOP BEAM
+block create brick 0 1.292 0.0 0.210 2.58 2.68 group 'T_B'
+
+block create brick 0.8882 0.9690 0.105 1.355 0.23455 0.41045 group 'Joist'
+block create brick 0.8882 0.9690 0.105 1.355 2.11091 2.28682 group 'Joist'
+
+block create brick 0.3230 0.4037 0.105 1.355 0.23455 0.41045 group 'Joist'
+block create brick 0.3230 0.4037 0.105 1.355 2.11091 2.28682 group 'Joist'
+
+; 3 meters long
+block create brick 0 1.292 1 1.5 0.14137 0.23455 group 'Joist_S1'
+block create brick 0 1.292 1 1.5 2.01773 2.11091 group 'Joist_S2'
+
+; hexahedra: divisions along the SHORTEST, INTERMEDIATE, LONGEST edge of each brick
+;   S        Z 0.05  / Y 0.21  / X 1.292   -> 2 4 26
+;   T_B      Z 0.10  / Y 0.21  / X 1.292   -> 2 4 26   (gridpoints at Z 2.63 and Y 0.105: the beam's axis line)
+;   Joist    X 0.081 / Z 0.176 / Y 1.25    -> 2 4 25
+;   Joist_S  Z 0.093 / Y 0.50  / X 1.292   -> 2 5 26
+block zone generate hexahedra divisions 2 4 26 range group 'S'
+block zone generate hexahedra divisions 2 4 26 range group 'T_B'
+block zone generate hexahedra divisions 2 4 25 range group 'Joist'
+block zone generate hexahedra divisions 2 5 26 range group 'Joist_S1'
+block zone generate hexahedra divisions 2 5 26 range group 'Joist_S2'
+
+; CHECK: EVERY block (wall, S, T_B, joists, supports) must now carry zones; stop here, before any contact work, if
+; one does not. Zoned blocks are collected in a FISH map keyed by block id.
 fish define defss_rigid_check
     ; every local declared ONCE, at the top
     local b = null
@@ -99,42 +134,30 @@ fish define defss_rigid_check
             endif
         endif
     endloop
-    io.out('DEFSS zones made ' + string(nz) + ' | wall blocks ' + string(nb) + ' (geometry: 442), zoned ' + string(map.size(zoned)) + ', not zoned ' + string(nr))
+    io.out('DEFSS zones made ' + string(nz) + ' | blocks ' + string(nb) + ' (442 wall + S + T_B + 4 joists + 2 supports = 450), zoned ' + string(map.size(zoned)) + ', not zoned ' + string(nr))
     if nz = 0 then
         system.error = 'DEFSS: block zone generate made no zones; stopping before the contacts'
     endif
     if nr > 0 then
-        system.error = 'DEFSS: ' + string(nr) + ' wall blocks were not zoned (listed above); stopping before the contacts'
+        system.error = 'DEFSS: ' + string(nr) + ' blocks were not zoned (listed above); stopping before the contacts'
     endif
     defss_rigid_check = nr
 end
 [defss_rigid_check]
 
-;SUPPORT BLOCK (rigid)
-block create brick 0 1.292 0.0 0.210 -0.05 0 group 'S'
-
-;TOP BEAM (rigid)
-block create brick 0 1.292 0.0 0.210 2.58 2.68 group 'T_B'
-
-block create brick 0.8882 0.9690 0.105 1.355 0.23455 0.41045 group 'Joist'
-block create brick 0.8882 0.9690 0.105 1.355 2.11091 2.28682 group 'Joist'
-
-block create brick 0.3230 0.4037 0.105 1.355 0.23455 0.41045 group 'Joist'
-block create brick 0.3230 0.4037 0.105 1.355 2.11091 2.28682 group 'Joist'
-
-; 3 meters long
-block create brick 0 1.292 1 1.5 0.14137 0.23455 group 'Joist_S1'
-block create brick 0 1.292 1 1.5 2.01773 2.11091 group 'Joist_S2'
-
-; (masonry already zoned right after the geometry; its faces are the zone faces)
-block face triangulate edge-max [0.05] range group "Masonry" not
+; (no face triangulation: every block is zoned, its faces are the zone faces)
 
 ;MATERIAL PROPERTIES
 block property density 1885 range group "Masonry"
-block zone cmodel assign elastic range group "Masonry"
-block zone property density 1885 young [E_UNIT] poisson [NU_UNIT] range group "Masonry"
 block property density 7850 range group "S" or "T_B" or "Joist_S1" or "Joist_S2"
 block property density [5510*1.034] range group "Joist"
+block zone cmodel assign elastic
+block zone property density 1885 young [E_UNIT] poisson [NU_UNIT] range group "Masonry"
+block zone property density [5510*1.034] young [E_TIMBER] poisson [NU_TIMBER] range group "Joist"
+block zone property density 7850 young [E_STEEL] poisson [NU_STEEL] range group 'S'
+block zone property density 7850 young [E_STEEL] poisson [NU_STEEL] range group 'T_B'
+block zone property density 7850 young [E_STEEL] poisson [NU_STEEL] range group 'Joist_S1'
+block zone property density 7850 young [E_STEEL] poisson [NU_STEEL] range group 'Joist_S2'
 
 ; mat_case.dat's property set, copied INLINE without its 'model large-strain on' (no switch to large strain at all)
 fish define properties
@@ -215,13 +238,39 @@ fish history Top_Quarter_A_Disp
 fish history Top_Quarter_B_Disp
 [Record_Disp]
 
-block apply velocity-x 0 range group 'T_B' 
-block apply velocity-y 0 range group 'T_B'   ; OOP (was velocity-z) 
-
-block initialize rvelocity-z 0 range group 'T_B'   ; rotation about the vertical (was rvelocity-y)
-block initialize rvelocity-y 0 range group 'T_B'   ; rotation about the OOP axis (was rvelocity-z)
-block fix rotation-z range group 'T_B'   ; was rotation-y
-block fix rotation-y range group 'T_B'   ; was rotation-z
+; T_B held as in the rigid build (v5, deformable beam). Rigid build: v_x = v_y = 0 at the centroid, rotations about
+; Z and Y fixed, rotation about X (the beam's axis) and v_z free. Deformable equivalent:
+;   v_x = 0 at EVERY T_B gridpoint            -> no x motion, no rotation about Y or Z
+;   v_y = 0 on the axis line (Y 0.105, Z 2.63) -> no y motion, no rotation about Z; rotation about the axis stays free
+; The axis ranges leave out X 0.55-0.75, i.e. the beam's centroid (X 0.646): if the range were read at block
+; centroids it would then select nothing (and the axis check below would say so) rather than the whole beam.
+block fix velocity-x range group 'T_B'
+block gridpoint apply velocity-y 0 range position-x -0.01 0.55 position-y 0.1049 0.1051 position-z 2.6299 2.6301
+block gridpoint apply velocity-y 0 range position-x 0.75 1.31 position-y 0.1049 0.1051 position-z 2.6299 2.6301
+fish define defss_tb_axis
+    ; every local declared ONCE, at the top
+    local gp = null
+    local p = null
+    local na = 0
+    local nt = 0
+    loop foreach gp block.gp.list
+        if block.isgroup(block.gp.hostblock(gp), 'T_B') then
+            nt = nt + 1
+            p = block.gp.pos(gp)
+            if math.abs(comp.y(p) - 0.105) < 1e-4 then
+                if math.abs(comp.z(p) - 2.63) < 1e-4 then
+                    na = na + 1
+                endif
+            endif
+        endif
+    endloop
+    io.out('DEFSS T_B gridpoints ' + string(nt) + ', on the axis line (Y 0.105, Z 2.63) ' + string(na) + ' (expected 27, 23 of them held in y)')
+    if na = 0 then
+        system.error = 'DEFSS: no T_B gridpoints on the axis line; the y-restraint of the top beam would be missing'
+    endif
+    defss_tb_axis = na
+end
+[defss_tb_axis]
 block face group "Comp_apply" range pos-z 2.68
 block hide off
 ; "Reaction" (default slot) = base + joist supports, as cstav has always used.
@@ -300,10 +349,12 @@ fish define mass_group(gname)
     mass_group = m
 end
 fish define applied_force_y_group(gname)
+    ; v5: deformable blocks carry the applied force on their gridpoints
+    local gp = null
     local f = 0.0
-    loop foreach local b block.list
-        if block.isgroup(b, gname)
-            f = f + comp.z(block.force.app(b))   ; vertical is z (function name kept)
+    loop foreach gp block.gp.list
+        if block.isgroup(block.gp.hostblock(gp), gname) then
+            f = f + comp.z(block.gp.force.app(gp))   ; vertical is z (function name kept)
         endif
     endloop
     applied_force_y_group = f
@@ -370,11 +421,22 @@ model solve ratio 1e-6
 ; (the equivalent density put ~1055 kg of inertia on the beam).
 ; ----------------------------------------------------------------------
 fish define apply_spring_force
-    loop foreach local b block.list
-        if block.isgroup(b, 'T_B')
-            block.force.app(b) = vector(0.0, 0.0, -spring_total)
+    ; v5: the deformable beam takes the spring force as equal vertical forces on all its gridpoints (regular hexahedral
+    ; grid, so the resultant acts at the centroid; global direction, no follower moment, as before)
+    local gp = null
+    local ngp = 0
+    loop foreach gp block.gp.list
+        if block.isgroup(block.gp.hostblock(gp), 'T_B') then
+            ngp = ngp + 1
         endif
     endloop
+    loop foreach gp block.gp.list
+        if block.isgroup(block.gp.hostblock(gp), 'T_B') then
+            block.gp.force.app(gp) = vector(0.0, 0.0, -spring_total / ngp)
+        endif
+    endloop
+    io.out('DEFSS spring force ' + string(spring_total) + ' N on ' + string(ngp) + ' T_B gridpoints')
+    apply_spring_force = ngp
 end
 [apply_spring_force]
 block property density 7850 range group 'T_B'
@@ -394,10 +456,31 @@ fish define defss_report
     local kmin = 1e30
     local kmax = -1e30
     local kk = 0.0
+    local gp = null
+    local no = 0
+    local ds = 0.0
+    local dx = 0.0
     loop foreach z block.zone.list
         if block.isgroup(block.zone.hostblock(z), 'Masonry') then
             nz = nz + 1
             mz = mz + block.zone.vol(z) * block.zone.density(z)
+        endif
+        if block.isgroup(block.zone.hostblock(z), 'Masonry') = false then
+            no = no + 1
+        endif
+    endloop
+    loop foreach gp block.gp.list
+        if block.isgroup(block.gp.hostblock(gp), 'S') then
+            ds = math.max(ds, math.mag(block.gp.disp(gp)))
+        endif
+        if block.isgroup(block.gp.hostblock(gp), 'Joist_S1') then
+            ds = math.max(ds, math.mag(block.gp.disp(gp)))
+        endif
+        if block.isgroup(block.gp.hostblock(gp), 'Joist_S2') then
+            ds = math.max(ds, math.mag(block.gp.disp(gp)))
+        endif
+        if block.isgroup(block.gp.hostblock(gp), 'T_B') then
+            dx = math.max(dx, math.abs(block.gp.disp.x(gp)))
         endif
     endloop
     loop foreach cx block.contact.list
@@ -410,7 +493,9 @@ fish define defss_report
             endloop
         endif
     endloop
-    io.out('DEFSS masonry zones ' + string(nz) + ', zone mass ' + string(mz) + ' kg (rigid build: 1308.3 kg)')
+    io.out('DEFSS masonry zones ' + string(nz) + ', zone mass ' + string(mz) + ' kg (rigid build: 1308.3 kg); other zones ' + string(no))
+    io.out('DEFSS fixed blocks (S, Joist_S1, Joist_S2): max gridpoint displacement ' + string(ds) + ' m (must be 0)')
+    io.out('DEFSS T_B: max |x displacement| ' + string(dx) + ' m (must be 0)')
     io.out('DEFSS pocket subcontacts ' + string(npk) + ', stiffness-shear ' + string(kmin) + '-' + string(kmax) + ' Pa/m (must be 1.1e8)')
     defss_report = nz
 end
