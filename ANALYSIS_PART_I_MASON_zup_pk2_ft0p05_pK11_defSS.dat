@@ -15,11 +15,12 @@
 ;   E_UNIT: PLACEHOLDER 5 GPa, nu 0.15 -- replace with the unit modulus of the material characterisation if you have it.
 ;   Output: Part_I_MASON_v8_SmallStrain_springforce_zup_pk2_ft0p05_pK11_def.sav   (FISH 'tension' = 0.05e6)
 ; =====================================================================
+model new 
+model restore 'GEO_WALL_zup_pk2'
+; parameters AFTER the restore (model new / restore clear FISH globals)
 [global ZONE_EDGE = 0.10]     ; m, tetrahedron edge length in the masonry (0.10: a few zones per unit)
 [global E_UNIT = 5.0e9]       ; Pa  PLACEHOLDER
 [global NU_UNIT = 0.15]
-model new 
-model restore 'GEO_WALL_zup_pk2'
 
 block create brick 0.8882 0.9690 0.105 1.355 0.23455 0.41045 group 'Joist'
 block create brick 0.8882 0.9690 0.105 1.355 2.11091 2.28682 group 'Joist'
