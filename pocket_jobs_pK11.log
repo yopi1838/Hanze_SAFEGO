@@ -1,0 +1,13 @@
+[15:47:51] [pK11 push+] ============================================================
+[15:47:51] [pK11 push+] building the save: program call 'ANALYSIS_PART_I_MASON_zup_pk2_ft0p05_pK11.dat'
+[15:47:58] [pK11 push-] ============================================================
+[15:47:58] [pK11 push-] another session is building Part_I_MASON_v8_LargeStrain_springforce_zup_pk2_ft0p05_pK11: waiting
+[15:49:32] [pK11 push+] save built; check the POCKET ... AFTER line above (stiffness-shear, cohesion 1e5)
+[15:49:32] [pK11 push+] + push: Part_I_MASON_v8_LargeStrain_springforce_zup_pk2_ft0p05_pK11 -> pushover_results_v5zup_pk2_ft0p05_pK11_TopMason\pushover_pos.csv
+[15:49:38] [pK11 push-] save ready after 1.7 min
+[15:49:38] [pK11 push-] - push: Part_I_MASON_v8_LargeStrain_springforce_zup_pk2_ft0p05_pK11 -> pushover_results_v5zup_pk2_ft0p05_pK11_TopMason\pushover_neg.csv
+[15:49:50] [pK11 stratF] ============================================================
+[15:49:50] [pK11 stratF] save Part_I_MASON_v8_LargeStrain_springforce_zup_pk2_ft0p05_pK11 found
+[15:49:50] [pK11 stratF] Strategy F runs 1-25, 1.5 % Maxwell, build zup_pk2_ft0p05_pK11
+[23:21:53] [pK11 push-] done in 452.2 min
+[00:40:46] [pK11 push+] done in 531.2 min
