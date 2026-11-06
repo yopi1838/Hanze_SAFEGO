@@ -1,0 +1,173 @@
+# -*- coding: ascii -*-
+"""
+pocket_def_jobs.py -- +/- pushover of the pK11 pocket build with DEFORMABLE masonry blocks in SMALL STRAIN (6 Nov 2026).
+Not called directly: run_pK11def_push_pos.py / _neg.py set JOB and exec this file; each runs in its own 3DEC session.
+
+BUILD: ANALYSIS_PART_I_MASON_zup_pk2_ft0p05_pK11_defSS.dat (built once, under a lock, by the first session that needs it)
+    -> Part_I_MASON_v8_SmallStrain_springforce_zup_pk2_ft0p05_pK11_def.sav
+DRIVER: pushover_oop_3dec_v5_zup.py, read and patched in memory (not edited):
+    * model large-strain OFF (the driver forces it on);
+    * the push a*m is applied to the masonry GRIDPOINTS (block.gp.force.app, a * zone mass / 4 on each of a zone's
+      4 gridpoints) instead of block.force.app on rigid blocks;
+    * masonry mass, participating mass and largest velocity from the zones (mass) and their gridpoints (velocity);
+    * RESTORE_SAV / OUT_DIR / PUSH_DIR / TOP_JOINT 'mason' / TENSION_MAX_PA 0.06e6.
+    Everything else (stepping, servo, diagnostics, CSV) unchanged.
+OUTPUT: pushover_results_v5zup_pk2_ft0p05_pK11_defSS_TopMason/pushover_pos.csv, pushover_neg.csv (+ _end saves)
+NOTE: in small strain there is no geometric softening (no P-Delta, contact geometry not updated), so after the peak
+the curve cannot descend as the large-strain runs do; read the elastic branch, the peak and the mechanism.
+"""
+import os, re, time
+
+JOB = globals().get("JOB")
+if JOB not in ("push+", "push-"):
+    raise RuntimeError("pocket_def_jobs.py: JOB must be 'push+' or 'push-' (got {!r})".format(JOB))
+SAVE = "Part_I_MASON_v8_SmallStrain_springforce_zup_pk2_ft0p05_pK11_def"
+DAT = "ANALYSIS_PART_I_MASON_zup_pk2_ft0p05_pK11_defSS.dat"
+OUT = "pushover_results_v5zup_pk2_ft0p05_pK11_defSS_TopMason"
+BASE = "pushover_oop_3dec_v5_zup.py"
+LOCK = SAVE + ".building"
+LOCK_STALE_MIN = 240
+TAG = "# [pocket_def_jobs {}]".format(JOB)
+LOG = "pocket_def_jobs.log"
+
+PO_PUSH = '''
+fish define po_push(a_push)
+    loop foreach local z block.zone.list
+        if block.isgroup(block.zone.hostblock(z), 'Masonry') then
+            loop local i (1, 4)
+                block.gp.force.app(block.zone.gp(z, i)) = vector(0.0, 0.0, 0.0)
+            endloop
+        endif
+    endloop
+    loop foreach local z block.zone.list
+        if block.isgroup(block.zone.hostblock(z), 'Masonry') then
+            local fz = 0.25 * a_push * block.zone.vol(z) * block.zone.density(z)
+            loop local i (1, 4)
+                local gp = block.zone.gp(z, i)
+                block.gp.force.app(gp) = block.gp.force.app(gp) + vector(0.0, fz, 0.0)
+            endloop
+        endif
+    endloop
+end
+'''
+WALL_MASS = '''
+fish define wall_mass_part
+    global m_tot = 0.0
+    global m_part = 0.0
+    global wall_maxvel = 0.0
+    loop foreach local z block.zone.list
+        if block.isgroup(block.zone.hostblock(z), 'Masonry') then
+            local mz = block.zone.vol(z) * block.zone.density(z)
+            local vy = 0.0
+            loop local i (1, 4)
+                vy = vy + 0.25 * block.gp.vel.y(block.zone.gp(z, i))
+            endloop
+            m_tot = m_tot + mz
+            if (vy * push_sign) > 0.0 then
+                m_part = m_part + mz
+            endif
+            if math.abs(vy) > wall_maxvel then
+                wall_maxvel = math.abs(vy)
+            endif
+        endif
+    endloop
+end
+'''
+
+
+def log(s):
+    line = "[{}] [pK11def {}] {}".format(time.strftime("%H:%M:%S"), JOB, s)
+    print(line)
+    with open(LOG, "a") as f:
+        f.write(line + "\n")
+
+
+def have_save():
+    return os.path.isfile(SAVE + ".sav") or os.path.isfile(SAVE)
+
+
+def ensure_save():
+    if have_save() and not os.path.isfile(LOCK):
+        log("save {} found".format(SAVE)); return
+    if not os.path.isfile(DAT):
+        raise RuntimeError("{} not found".format(DAT))
+    try:
+        fd = os.open(LOCK, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+        os.write(fd, "built by {} at {}\n".format(JOB, time.ctime()).encode()); os.close(fd)
+        builder = True
+    except FileExistsError:
+        builder = False
+    if builder:
+        import itasca as it
+        try:
+            log("building the save: program call '{}'".format(DAT))
+            it.command("python-reset-state false")
+            it.command("program call '{}'".format(DAT))
+            it.command("python-reset-state false")
+        finally:
+            os.remove(LOCK)
+        if not have_save():
+            raise RuntimeError("{} did not write {}".format(DAT, SAVE))
+        log("save built; check the DEFSS lines (zones, zone mass ~1308 kg, pocket stiffness-shear 1.1e8)")
+        return
+    log("another session is building the save: waiting")
+    t0 = time.time()
+    while os.path.isfile(LOCK) or not have_save():
+        time.sleep(20)
+        if os.path.isfile(LOCK) and time.time() - os.path.getmtime(LOCK) > LOCK_STALE_MIN * 60:
+            raise RuntimeError("{} is older than {} min: the build probably crashed. Delete it and start again."
+                               .format(LOCK, LOCK_STALE_MIN))
+    log("save ready after {:.1f} min".format((time.time() - t0) / 60.0))
+
+
+def set_last(src, name, val):
+    hits = list(re.finditer(r"^{}[ \t]*=.*$".format(re.escape(name)), src, re.M))
+    if not hits:
+        raise RuntimeError("{}: no config line '{} = ...'".format(BASE, name))
+    m = hits[-1]
+    return src[:m.start()] + "{} = {!r}   {}".format(name, val, TAG) + src[m.end():]
+
+
+def replace_fish(src, name, new):
+    i = src.index("fish define {}".format(name))
+    a = src.rindex('it.command("""', 0, i) + len('it.command("""')
+    b = src.index('""")', i)
+    return src[:a] + new + src[b:]
+
+
+def patched(direction):
+    with open(BASE) as f:
+        src = f.read()
+    if "Z-UP" not in src:
+        raise RuntimeError("{} is not the z-up driver".format(BASE))
+    old = 'it.command("model large-strain on")'
+    if src.count(old) != 1:
+        raise RuntimeError("{}: large-strain line not found once".format(BASE))
+    src = src.replace(old, 'it.command("model large-strain off")   ' + TAG)
+    src = replace_fish(src, "po_push(a_push)", PO_PUSH)
+    src = replace_fish(src, "wall_mass_part", WALL_MASS)
+    for k, v in (("RESTORE_SAV", SAVE), ("OUT_DIR", OUT), ("PUSH_DIR", direction), ("TOP_JOINT", "mason"),
+                 ("TENSION_MAX_PA", 0.06e6)):
+        src = set_last(src, k, v)
+    return src
+
+
+def run(direction):
+    side = "pos" if direction > 0 else "neg"
+    csvp = os.path.join(OUT, "pushover_{}.csv".format(side))
+    endsav = os.path.join(OUT, "pushover_{}_end".format(side))
+    if os.path.isfile(endsav + ".sav") or os.path.isfile(endsav):
+        log("{} already finished -- nothing to do".format(csvp)); return
+    if os.path.isfile(csvp):
+        os.replace(csvp, csvp + ".partial"); log("{}: no end save, kept as .partial, pushing again".format(csvp))
+    src = patched(direction)
+    log("{} push, deformable masonry, small strain: {} -> {}".format("+" if direction > 0 else "-", SAVE, csvp))
+    t0 = time.time()
+    exec(compile(src, "{} [pK11 def SS {}]".format(BASE, side), "exec"),
+         {"__name__": "__main__", "__file__": os.path.abspath(BASE)})
+    log("done in {:.1f} min".format((time.time() - t0) / 60.0))
+
+
+log("=" * 60)
+ensure_save()
+run(+1 if JOB == "push+" else -1)

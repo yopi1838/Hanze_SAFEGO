@@ -1,0 +1,41 @@
+side,model,d_mm,F_kN
+pos,"rigid, floors NOT pushed, top-beam corner, weakest hinge",5,11.54
+pos,"rigid, floors NOT pushed, top-beam corner, weakest hinge",10,10.89
+pos,"rigid, floors NOT pushed, top-beam corner, weakest hinge",20,9.51
+pos,"rigid, floors NOT pushed, top-beam corner, weakest hinge",30,8.1
+pos,"rigid, floors NOT pushed, top-beam corner, weakest hinge",40,6.69
+pos,"rigid, floors NOT pushed, top-beam corner, hinge at upper pocket 2.11 m",5,16.03
+pos,"rigid, floors NOT pushed, top-beam corner, hinge at upper pocket 2.11 m",10,15.58
+pos,"rigid, floors NOT pushed, top-beam corner, hinge at upper pocket 2.11 m",20,14.69
+pos,"rigid, floors NOT pushed, top-beam corner, hinge at upper pocket 2.11 m",30,13.82
+pos,"rigid, floors NOT pushed, top-beam corner, hinge at upper pocket 2.11 m",40,12.97
+pos,"rigid, floors pushed, top-beam corner, weakest hinge",5,9.81
+pos,"rigid, floors pushed, top-beam corner, weakest hinge",10,9.28
+pos,"rigid, floors pushed, top-beam corner, weakest hinge",20,8.13
+pos,"rigid, floors pushed, top-beam corner, weakest hinge",30,6.92
+pos,"rigid, floors pushed, top-beam corner, weakest hinge",40,5.72
+pos,"rigid, floors pushed, top at beam centroid, weakest hinge",5,7.13
+pos,"rigid, floors pushed, top at beam centroid, weakest hinge",10,6.78
+pos,"rigid, floors pushed, top at beam centroid, weakest hinge",20,6.03
+pos,"rigid, floors pushed, top at beam centroid, weakest hinge",30,5.14
+pos,"rigid, floors pushed, top at beam centroid, weakest hinge",40,4.06
+neg,"rigid, floors NOT pushed, top-beam corner, weakest hinge",5,11.52
+neg,"rigid, floors NOT pushed, top-beam corner, weakest hinge",10,10.88
+neg,"rigid, floors NOT pushed, top-beam corner, weakest hinge",20,9.51
+neg,"rigid, floors NOT pushed, top-beam corner, weakest hinge",30,8.09
+neg,"rigid, floors NOT pushed, top-beam corner, weakest hinge",40,6.69
+neg,"rigid, floors NOT pushed, top-beam corner, hinge at upper pocket 2.11 m",5,15.9
+neg,"rigid, floors NOT pushed, top-beam corner, hinge at upper pocket 2.11 m",10,15.45
+neg,"rigid, floors NOT pushed, top-beam corner, hinge at upper pocket 2.11 m",20,14.57
+neg,"rigid, floors NOT pushed, top-beam corner, hinge at upper pocket 2.11 m",30,13.7
+neg,"rigid, floors NOT pushed, top-beam corner, hinge at upper pocket 2.11 m",40,12.84
+neg,"rigid, floors pushed, top-beam corner, weakest hinge",5,9.79
+neg,"rigid, floors pushed, top-beam corner, weakest hinge",10,9.26
+neg,"rigid, floors pushed, top-beam corner, weakest hinge",20,8.11
+neg,"rigid, floors pushed, top-beam corner, weakest hinge",30,6.9
+neg,"rigid, floors pushed, top-beam corner, weakest hinge",40,5.7
+neg,"rigid, floors pushed, top at beam centroid, weakest hinge",5,7.08
+neg,"rigid, floors pushed, top at beam centroid, weakest hinge",10,6.74
+neg,"rigid, floors pushed, top at beam centroid, weakest hinge",20,5.99
+neg,"rigid, floors pushed, top at beam centroid, weakest hinge",30,5.12
+neg,"rigid, floors pushed, top at beam centroid, weakest hinge",40,4.05
