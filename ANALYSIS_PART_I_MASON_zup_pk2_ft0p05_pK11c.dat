@@ -1,0 +1,63 @@
+; =====================================================================
+; ANALYSIS_PART_I_MASON_zup_pk2_ft0p05_pK11c.dat -- pocket variant pK11c (8 Nov 2026): pK11 with the pocket
+;   cohesion KEPT after failure (cohesion-residual 0.1 MPa instead of 0). Everything else as pK11.
+;   WHY: Strategy F at 1.5 % with pK11 matched the large HU12 runs (15-21: displacement 1.19 x US-1, force
+;   1.16 x US-2) but the upper joists ratcheted out of their pockets by tens of mm from run 16 on, while the
+;   tests show < 0.2 mm residual slip until runs 23-24. With cohesion-residual 0 the pocket holds the floor
+;   (203 kg per floor) by friction alone once the 0.1 MPa cohesion is lost. ONE parameter changed.
+;   POCKET SET (Joist-Masonry contacts only; every other contact unchanged):
+;     stiffness-shear 1.1e8 Pa/m, cohesion 0.1 MPa, friction 31 deg, tension 0  <- as pK11 (Arslan et al. 2024)
+;     cohesion-residual 0.1 MPa (= cohesion)                                    <- CHANGED (pK11: 0)
+;     stiffness-normal / -initial kn unchanged
+;   Built FROM the zup_pk2_ft0p05 save, as pK11; a static settle follows the change.
+;   Output: Part_I_MASON_v8_LargeStrain_springforce_zup_pk2_ft0p05_pK11c.sav
+; =====================================================================
+model restore 'Part_I_MASON_v8_LargeStrain_springforce_zup_pk2_ft0p05'
+[global ks_pocket = 1.1e8]
+[global c_pocket = 0.1e6]
+[global phi_pocket = 31.0]
+block contact group 'PocketJM' slot 'pocket' range group-intersection 'Joist' 'Masonry'
+fish define pocket_report
+    ; every local declared ONCE, at the top
+    local n = 0
+    local kmin = 1e30
+    local kmax = -1e30
+    local cmin = 1e30
+    local cmax = -1e30
+    local rmin = 1e30
+    local rmax = -1e30
+    local cx = null
+    local sc = null
+    local ks_ = 0.0
+    local co_ = 0.0
+    local cr_ = 0.0
+    loop foreach cx block.contact.list
+        if block.contact.isgroup(cx, 'PocketJM', 'pocket') then
+            loop foreach sc block.contact.subcontactlist(cx)
+                n = n + 1
+                ks_ = block.subcontact.prop(sc, 'stiffness-shear')
+                co_ = block.subcontact.prop(sc, 'cohesion')
+                cr_ = block.subcontact.prop(sc, 'cohesion-residual')
+                kmin = math.min(kmin, ks_)
+                kmax = math.max(kmax, ks_)
+                cmin = math.min(cmin, co_)
+                cmax = math.max(cmax, co_)
+                rmin = math.min(rmin, cr_)
+                rmax = math.max(rmax, cr_)
+            endloop
+        endif
+    endloop
+    io.out('POCKET joist-masonry subcontacts ' + string(n) + ': stiffness-shear ' + string(kmin) + '-' + string(kmax) + ' Pa/m, cohesion ' + string(cmin) + '-' + string(cmax) + ' Pa, cohesion-residual ' + string(rmin) + '-' + string(rmax) + ' Pa')
+    pocket_report = n
+end
+[io.out('--- pocket contacts BEFORE ---')]
+[pocket_report]
+block contact prop stiffness-shear @ks_pocket tension 0 cohesion @c_pocket friction @phi_pocket ...
+    friction-residual @phi_pocket cohesion-residual @c_pocket ...
+    range group-intersection 'Joist' 'Masonry'
+[io.out('--- pocket contacts AFTER (stiffness-shear must read ' + string(ks_pocket) + ', cohesion 1e5, cohesion-residual 1e5) ---')]
+[pocket_report]
+model solve ratio 5e-8
+[io.out('--- after the static settle ---')]
+[pocket_report]
+model save 'Part_I_MASON_v8_LargeStrain_springforce_zup_pk2_ft0p05_pK11c'
