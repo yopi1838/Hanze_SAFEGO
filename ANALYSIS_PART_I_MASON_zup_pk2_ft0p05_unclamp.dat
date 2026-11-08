@@ -10,7 +10,8 @@
 ;   bears on the pocket floor; side faces, back face, floor and every other contact keep the ft0p05 joint set.
 ;   A BOUNDING case: it tells whether the lever is the source, not what the real pocket carries.
 ;   Joist top faces (z-up): Z 0.41045 (lower floor), 2.28682 (upper floor); contact ranges Z +/- 0.005 m.
-;   New contacts forming there in large strain get the same soft set (material-table add).
+;   New contacts forming there in large strain get the same soft set (material-table add: ONE command per entry,
+;   jmodel and property together -- 3DEC refuses an entry without a model).
 ;   Built FROM the zup_pk2_ft0p05 save (FISH kn, ks, friction, check_vertical_loads come with it); static settle.
 ;   Output: Part_I_MASON_v8_LargeStrain_springforce_zup_pk2_ft0p05_unclamp.sav
 ; =====================================================================
@@ -49,11 +50,9 @@ end
 block contact jmodel assign mohr range group 'PocketTop' slot 'ptop'
 block contact property stiffness-normal [kn*kn_top_factor] stiffness-shear [ks*kn_top_factor] ...
     friction [friction] cohesion 0 tension 0 range group 'PocketTop' slot 'ptop'
-block contact material-table add jmodel mohr range group-intersection 'Joist' 'Masonry' position-z 0.40545 0.41545
-block contact material-table add property stiffness-normal [kn*kn_top_factor] stiffness-shear [ks*kn_top_factor] ...
+block contact material-table add jmodel mohr property stiffness-normal [kn*kn_top_factor] stiffness-shear [ks*kn_top_factor] ...
     friction [friction] cohesion 0 tension 0 range group-intersection 'Joist' 'Masonry' position-z 0.40545 0.41545
-block contact material-table add jmodel mohr range group-intersection 'Joist' 'Masonry' position-z 2.28182 2.29182
-block contact material-table add property stiffness-normal [kn*kn_top_factor] stiffness-shear [ks*kn_top_factor] ...
+block contact material-table add jmodel mohr property stiffness-normal [kn*kn_top_factor] stiffness-shear [ks*kn_top_factor] ...
     friction [friction] cohesion 0 tension 0 range group-intersection 'Joist' 'Masonry' position-z 2.28182 2.29182
 model solve ratio 5e-8
 [io.out('--- after the static settle: top faces should carry ~0, the pockets about the joists own reaction ---')]
