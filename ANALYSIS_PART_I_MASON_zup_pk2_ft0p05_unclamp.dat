@@ -1,0 +1,63 @@
+; =====================================================================
+; ANALYSIS_PART_I_MASON_zup_pk2_ft0p05_unclamp.dat -- the zup_pk2_ft0p05 build (rigid blocks, large strain) with the
+;   joist pockets UNCLAMPED (8 Nov 2026). ONE change: the contacts on the joists' TOP faces inside the pockets.
+;   WHY: in the pk2 f_t 0.05 pushovers the joist-support normal force changes by about +/-2 kN as the wall rotates
+;   (rises on the + push, falls on the - push): the rigid joist, held on its top and bottom faces in the pocket, acts
+;   as a lever on its support ~1 m away and resists the wall's rotation, ~2 kNm, i.e. ~1.5-2 kN of lateral force in
+;   both directions -- the size of the model's excess over the tests. This build removes that couple: the masonry
+;   above each joist gets a very soft, frictional, tensionless contact (kn x 1e-3, ks x 1e-3, friction as the joints,
+;   cohesion 0, tension 0, model mohr), so the joist can no longer transmit a moment into the wall. The joist still
+;   bears on the pocket floor; side faces, back face, floor and every other contact keep the ft0p05 joint set.
+;   A BOUNDING case: it tells whether the lever is the source, not what the real pocket carries.
+;   Joist top faces (z-up): Z 0.41045 (lower floor), 2.28682 (upper floor); contact ranges Z +/- 0.005 m.
+;   New contacts forming there in large strain get the same soft set (material-table add).
+;   Built FROM the zup_pk2_ft0p05 save (FISH kn, ks, friction, check_vertical_loads come with it); static settle.
+;   Output: Part_I_MASON_v8_LargeStrain_springforce_zup_pk2_ft0p05_unclamp.sav
+; =====================================================================
+model restore 'Part_I_MASON_v8_LargeStrain_springforce_zup_pk2_ft0p05'
+[global kn_top_factor = 1.0e-3]
+block contact group 'PocketTop' slot 'ptop' range group-intersection 'Joist' 'Masonry' position-z 0.40545 0.41545
+block contact group 'PocketTop' slot 'ptop' range group-intersection 'Joist' 'Masonry' position-z 2.28182 2.29182
+block contact group 'PocketJM' slot 'pocket' range group-intersection 'Joist' 'Masonry'
+fish define pocket_load(gname, gslot)
+    ; every local declared ONCE, at the top
+    local f = 0.0
+    local n = 0
+    local kmin = 1e30
+    local kmax = -1e30
+    local cx = null
+    local sc = null
+    loop foreach cx block.contact.list
+        if block.contact.isgroup(cx, gname, gslot) then
+            loop foreach sc block.contact.subcontactlist(cx)
+                f = f + block.subcontact.force.norm(sc)
+                n = n + 1
+                kmin = math.min(kmin, block.subcontact.prop(sc, 'stiffness-normal'))
+                kmax = math.max(kmax, block.subcontact.prop(sc, 'stiffness-normal'))
+            endloop
+        endif
+    endloop
+    io.out('  ' + gname + ': ' + string(n) + ' subcontacts, sum normal force ' + string(f) + ' N, stiffness-normal ' + string(kmin) + '-' + string(kmax) + ' Pa/m')
+    if n = 0 then
+        system.error = 'UNCLAMP: contact group ' + gname + ' is empty -- the top-face range found no contacts'
+    endif
+    pocket_load = n
+end
+[io.out('--- pocket contacts BEFORE (top faces carry the clamp) ---')]
+[pocket_load('PocketTop', 'ptop')]
+[pocket_load('PocketJM', 'pocket')]
+block contact jmodel assign mohr range group 'PocketTop' slot 'ptop'
+block contact property stiffness-normal [kn*kn_top_factor] stiffness-shear [ks*kn_top_factor] ...
+    friction [friction] cohesion 0 tension 0 range group 'PocketTop' slot 'ptop'
+block contact material-table add jmodel mohr range group-intersection 'Joist' 'Masonry' position-z 0.40545 0.41545
+block contact material-table add property stiffness-normal [kn*kn_top_factor] stiffness-shear [ks*kn_top_factor] ...
+    friction [friction] cohesion 0 tension 0 range group-intersection 'Joist' 'Masonry' position-z 0.40545 0.41545
+block contact material-table add jmodel mohr range group-intersection 'Joist' 'Masonry' position-z 2.28182 2.29182
+block contact material-table add property stiffness-normal [kn*kn_top_factor] stiffness-shear [ks*kn_top_factor] ...
+    friction [friction] cohesion 0 tension 0 range group-intersection 'Joist' 'Masonry' position-z 2.28182 2.29182
+model solve ratio 5e-8
+[io.out('--- after the static settle: top faces should carry ~0, the pockets about the joists own reaction ---')]
+[pocket_load('PocketTop', 'ptop')]
+[pocket_load('PocketJM', 'pocket')]
+[check_vertical_loads]
+model save 'Part_I_MASON_v8_LargeStrain_springforce_zup_pk2_ft0p05_unclamp'
