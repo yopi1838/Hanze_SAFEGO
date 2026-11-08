@@ -1,0 +1,520 @@
+; =====================================================================
+; ANALYSIS_PART_I_MASON_zup_pk2_ft0p05_pK11_defSS.dat -- the pK11 pocket build with DEFORMABLE masonry blocks, in
+;   SMALL STRAIN, built FROM THE GEOMETRY (6 Nov 2026, v5): no restore of GEO_WALL_zup_pk2 or of any rigid save.
+;   1. GEOMETRY: the commands of Geo_Prep_zup_pk2.dat, unchanged (Groningen_zup.dec, support, top beam, the Y = 0.105
+;      cuts of the pocket bands, pocket voids, group 'Masonry'), without its save.
+;   2. ZONING, EVERY block (v5): the wall pieces first (tetrahedra, edge ZONE_EDGE, no range: only wall pieces exist
+;      then); then the base 'S', top beam 'T_B', joists and joist supports are created and zoned with hexahedra
+;      (regular grids, so the top beam has a gridpoint line on its axis). A check stops the build if any of the 450
+;      blocks is left without zones. Elastic zones: wall E_UNIT/NU_UNIT, joists E_TIMBER/NU_TIMBER, steel E_STEEL.
+;      Rigid-block commands replaced: spring force as gridpoint forces on T_B; T_B held as the rigid build held it
+;      (x fixed everywhere; y fixed on its axis line (Y 0.105, Z 2.63), so it can still rotate about that axis).
+;   3. BUILD: ANALYSIS_PART_I_MASON_zup_pk2_ft0p05.dat from the joists on, with
+;        large strain OFF throughout (mat_case.dat's properties copied inline, without its 'model large-strain on');
+;        the pK11 pocket set on the joist-masonry contacts (ks 1.1e8 Pa/m, cohesion 0.1 MPa, friction 31 deg, tension 0).
+;   NOT CHANGED: the joint set (kn = ks = 2.5e9 Pa/m, f_t 0.05 MPa, c 0.2 MPa, 36 deg, MASON v12). kn lumps the units'
+;     deformability (kn x course height ~ 146 MPa against E_UNIT of a few GPa), so the units add only ~3 % flexibility.
+;   PLACEHOLDERS: E_UNIT 5 GPa / nu 0.15 (replace with the characterisation's unit modulus if available);
+;     E_TIMBER 11 GPa / nu 0.3 (C24-type softwood, isotropic); E_STEEL 200 GPa / nu 0.3.
+;   Output: Part_I_MASON_v8_SmallStrain_springforce_zup_pk2_ft0p05_pK11_def.sav   (FISH 'tension' = 0.05e6)
+; =====================================================================
+model new
+model config dynamic
+model dynamic active off
+model large-strain off
+
+call 'Groningen_zup.dec'
+
+; (base 'S' and top beam 'T_B' are created AFTER the zoning, v4: at the zoning step only wall pieces exist, so the
+;  zoning needs no range at all. The cuts below never touched S or T_B -- they were hidden by every cut's z range.)
+
+; ---- split at Y = 0.105 as Geo_Prep.dat does it -------------------------------------------------------------
+; stretcher course of each pocket band (course 5, Z 0.2932-0.3518; course 37, Z 2.1697-2.2283): two leaves across
+; the whole wall -- a stretcher course of the one-brick wall is two rows of stretchers (Groningen.dec merges them)
+block hide
+block hide off range pos-z 0.30 0.34
+block hide off range pos-z 2.18 2.22
+block cut joint-set dip 90 dip-direction 0 origin 0 0.105 0
+
+; header courses of each pocket band (4, 6, 36, 38): headers run through the thickness, so only the brick over
+; each pocket is split (as Geo_Prep.dat's second cut)
+block hide
+block hide off range pos-z 0.24 0.29
+block hide off range pos-z 0.36 0.40
+block hide off range pos-z 2.12 2.16
+block hide off range pos-z 2.24 2.28
+block hide range pos-x -1 0.33
+block hide range pos-x 0.42 0.86
+block hide range pos-x 0.97 11
+block cut joint-set dip 90 dip-direction 0 origin 0 0.105 0
+
+; ---- remove the pocket volume: bands, joist half (Y > 0.105), between the pocket faces -------------------------
+block hide off
+
+block hide range pos-z -10000 0.2346
+block hide range pos-z 0.4105 2.1109
+block hide range pos-z 2.2869 100000
+
+block hide range pos-y -1 0.105
+
+block cut joint-set dip 90 dip-direction 90 origin 0.9690 0 0
+block cut joint-set dip 90 dip-direction 90 origin 0.8882 0 0
+block delete range pos-x 0.8882 0.9690
+
+block cut joint-set dip 90 dip-direction 90 origin 0.4037 0 0
+block cut joint-set dip 90 dip-direction 90 origin 0.3230 0 0
+block delete range pos-x 0.3230 0.4037
+
+block hide off
+
+; ---- zoning, EVERY block (v5) -------------------------------------------------------------------------------------
+; Wall: only wall pieces exist at this point, so the wall is grouped and zoned with NO range (v3's exclusion range
+; zoned nothing). Then S, T_B, the joists and the supports are created and zoned with hexahedra, block by group.
+[global ZONE_EDGE = 0.10]     ; m, tetrahedron edge length in the masonry
+[global E_UNIT = 5.0e9]       ; Pa  PLACEHOLDER
+[global NU_UNIT = 0.15]
+[global E_TIMBER = 11.0e9]    ; Pa  PLACEHOLDER (joists)
+[global NU_TIMBER = 0.3]
+[global E_STEEL = 200.0e9]    ; Pa  (base S, top beam T_B, joist supports)
+[global NU_STEEL = 0.3]
+block group "Masonry"
+block zone generate edgelength [ZONE_EDGE]
+
+;SUPPORT BLOCK
+block create brick 0 1.292 0.0 0.210 -0.05 0 group 'S'
+
+;TOP BEAM
+block create brick 0 1.292 0.0 0.210 2.58 2.68 group 'T_B'
+
+block create brick 0.8882 0.9690 0.105 1.355 0.23455 0.41045 group 'Joist'
+block create brick 0.8882 0.9690 0.105 1.355 2.11091 2.28682 group 'Joist'
+
+block create brick 0.3230 0.4037 0.105 1.355 0.23455 0.41045 group 'Joist'
+block create brick 0.3230 0.4037 0.105 1.355 2.11091 2.28682 group 'Joist'
+
+; 3 meters long
+block create brick 0 1.292 1 1.5 0.14137 0.23455 group 'Joist_S1'
+block create brick 0 1.292 1 1.5 2.01773 2.11091 group 'Joist_S2'
+
+; hexahedra: divisions along the SHORTEST, INTERMEDIATE, LONGEST edge of each brick
+;   S        Z 0.05  / Y 0.21  / X 1.292   -> 2 4 26
+;   T_B      Z 0.10  / Y 0.21  / X 1.292   -> 2 4 26   (gridpoints at Z 2.63 and Y 0.105: the beam's axis line)
+;   Joist    X 0.081 / Z 0.176 / Y 1.25    -> 2 4 25
+;   Joist_S  Z 0.093 / Y 0.50  / X 1.292   -> 2 5 26
+block zone generate hexahedra divisions 2 4 26 range group 'S'
+block zone generate hexahedra divisions 2 4 26 range group 'T_B'
+block zone generate hexahedra divisions 2 4 25 range group 'Joist'
+block zone generate hexahedra divisions 2 5 26 range group 'Joist_S1'
+block zone generate hexahedra divisions 2 5 26 range group 'Joist_S2'
+
+; CHECK: EVERY block (wall, S, T_B, joists, supports) must now carry zones; stop here, before any contact work, if
+; one does not. Zoned blocks are collected in a FISH map keyed by block id.
+fish define defss_rigid_check
+    ; every local declared ONCE, at the top
+    local b = null
+    local z = null
+    local bid = 0
+    local nb = 0
+    local nz = 0
+    local nr = 0
+    local zoned = map()
+    loop foreach z block.zone.list
+        nz = nz + 1
+        bid = block.id(block.zone.hostblock(z))
+        if map.has(zoned, bid) = false then
+            map.add(zoned, bid, 1)
+        endif
+    endloop
+    loop foreach b block.list
+        nb = nb + 1
+        if map.has(zoned, block.id(b)) = false then
+            nr = nr + 1
+            if nr <= 20 then
+                io.out('DEFSS NOT zoned: block ' + string(block.id(b)) + ' at ' + string(block.pos(b)) + ', volume ' + string(block.vol(b)) + ' m3')
+            endif
+        endif
+    endloop
+    io.out('DEFSS zones made ' + string(nz) + ' | blocks ' + string(nb) + ' (442 wall + S + T_B + 4 joists + 2 supports = 450), zoned ' + string(map.size(zoned)) + ', not zoned ' + string(nr))
+    if nz = 0 then
+        system.error = 'DEFSS: block zone generate made no zones; stopping before the contacts'
+    endif
+    if nr > 0 then
+        system.error = 'DEFSS: ' + string(nr) + ' blocks were not zoned (listed above); stopping before the contacts'
+    endif
+    defss_rigid_check = nr
+end
+[defss_rigid_check]
+
+; ---- report: zoning, zone mass, fixed blocks, pocket set (DEFINED here, before any solve, so a FISH name error
+;      stops the build in seconds; CALLED after the save) ----
+; zone mass = zone volume x its block's density (block.mass / block.vol): 3DEC has no block.zone.density
+fish define defss_report
+    ; every local declared ONCE, at the top
+    local z = null
+    local cx = null
+    local sc = null
+    local nz = 0
+    local mz = 0.0
+    local npk = 0
+    local kmin = 1e30
+    local kmax = -1e30
+    local kk = 0.0
+    local gp = null
+    local no = 0
+    local ds = 0.0
+    local dx = 0.0
+    loop foreach z block.zone.list
+        if block.isgroup(block.zone.hostblock(z), 'Masonry') then
+            nz = nz + 1
+            mz = mz + block.zone.vol(z) * block.mass(block.zone.hostblock(z)) / block.vol(block.zone.hostblock(z))
+        endif
+        if block.isgroup(block.zone.hostblock(z), 'Masonry') = false then
+            no = no + 1
+        endif
+    endloop
+    loop foreach gp block.gp.list
+        if block.isgroup(block.gp.hostblock(gp), 'S') then
+            ds = math.max(ds, math.abs(block.gp.disp.x(gp)))
+            ds = math.max(ds, math.abs(block.gp.disp.y(gp)))
+            ds = math.max(ds, math.abs(block.gp.disp.z(gp)))
+        endif
+        if block.isgroup(block.gp.hostblock(gp), 'Joist_S1') then
+            ds = math.max(ds, math.abs(block.gp.disp.x(gp)))
+            ds = math.max(ds, math.abs(block.gp.disp.y(gp)))
+            ds = math.max(ds, math.abs(block.gp.disp.z(gp)))
+        endif
+        if block.isgroup(block.gp.hostblock(gp), 'Joist_S2') then
+            ds = math.max(ds, math.abs(block.gp.disp.x(gp)))
+            ds = math.max(ds, math.abs(block.gp.disp.y(gp)))
+            ds = math.max(ds, math.abs(block.gp.disp.z(gp)))
+        endif
+        if block.isgroup(block.gp.hostblock(gp), 'T_B') then
+            dx = math.max(dx, math.abs(block.gp.disp.x(gp)))
+        endif
+    endloop
+    loop foreach cx block.contact.list
+        if block.contact.isgroup(cx, 'PocketJM', 'pocket') then
+            loop foreach sc block.contact.subcontactlist(cx)
+                npk = npk + 1
+                kk = block.subcontact.prop(sc, 'stiffness-shear')
+                kmin = math.min(kmin, kk)
+                kmax = math.max(kmax, kk)
+            endloop
+        endif
+    endloop
+    io.out('DEFSS masonry zones ' + string(nz) + ', zone mass ' + string(mz) + ' kg (rigid build: 1308.3 kg); other zones ' + string(no))
+    io.out('DEFSS fixed blocks (S, Joist_S1, Joist_S2): max gridpoint displacement ' + string(ds) + ' m (must be 0)')
+    io.out('DEFSS T_B: max |x displacement| ' + string(dx) + ' m (must be 0)')
+    io.out('DEFSS pocket subcontacts ' + string(npk) + ', stiffness-shear ' + string(kmin) + '-' + string(kmax) + ' Pa/m (must be 1.1e8)')
+    defss_report = nz
+end
+
+; (no face triangulation: every block is zoned, its faces are the zone faces)
+
+;MATERIAL PROPERTIES
+block property density 1885 range group "Masonry"
+block property density 7850 range group "S" or "T_B" or "Joist_S1" or "Joist_S2"
+block property density [5510*1.034] range group "Joist"
+block zone cmodel assign elastic
+block zone property density 1885 young [E_UNIT] poisson [NU_UNIT] range group "Masonry"
+block zone property density [5510*1.034] young [E_TIMBER] poisson [NU_TIMBER] range group "Joist"
+block zone property density 7850 young [E_STEEL] poisson [NU_STEEL] range group 'S'
+block zone property density 7850 young [E_STEEL] poisson [NU_STEEL] range group 'T_B'
+block zone property density 7850 young [E_STEEL] poisson [NU_STEEL] range group 'Joist_S1'
+block zone property density 7850 young [E_STEEL] poisson [NU_STEEL] range group 'Joist_S2'
+
+; mat_case.dat's property set, copied INLINE without its 'model large-strain on' (no switch to large strain at all)
+fish define properties
+    kn       = 2.5e9
+    ks       = 2.5e9
+    tension  = 0.0
+    cohesion = 0.2e6
+    friction = 36
+    fc_comp  = 20e6
+    Gt = 0.025*((2*tension*1e-6)^0.7)*1000
+    Gs = 100
+    Gc = (0.15+0.43*fc_comp*1e-6-0.0036*(fc_comp*1e-6)^2)*1000
+    n   = 2.0
+    Css = 9.0
+    Cnn = 1.0
+    Cn  = 0.0
+end
+@properties
+; ---- f_t = 0.05 MPa, cohesion 0.2 MPa for every joint (overrides mat_case.dat; as the f_t sweep) ----
+[global tension  = 0.05e6]
+[global cohesion = 0.2e6]
+[global Gt = 0.025*((2*tension*1e-6)^0.7)*1000]
+[io.out('joints: tension ' + string(tension) + ' Pa, cohesion ' + string(cohesion) + ' Pa, G_I ' + string(Gt) + ' N/m')]
+;CONTACT PROPERTIES
+block contact generate-subcontacts
+block contact jmodel assign mason_v12
+block contact prop stiffness-normal @kn stiffness-initial @kn  stiffness-shear @ks ...
+    tension @tension cohesion @cohesion friction @friction ...
+    friction-residual @friction cohesion-residual [0.1*cohesion] ...
+    G_I @Gt G_II @Gs G_c @Gc compression @fc_comp ...
+    comp-residual [fc_comp*0.2] Cn [Cn] Cnn [Cnn] Css [Css] peak_ratio [n]
+
+; ---- pK11 pocket: timber-mortar set on the joist-masonry contacts (Arslan et al. 2024) ----
+block contact prop stiffness-shear 1.1e8 tension 0 cohesion 0.1e6 friction 31.0 ...
+    friction-residual 31.0 cohesion-residual 0 ...
+    range group-intersection 'Joist' 'Masonry'
+
+;Timber Support Properties
+block contact jmodel assign mohr range group-intersection 'Joist' 'Joist_S1'
+block contact property stiffness-normal [kn*0.1] stiffness-shear 1 ...
+    tension 1 cohesion 1 friction 1 ...
+    range group-intersection 'Joist' 'Joist_S1'
+
+block contact jmodel assign mohr range group-intersection 'Joist' 'Joist_S2'
+block contact property stiffness-normal [kn*0.1] stiffness-shear 1 ...
+    tension 1 cohesion 1 friction 1 ...
+    range group-intersection 'Joist' 'Joist_S2'
+
+block contact	material-table	default	jmodel mason_v12
+block contact material-table default prop stiffness-normal @kn stiffness-initial @kn ...
+    stiffness-shear @ks tension 0 cohesion 0 friction @friction ...
+    friction-residual @friction cohesion-residual 0 G_I @Gt G_II @Gs ...
+    G_c @Gc compression @fc_comp comp-residual [0] Cn [0] Cnn [1] Css [9] ...
+    peak_ratio [3.0]
+
+;BOUNDARY CONDITIONS
+block fix range group 'S'
+block fix range group 'Joist_S1'
+block fix range group 'Joist_S2'
+
+;HISTORIES
+fish def Record_Disp
+   monitoring_point = block.gp.near(0.644, 0.21, 2.68)
+   monitoring_point_1 = block.gp.near(0.644, 0.21, 0.6)
+   monitoring_point_2 = block.gp.near(0.644, 0.21, 1.26)
+   monitoring_point_3a = block.gp.near(1.184, 0.21, 2.06)
+   monitoring_point_3b = block.gp.near(0.104, 0.21, 2.06)
+   Record_Disp = block.gp.disp.y(monitoring_point)
+   Bot_Quarter_Disp = block.gp.disp.y(monitoring_point_1)
+   Mid_Disp = block.gp.disp.y(monitoring_point_2)
+   Top_Quarter_A_Disp = block.gp.disp.y(monitoring_point_3a)
+   Top_Quarter_B_Disp = block.gp.disp.y(monitoring_point_3b)
+end
+fish history Record_Disp
+fish history Bot_Quarter_Disp
+fish history Mid_Disp
+fish history Top_Quarter_A_Disp
+fish history Top_Quarter_B_Disp
+[Record_Disp]
+
+; T_B held as in the rigid build (v5, deformable beam). Rigid build: v_x = v_y = 0 at the centroid, rotations about
+; Z and Y fixed, rotation about X (the beam's axis) and v_z free. Deformable equivalent:
+;   v_x = 0 at EVERY T_B gridpoint            -> no x motion, no rotation about Y or Z
+;   v_y = 0 on the axis line (Y 0.105, Z 2.63) -> no y motion, no rotation about Z; rotation about the axis stays free
+; The axis ranges leave out X 0.55-0.75, i.e. the beam's centroid (X 0.646): if the range were read at block
+; centroids it would then select nothing (and the axis check below would say so) rather than the whole beam.
+block fix velocity-x range group 'T_B'
+block gridpoint apply velocity-y 0 range position-x -0.01 0.55 position-y 0.1049 0.1051 position-z 2.6299 2.6301
+block gridpoint apply velocity-y 0 range position-x 0.75 1.31 position-y 0.1049 0.1051 position-z 2.6299 2.6301
+fish define defss_tb_axis
+    ; every local declared ONCE, at the top
+    local gp = null
+    local p = null
+    local na = 0
+    local nt = 0
+    loop foreach gp block.gp.list
+        if block.isgroup(block.gp.hostblock(gp), 'T_B') then
+            nt = nt + 1
+            p = block.gp.pos(gp)
+            if math.abs(comp.y(p) - 0.105) < 1e-4 then
+                if math.abs(comp.z(p) - 2.63) < 1e-4 then
+                    na = na + 1
+                endif
+            endif
+        endif
+    endloop
+    io.out('DEFSS T_B gridpoints ' + string(nt) + ', on the axis line (Y 0.105, Z 2.63) ' + string(na) + ' (expected 27, 23 of them held in y)')
+    if na = 0 then
+        system.error = 'DEFSS: no T_B gridpoints on the axis line; the y-restraint of the top beam would be missing'
+    endif
+    defss_tb_axis = na
+end
+[defss_tb_axis]
+block face group "Comp_apply" range pos-z 2.68
+block hide off
+; "Reaction" (default slot) = base + joist supports, as cstav has always used.
+; The check groups live in their own slot so they do not overwrite "Reaction".
+block contact group "Reaction" range pos-z -0.01 0.01 
+block contact group "Reaction_base" slot "vcheck" range pos-z -0.01 0.01
+block hide range group "Masonry" or "S" or "T_B"
+block contact group "Reaction" range pos-x -1 1
+block contact group "Reaction_joist" slot "vcheck" range pos-x -1 1
+block hide off
+; T_B-masonry contacts (top joint) and masonry-masonry contacts, for the pushover diagnostics
+block contact group "Reaction_topTB" slot "vcheck" range group-intersection 'T_B' 'Masonry'
+block hide range group 'Masonry' not
+block contact group "MasJ" slot "vcheck" range position-x -1 2
+block hide off
+
+fish define contactList
+    local allpts = list(block.contact.list) ; A list of pointers to scalars
+    local check = block.contact.isgroup(::block.contact.list,'Reaction')     
+    ; List of booleans
+    contactList = allpts(check) ; List of scalars in 'surface'    
+end
+@contactList
+fish define cstav
+    contactList
+    local scstav_vec = 0.0
+    ncstav = 0.0
+    ncjdisp = 0.0
+    local scjdisp_vec = 0.0
+    local jarea = 0.0
+    negFlag = 0.0
+    loop foreach cx contactList
+        scx = block.contact.subcontactlist(cx)
+        loop foreach sc scx
+             ; weight by area
+             local area_ = block.subcontact.area(sc)
+             scstav_vec = scstav_vec + block.subcontact.force.shear.y(sc)   ; OOP
+             ncstav = ncstav + block.subcontact.force.norm(sc)
+             ncjdisp = ncjdisp + block.subcontact.disp.norm(sc)*area_
+             scjdisp_vec = scjdisp_vec + block.subcontact.disp.shear.y(sc)*area_   ; OOP
+             jarea = jarea + area_
+        endloop
+    endloop
+    if jarea > 0 then
+        ncstav = ncstav/jarea
+        sstop = 0.0
+        cstav = scstav_vec/1000
+    endif        
+end
+@cstav
+fish history cstav
+fish history ncstav
+
+; ----------------------------------------------------------------------
+; VERTICAL-LOAD CHECK (forces, not stresses)
+; ----------------------------------------------------------------------
+[global spring_total = 10350.0]        ; N, both springs, group's sheet / Table 1
+fish define sum_norm_group(gname, gslot)
+    local f = 0.0
+    loop foreach local cx block.contact.list
+        if block.contact.isgroup(cx, gname, gslot)
+            loop foreach local sc block.contact.subcontactlist(cx)
+                f = f + block.subcontact.force.norm(sc)
+            endloop
+        endif
+    endloop
+    sum_norm_group = f
+end
+fish define mass_group(gname)
+    local m = 0.0
+    loop foreach local b block.list
+        if block.isgroup(b, gname)
+            m = m + block.mass(b)
+        endif
+    endloop
+    mass_group = m
+end
+fish define applied_force_y_group(gname)
+    ; v5: deformable blocks carry the applied force on their gridpoints
+    local gp = null
+    local f = 0.0
+    loop foreach gp block.gp.list
+        if block.isgroup(block.gp.hostblock(gp), gname) then
+            f = f + comp.z(block.gp.force.app(gp))   ; vertical is z (function name kept)
+        endif
+    endloop
+    applied_force_y_group = f
+end
+fish define check_vertical_loads
+    local g0 = 9.81
+    local m_mas = mass_group('Masonry')
+    local m_joi = mass_group('Joist')
+    local m_tb  = mass_group('T_B')
+    local f_app = applied_force_y_group('T_B')          ; should be -spring_total
+    local f_base  = sum_norm_group('Reaction_base',  'vcheck')
+    local f_joist = sum_norm_group('Reaction_joist', 'vcheck')
+    local f_all   = sum_norm_group('Reaction', 'Default')
+    local w_total = g0 * (m_mas + m_joi + m_tb) - f_app  ; weight + applied downward force
+    local joist_into_wall = g0 * m_joi - f_joist
+    local f_base_exp = g0 * (m_mas + m_tb) - f_app + joist_into_wall
+    io.out(' ')
+    io.out('==== VERTICAL LOAD CHECK (forces in N) ====')
+    io.out('masonry mass        = ' + string(m_mas) + ' kg   (sheet: 1340 kg)')
+    io.out('joist mass (4 blk)  = ' + string(m_joi) + ' kg')
+    io.out('T_B mass            = ' + string(m_tb)  + ' kg   [CHECK: steel only, ~213 kg]')
+    io.out('applied force on T_B (vertical, z) = ' + string(f_app) + ' N   [CHECK: -' + string(spring_total) + ']')
+    io.out('weight + applied, all free = ' + string(w_total))
+    io.out('sum force.norm, Reaction (base+joist supports) = ' + string(f_all))
+    if f_all > 0 then
+        io.out('   -> (weight+applied) / Reaction sum         = ' + string(w_total / f_all) + '   [CHECK ~1.00]')
+    else
+        io.out('   -> Reaction group is EMPTY')
+    endif
+    io.out('sum force.norm, base contacts only             = ' + string(f_base))
+    io.out('expected base force                            = ' + string(f_base_exp))
+    if f_base_exp > 0 then
+        io.out('   -> base / expected                          = ' + string(f_base / f_base_exp) + '   [CHECK ~1.00]')
+    endif
+    io.out('base stress = base force / (0.21*1.292)        = ' + string(f_base / (0.21*1.292) / 1e6) + ' MPa   [sheet: 0.1008; density build gave 0.096]')
+    io.out('sum force.norm, joist supports                 = ' + string(f_joist))
+    io.out('joist weight carried by the WALL               = ' + string(joist_into_wall / g0) + ' kg   [density build: 76 kg]')
+    io.out('===========================================')
+end
+fish define nbase_stress
+    local f = 0.0
+    local a = 0.0
+    loop foreach local cx block.contact.list
+        if block.contact.isgroup(cx, 'Reaction_base', 'vcheck')
+            loop foreach local sc block.contact.subcontactlist(cx)
+                f = f + block.subcontact.force.norm(sc)
+                a = a + block.subcontact.area(sc)
+            endloop
+        endif
+    endloop
+    nbase_stress = f / a
+end
+fish history nbase_stress
+model large-strain off
+; damping for the gravity and spring-force solves: GLOBAL (adaptive viscous, fac 0.5 = 3DEC's default), local off.
+; The drivers switch it off themselves: Strategy F / Route 2 set local 0 + global 0 before Maxwell; the pushover
+; (pocket_def_jobs.py) sets global 0 before its local 0.9.
+block mech damp local 0.0
+block mech damp global 0.5
+model gravity 0 0 -9.81
+model solve ratio 1e-6
+[io.out('--- after gravity only (no spring force yet) ---')]
+[check_vertical_loads]
+
+; ----------------------------------------------------------------------
+; SPRING PRECOMPRESSION AS AN APPLIED FORCE ON THE RIGID BEAM
+; Global direction, acts at the centroid: no follower moment (the face
+; traction failed in large strain for that reason) and no added mass
+; (the equivalent density put ~1055 kg of inertia on the beam).
+; ----------------------------------------------------------------------
+fish define apply_spring_force
+    ; v5: the deformable beam takes the spring force as equal vertical forces on all its gridpoints (regular hexahedral
+    ; grid, so the resultant acts at the centroid; global direction, no follower moment, as before)
+    local gp = null
+    local ngp = 0
+    loop foreach gp block.gp.list
+        if block.isgroup(block.gp.hostblock(gp), 'T_B') then
+            ngp = ngp + 1
+        endif
+    endloop
+    loop foreach gp block.gp.list
+        if block.isgroup(block.gp.hostblock(gp), 'T_B') then
+            block.gp.force.app(gp) = vector(0.0, 0.0, -spring_total / ngp)
+        endif
+    endloop
+    io.out('DEFSS spring force ' + string(spring_total) + ' N on ' + string(ngp) + ' T_B gridpoints')
+    apply_spring_force = ngp
+end
+[apply_spring_force]
+block property density 7850 range group 'T_B'
+model solve ratio 5e-8
+[io.out('--- after spring force, settled ---')]
+[check_vertical_loads]
+
+model save 'Part_I_MASON_v8_SmallStrain_springforce_zup_pk2_ft0p05_pK11_def'
+; the report runs after the save, so a FISH name problem cannot cost the build
+block contact group 'PocketJM' slot 'pocket' range group-intersection 'Joist' 'Masonry'
+[defss_report]
+;;call "sinus_wave_analysis.dat"
