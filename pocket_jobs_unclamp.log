@@ -1,0 +1,12 @@
+[18:40:52] [unclamp push+] ============================================================
+[18:40:52] [unclamp push+] building the save: program call 'ANALYSIS_PART_I_MASON_zup_pk2_ft0p05_unclamp.dat'
+[18:45:24] [unclamp push+] ============================================================
+[18:45:24] [unclamp push+] building the save: program call 'ANALYSIS_PART_I_MASON_zup_pk2_ft0p05_unclamp.dat'
+[18:45:49] [unclamp push-] ============================================================
+[18:45:49] [unclamp push-] another session is building Part_I_MASON_v8_LargeStrain_springforce_zup_pk2_ft0p05_unclamp: waiting
+[18:46:15] [unclamp push+] save built; check the POCKET ... AFTER line above (stiffness-shear, cohesion 1e5)
+[18:46:15] [unclamp push+] + push: Part_I_MASON_v8_LargeStrain_springforce_zup_pk2_ft0p05_unclamp -> pushover_results_v5zup_pk2_ft0p05_unclamp_TopMason\pushover_pos.csv
+[18:46:29] [unclamp push-] save ready after 0.7 min
+[18:46:29] [unclamp push-] - push: Part_I_MASON_v8_LargeStrain_springforce_zup_pk2_ft0p05_unclamp -> pushover_results_v5zup_pk2_ft0p05_unclamp_TopMason\pushover_neg.csv
+[03:39:07] [unclamp push+] done in 532.9 min
+[04:00:13] [unclamp push-] done in 553.7 min

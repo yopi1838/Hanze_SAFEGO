@@ -18,6 +18,10 @@ OUTPUT: pushover_results_v5zup_pk2_ft0p05_pK11_defSS_TopMason/pushover_pos.csv, 
 STRAIN (6 Nov 2026): "SS" (default) as above; "LS" builds a copy of the DAT with large strain ON from 'model new'
 (gravity and spring solves in large strain, as the rigid builds via mat_case.dat), save ..._LargeStrain_..._def, and
 keeps the driver's own 'model large-strain on'; outputs ..._defLS_TopMason. Wrappers run_pK11defLS_push_pos/_neg.py.
+POCKET (8 Nov 2026): "pK11" (default) as above; "glued" drops the pK11 pocket set from the generated DAT, so the
+joist-masonry contacts keep the joint set every contact gets (f_t 0.05 MPa, cohesion 0.2 MPa, ks 2.5e9; the rigid
+ft0p05 build's pockets); save ..._glued_def, outputs pushover_results_v5zup_pk2_ft0p05_glued_defLS_TopMason.
+Wrappers run_gluedDefLS_push_pos/_neg.py.
 NOTE: in small strain there is no geometric softening (no P-Delta, contact geometry not updated), so after the peak
 the curve cannot descend as the large-strain runs do; read the elastic branch, the peak and the mechanism.
 """
@@ -33,16 +37,21 @@ STRAIN = globals().get("STRAIN", "SS")   # "SS" small strain (build and push), "
 if STRAIN not in ("SS", "LS"):
     raise RuntimeError("pocket_def_jobs.py: STRAIN must be 'SS' or 'LS' (got {!r})".format(STRAIN))
 SFX = "_" + VARIANT if VARIANT else ""
+POCKET = globals().get("POCKET", "pK11")   # "pK11" (timber-mortar pocket set) or "glued" (pockets keep the joint set)
+if POCKET not in ("pK11", "glued"):
+    raise RuntimeError("pocket_def_jobs.py: POCKET must be 'pK11' or 'glued' (got {!r})".format(POCKET))
 SAVE0 = "Part_I_MASON_v8_SmallStrain_springforce_zup_pk2_ft0p05_pK11_def"      # the save DAT0 writes
-SAVE = ("Part_I_MASON_v8_LargeStrain_springforce_zup_pk2_ft0p05_pK11_def" if STRAIN == "LS" else SAVE0) + SFX
+SAVE = "Part_I_MASON_v8_{}_springforce_zup_pk2_ft0p05_{}_def{}".format(
+    "LargeStrain" if STRAIN == "LS" else "SmallStrain", POCKET, SFX)
 DAT0 = "ANALYSIS_PART_I_MASON_zup_pk2_ft0p05_pK11_defSS.dat"
-GENERATED = bool(VARIANT) or STRAIN == "LS"
-DAT = DAT0.replace("_defSS.dat", "_def{}{}.dat".format(STRAIN, SFX)) if GENERATED else DAT0   # written from DAT0
-OUT = "pushover_results_v5zup_pk2_ft0p05_pK11_def{}{}_TopMason".format(STRAIN, SFX)
+GENERATED = bool(VARIANT) or STRAIN == "LS" or POCKET != "pK11"
+DAT = ("ANALYSIS_PART_I_MASON_zup_pk2_ft0p05_{}_def{}{}.dat".format(POCKET, STRAIN, SFX)
+       if GENERATED else DAT0)   # written from DAT0
+OUT = "pushover_results_v5zup_pk2_ft0p05_{}_def{}{}_TopMason".format(POCKET, STRAIN, SFX)
 BASE = "pushover_oop_3dec_v5_zup.py"
 MAX_WAIT_MIN = 360
 TAG = "# [pocket_def_jobs {}]".format(JOB)
-LOG = "pocket_def_jobs_{}{}.log".format(STRAIN, SFX)
+LOG = "pocket_def_jobs_{}_{}{}.log".format(POCKET, STRAIN, SFX)
 
 PO_PUSH = '''
 fish define po_push(a_push)
@@ -100,7 +109,7 @@ end
 
 
 def log(s):
-    line = "[{}] [pK11def{}{} {}] {}".format(time.strftime("%H:%M:%S"), STRAIN, SFX, JOB, s)
+    line = "[{}] [{}def{}{} {}] {}".format(time.strftime("%H:%M:%S"), POCKET, STRAIN, SFX, JOB, s)
     print(line)
     with open(LOG, "a") as f:
         f.write(line + "\n")
@@ -128,7 +137,8 @@ def ensure_save():
         it.command("python-reset-state false")
         if not have_save():
             raise RuntimeError("{} did not write {}".format(DAT, SAVE))
-        log("save built; check the DEFSS lines (zones, zone mass ~1308 kg, pocket stiffness-shear 1.1e8)")
+        log("save built; check the DEFSS lines (zones, zone mass ~1308 kg, pocket stiffness-shear {})".format(
+            "2.5e9" if POCKET == "glued" else "1.1e8"))
         return
     path = SAVE + ".sav" if os.path.isfile(SAVE + ".sav") or not os.path.isfile(SAVE) else SAVE
     log("waiting for the save from the + session ({})".format(path))
@@ -139,9 +149,15 @@ def ensure_save():
         still = still + 1 if (size > 0 and size == last) else 0
         last = size
         if time.time() - t0 > MAX_WAIT_MIN * 60:
-            raise RuntimeError("no save after {} min: start run_pK11def_push_pos.py first (it builds the save)"
+            raise RuntimeError("no save after {} min: start the + wrapper first (it builds the save)"
                                .format(MAX_WAIT_MIN))
     log("save ready after {:.1f} min".format((time.time() - t0) / 60.0))
+
+
+PK11_BLOCK = ("; ---- pK11 pocket: timber-mortar set on the joist-masonry contacts (Arslan et al. 2024) ----\n"
+              "block contact prop stiffness-shear 1.1e8 tension 0 cohesion 0.1e6 friction 31.0 ...\n"
+              "    friction-residual 31.0 cohesion-residual 0 ...\n"
+              "    range group-intersection 'Joist' 'Masonry'\n")
 
 
 def write_variant_dat():
@@ -155,6 +171,10 @@ def write_variant_dat():
         subs.append(("\nmodel large-strain off\n", "\nmodel large-strain on\n", 2))
     if VARIANT == "kser":
         subs.append(("[global KSERIES = 0]", "[global KSERIES = 1]", 1))
+    if POCKET == "glued":   # the joist-masonry contacts keep the joint set given to every contact (f_t 0.05 MPa)
+        subs.append((PK11_BLOCK, "; ---- glued pocket (POCKET 'glued'): the joist-masonry contacts keep the joint set above "
+                                 "(f_t 0.05 MPa, cohesion 0.2 MPa, ks 2.5e9) ----\n", 1))
+        subs.append(("(must be 1.1e8)", "(glued: must be 2.5e9, the joint set)", 1))
     for old, new, n in subs:
         if src.count(old) != n:
             raise RuntimeError("{}: expected {!r} {} time(s), found {}".format(DAT0, old, n, src.count(old)))
@@ -162,8 +182,8 @@ def write_variant_dat():
     if STRAIN == "LS" and re.search(r"^model large-strain off", src, re.M):
         raise RuntimeError("{}: a 'model large-strain off' command is left".format(DAT))
     with open(DAT, "w") as f:
-        f.write("; GENERATED by pocket_def_jobs.py (STRAIN {}, VARIANT {!r}) from {} -- edit that file, not this one\n"
-                .format(STRAIN, VARIANT, DAT0) + src)
+        f.write("; GENERATED by pocket_def_jobs.py (POCKET {}, STRAIN {}, VARIANT {!r}) from {} -- edit that file, not this one\n"
+                .format(POCKET, STRAIN, VARIANT, DAT0) + src)
     log("wrote {} (STRAIN {}, KSERIES {}, save {})".format(DAT, STRAIN, int(VARIANT == "kser"), SAVE))
 
 
@@ -216,7 +236,7 @@ def run(direction):
     src = patched(direction)
     log("{} push, deformable masonry, {} strain: {} -> {}".format("+" if direction > 0 else "-", "large" if STRAIN == "LS" else "small", SAVE, csvp))
     t0 = time.time()
-    exec(compile(src, "{} [pK11 def {} {}]".format(BASE, STRAIN, side), "exec"),
+    exec(compile(src, "{} [{} def {} {}]".format(BASE, POCKET, STRAIN, side), "exec"),
          {"__name__": "__main__", "__file__": os.path.abspath(BASE)})
     log("done in {:.1f} min".format((time.time() - t0) / 60.0))
 
