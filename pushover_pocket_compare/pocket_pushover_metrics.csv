@@ -1,0 +1,5 @@
+case,side,K_init_kN_per_mm,F_peak_kN,d_at_peak_mm,d_u80_mm,F_5mm,F_10mm,F_20mm,F_30mm,pocket_open_at_peak_mm,pocket_open_20mm,d_end_mm
+glued pocket (brick-mortar set),pos,6.67,13.08,6.98,43.9,12.69,11.52,11.18,11.19,1.66,8.2,80.9
+glued pocket (brick-mortar set),neg,6.38,14.39,26.79,26.8,13.3,13.88,14.18,10.8,7.02,5.18,80.8
+pK11 pocket (timber-mortar set),pos,3.34,11.77,9.09,48.1,10.93,10.98,10.45,10.02,2.38,8.34,80.1
+pK11 pocket (timber-mortar set),neg,2.87,14.39,27.52,27.6,11.9,13.82,14.15,10.8,7.63,5.36,80.5

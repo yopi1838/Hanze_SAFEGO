@@ -82,6 +82,9 @@ def force_channels(folder, n, masses):
     if rf is None:
         return None, None, []
     vs = {k: R.find_hist(rf, k) for k in masses}
+    for k in list(vs):                               # y-up builds export Channel_15/16/17 instead of vz_acc15/16/17
+        if vs[k][0] is None and k in getattr(R, "ALIAS", {}):
+            vs[k] = R.find_hist(rf, R.ALIAS[k])
     miss = [k for k, v in vs.items() if v[0] is None]
     if miss:
         return None, None, miss

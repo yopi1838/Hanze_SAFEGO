@@ -1,0 +1,21 @@
+side,model,d_mm,F_kN
+pos,"three-hinge model, floors NOT pushed, weakest hinge",5,11.54
+pos,"three-hinge model, floors NOT pushed, weakest hinge",10,10.89
+pos,"three-hinge model, floors NOT pushed, weakest hinge",20,9.51
+pos,"three-hinge model, floors NOT pushed, weakest hinge",30,8.1
+pos,"three-hinge model, floors NOT pushed, weakest hinge",40,6.69
+pos,"three-hinge model, floors pushed, weakest hinge",5,9.81
+pos,"three-hinge model, floors pushed, weakest hinge",10,9.28
+pos,"three-hinge model, floors pushed, weakest hinge",20,8.13
+pos,"three-hinge model, floors pushed, weakest hinge",30,6.92
+pos,"three-hinge model, floors pushed, weakest hinge",40,5.72
+neg,"three-hinge model, floors NOT pushed, weakest hinge",5,11.52
+neg,"three-hinge model, floors NOT pushed, weakest hinge",10,10.88
+neg,"three-hinge model, floors NOT pushed, weakest hinge",20,9.51
+neg,"three-hinge model, floors NOT pushed, weakest hinge",30,8.09
+neg,"three-hinge model, floors NOT pushed, weakest hinge",40,6.69
+neg,"three-hinge model, floors pushed, weakest hinge",5,9.79
+neg,"three-hinge model, floors pushed, weakest hinge",10,9.26
+neg,"three-hinge model, floors pushed, weakest hinge",20,8.11
+neg,"three-hinge model, floors pushed, weakest hinge",30,6.9
+neg,"three-hinge model, floors pushed, weakest hinge",40,5.7
