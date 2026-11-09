@@ -44,7 +44,8 @@ OUTPUT  <OUT_DIR>/run_NN_courses.csv  course profile of run NN
         <OUT_DIR>/_dump_<tag>.log     raw dumps (python deformed_shape_stratF_zup.py --post re-processes them)
 
 USAGE   inside 3DEC (no other model open):  program call 'deformed_shape_stratF_zup.py'
-        outside 3DEC:                       python deformed_shape_stratF_zup.py --post
+        outside 3DEC:                       python deformed_shape_stratF_zup.py --post [--run-dir <folder>]
+        another run folder inside 3DEC:     a wrapper setting DFM_RUN_DIR, e.g. run_deformed_shape_1p5.py
         A run still in progress is fine: only the saves that exist are read. Re-running skips dumps already written
         (delete a _dump_run_NN.log to re-dump that run, or set REDUMP = True).
 """
@@ -52,7 +53,12 @@ USAGE   inside 3DEC (no other model open):  program call 'deformed_shape_stratF_
 import os, sys, math, csv, re
 
 # ============================ CONFIG =================================
-RUN_DIR  = "stratF_full_LS_MAXWELL50_zup_pk2_ft0p05_tr"                 # the Strategy F output folder
+RUN_DIR  = "stratF_full_LS_MAXWELL50_zup_pk2_ft0p05_tr"                 # the Strategy F output folder (default)
+# override without editing (9 Nov 2026): a wrapper that sets DFM_RUN_DIR and execs this file, or, outside 3DEC,
+#   python deformed_shape_stratF_zup.py --post --run-dir <folder>
+RUN_DIR  = globals().get("DFM_RUN_DIR", RUN_DIR)
+if "--run-dir" in sys.argv[:-1]:
+    RUN_DIR = sys.argv[sys.argv.index("--run-dir") + 1]
 REF_SAV  = "Part_I_MASON_v8_LargeStrain_springforce_zup_pk2_ft0p05"      # the save the run started from
 RUNS     = None            # None = every stratC_run_NN.sav found in RUN_DIR; or a list, e.g. [12, 17, 18, 19, 20, 21]
 OUT_DIR  = os.path.join(RUN_DIR, "deformed_shape")
