@@ -1,6 +1,7 @@
 # -*- coding: ascii -*-
 """
-pocket_jobs.py -- the three jobs on a POCKET variant of the pk2 f_t 0.05 MPa build, each in its OWN 3DEC session so they
+pocket_jobs.py -- the three jobs on a POCKET variant of the pk2 f_t 0.05 MPa build (or, with BASE = "ft0p01", of the
+f_t 0.01 MPa build, 9 Nov 2026: the base save is built first when missing), each in its OWN 3DEC session so they
 run in parallel (5 Nov 2026). Not called directly: the wrappers set JOB (and POCKET) and exec this file.
 
     run_pK11_push_pos.py   JOB "push+"   pushover_oop_3dec_v5_zup.py, PUSH_DIR +1
@@ -24,17 +25,21 @@ the push starts again. Strategy F resumes from its own checkpoint.
 import os, re, time
 
 POCKET = globals().get("POCKET", "pK11")
+BASE = globals().get("BASE", "ft0p05")      # joint-tension build the pocket variant sits on: "ft0p05" (0.05 MPa), "ft0p01" (9 Nov)
+FT_PA = float(BASE[2:].replace("p", ".")) * 1e6
 JOB = globals().get("JOB")
 DAMP_PCT = globals().get("DAMP_PCT", 1.5)
 if JOB not in ("push+", "push-", "stratF"):
     raise RuntimeError("pocket_jobs.py: JOB must be 'push+', 'push-' or 'stratF' (got {!r})".format(JOB))
 
-SAVE = "Part_I_MASON_v8_LargeStrain_springforce_zup_pk2_ft0p05_" + POCKET
-DAT = "ANALYSIS_PART_I_MASON_zup_pk2_ft0p05_{}.dat".format(POCKET)
+BASE_SAVE = "Part_I_MASON_v8_LargeStrain_springforce_zup_pk2_" + BASE
+BASE_DAT = "ANALYSIS_PART_I_MASON_zup_pk2_{}.dat".format(BASE)
+SAVE = "{}_{}".format(BASE_SAVE, POCKET)
+DAT = "ANALYSIS_PART_I_MASON_zup_pk2_{}_{}.dat".format(BASE, POCKET)
 LOCK = SAVE + ".building"
 LOCK_STALE_MIN = 90
 TAG = "# [pocket_jobs {} {}]".format(POCKET, JOB)
-LOG = "pocket_jobs_{}.log".format(POCKET)
+LOG = "pocket_jobs_{}.log".format(POCKET if BASE == "ft0p05" else BASE + "_" + POCKET)
 
 
 def log(s):
@@ -44,8 +49,9 @@ def log(s):
         f.write(line + "\n")
 
 
-def have_save():
-    return os.path.isfile(SAVE + ".sav") or os.path.isfile(SAVE)
+def have_save(s=None):
+    s = SAVE if s is None else s
+    return os.path.isfile(s + ".sav") or os.path.isfile(s)
 
 
 def ensure_save():
@@ -64,6 +70,15 @@ def ensure_save():
     if builder:
         import itasca as it
         try:
+            if not have_save(BASE_SAVE):
+                if not os.path.isfile(BASE_DAT):
+                    raise RuntimeError("{} not found (base build for {})".format(BASE_DAT, BASE))
+                log("building the base save first: program call '{}'".format(BASE_DAT))
+                it.command("python-reset-state false")
+                it.command("program call '{}'".format(BASE_DAT))
+                it.command("python-reset-state false")
+                if not have_save(BASE_SAVE):
+                    raise RuntimeError("{} did not write {}".format(BASE_DAT, BASE_SAVE))
             log("building the save: program call '{}'".format(DAT))
             it.command("python-reset-state false")
             it.command("program call '{}'".format(DAT))
@@ -94,7 +109,7 @@ def set_last(src, name, val, base):
 
 def run_push(direction):
     base = "pushover_oop_3dec_v5_zup.py"
-    out = "pushover_results_v5zup_pk2_ft0p05_{}_TopMason".format(POCKET)
+    out = "pushover_results_v5zup_pk2_{}_{}_TopMason".format(BASE, POCKET)
     side = "pos" if direction > 0 else "neg"
     csvp = os.path.join(out, "pushover_{}.csv".format(side))
     endsav = os.path.join(out, "pushover_{}_end".format(side))
@@ -109,7 +124,7 @@ def run_push(direction):
     if "Z-UP" not in src:
         raise RuntimeError("{} is not the z-up driver".format(base))
     for k, v in (("RESTORE_SAV", SAVE), ("OUT_DIR", out), ("PUSH_DIR", direction), ("TOP_JOINT", "mason"),
-                 ("TENSION_MAX_PA", 0.06e6)):
+                 ("TENSION_MAX_PA", 1.2 * FT_PA)):
         src = set_last(src, k, v, base)
     log("{} push: {} -> {}".format("+" if direction > 0 else "-", SAVE, csvp))
     t0 = time.time()
@@ -120,9 +135,10 @@ def run_push(direction):
 
 def run_stratF():
     base = "run_stratF_zup.py"
-    key = "zup_pk2_ft0p05_" + POCKET
+    key = "zup_pk2_{}_{}".format(BASE, POCKET)
     entry = ('    "{}": ("{}.sav", "{}",\n'
-             '                       (0.04e6, 0.06e6), (0.23455, 2.11091), (0.32250, 2.19886), 0.091),\n').format(key, SAVE, DAT)
+             '                       ({:.4g}, {:.4g}), (0.23455, 2.11091), (0.32250, 2.19886), 0.091),\n').format(
+        key, SAVE, DAT, 0.8 * FT_PA, 1.2 * FT_PA)
     with open(base) as f:
         src = f.read()
     if '"{}"'.format(key) not in src:
