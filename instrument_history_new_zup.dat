@@ -180,6 +180,9 @@ block history name "Channel_5_DispTable" displacement-y position ([bLength/2],0.
 ; ORDER: these come after FISH histories 1-31 (instrument_tilt_v2_zup.dat) and are exported BY NAME, so
 ;   no numbered export in instrument_history_export_v2.dat shifts. jy_lower / jy_upper (joist centres)
 ;   are read when the joists are looked up, so the driver's per-build override applies.
+; 13 Nov 2026: the joists are looked up at their position BEFORE displacement (block.pos - block.disp), so a joist
+;   that has moved more than 5 cm (a collapsing wall) is still found; one that is not found is reported and its
+;   channels read 0 -- the lookup no longer stops the analysis (it stopped the T_p / T_p Route 2 run after a collapse).
 [jh_half = 0.08795]    ; half joist height (0.1759 m)
 [js_off  = 0.03]       ; wall reference distance below / above the joist
 [jx_e1   = 0.8882]     ; left joist edges, X
@@ -195,7 +198,7 @@ fish define ch_joist_ids
     jid_upper = 0
     loop foreach b block.list
         if block.isgroup(b, 'Joist') then
-            p = block.pos(b)
+            p = block.pos(b) - block.disp(b)          ; position BEFORE the displacement: found however far it has moved
             if math.abs(comp.x(p) - 0.5 * (jx_e1 + jx_e2)) < 0.02 then
                 if math.abs(comp.z(p) - jy_lower) < 0.05 then
                     jid_lower = block.id(b)
@@ -208,10 +211,10 @@ fish define ch_joist_ids
     endloop
     io.out('joist slip channels: left joists, block ' + string(jid_lower) + ' (lower) and ' + string(jid_upper) + ' (upper)')
     if jid_lower = 0 then
-        system.error = 'joist slip channels: the lower left joist was not found (group Joist, X ~0.93, Z ~jy_lower)'
+        io.out('  ** joist slip channels: lower left joist NOT found -- channels 8 / 9 read 0, the analysis goes on')
     endif
     if jid_upper = 0 then
-        system.error = 'joist slip channels: the upper left joist was not found (group Joist, X ~0.93, Z ~jy_upper)'
+        io.out('  ** joist slip channels: upper left joist NOT found -- channels 10 / 11 read 0, the analysis goes on')
     endif
     ch_joist_ids = jid_upper
 end
@@ -221,16 +224,26 @@ fish define ch_joist_slip
     local zlt = jy_lower + jh_half
     local zub = jy_upper - jh_half
     local zut = jy_upper + jh_half
-    local jl = block.disp.y(block.find(jid_lower))
-    local ju = block.disp.y(block.find(jid_upper))
+    local jl = 0.0
+    local ju = 0.0
     local wlb = 0.5 * (block.gp.disp.y(block.gp.near(jx_e1, jy_wall, zlb - js_off)) + block.gp.disp.y(block.gp.near(jx_e2, jy_wall, zlb - js_off)))
     local wlt = 0.5 * (block.gp.disp.y(block.gp.near(jx_e1, jy_wall, zlt + js_off)) + block.gp.disp.y(block.gp.near(jx_e2, jy_wall, zlt + js_off)))
     local wub = 0.5 * (block.gp.disp.y(block.gp.near(jx_e1, jy_wall, zub - js_off)) + block.gp.disp.y(block.gp.near(jx_e2, jy_wall, zub - js_off)))
     local wut = 0.5 * (block.gp.disp.y(block.gp.near(jx_e1, jy_wall, zut + js_off)) + block.gp.disp.y(block.gp.near(jx_e2, jy_wall, zut + js_off)))
-    ch8_slip  = (jl - wlb) * 1000.0
-    ch9_slip  = (jl - wlt) * 1000.0
-    ch10_slip = (ju - wub) * 1000.0
-    ch11_slip = (ju - wut) * 1000.0
+    ch8_slip  = 0.0
+    ch9_slip  = 0.0
+    ch10_slip = 0.0
+    ch11_slip = 0.0
+    if jid_lower # 0 then
+        jl = block.disp.y(block.find(jid_lower))
+        ch8_slip  = (jl - wlb) * 1000.0
+        ch9_slip  = (jl - wlt) * 1000.0
+    endif
+    if jid_upper # 0 then
+        ju = block.disp.y(block.find(jid_upper))
+        ch10_slip = (ju - wub) * 1000.0
+        ch11_slip = (ju - wut) * 1000.0
+    endif
     ch_joist_slip = ch11_slip
 end
 @ch_joist_ids
