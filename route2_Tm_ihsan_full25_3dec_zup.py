@@ -163,6 +163,9 @@ K_EL_RANGE_MM  = (0.1, 1.5)
 T_EFF_RULE     = "model_du_secant"   # "model_du_secant" (d_u and F from the model's pushover) | "test_du_peak" (D_U_MM, peak)
 DU_DROP        = 0.80             # model_du_secant: d_u where the force has dropped to this fraction of the reference (DU_REFERENCE)
 DU_REFERENCE   = "peak"           # "peak": DU_DROP x the peak force (default) | "post_crack": x the highest force after a brittle jump
+DU_FIXED_MM    = None             # model_du_secant (16 Nov 2026): a number (mm) fixes d_u there instead of the DU_DROP
+                                  #   strength drop -- the ultimate point is the largest displacement the tests reach
+                                  #   (30 mm, US-1 run 24); F_du = the pushover force at d_u, T_eff = 2 pi sqrt(L d_u / F_du)
 GAP_MM         = 5.0              # an ascent that ends in a jump larger than this = a brittle cracking peak
 D_U_MM         = 27.4             # test_du_peak only: end of the US-1 envelope; see the docstring
 D_CUT_MM       = 17.0             # F_y taken before this d: the gravity-tilt push loses the joist at 17.4 mm (harmless on v5: peak at 12 mm)
@@ -182,7 +185,9 @@ if "{}" in OUT_DIR:                # the default name, completed now that PERIOD
     OUT_DIR = OUT_DIR.format(PERIOD_B, int(round(DAMP_PCT * 10)), BUILD)
     if FIT_MODE == "separate":
         OUT_DIR = OUT_DIR.replace("r2_", "r2sep_", 1)    # e.g. r2sep_TpTp_du80_full25_LS_MAXWELL50_zup_pk2_ft0p05
-    if T_EFF_RULE != "model_du_secant" or abs(DU_DROP - 0.8) > 1e-9 or DU_REFERENCE != "peak":
+    if T_EFF_RULE == "model_du_secant" and DU_FIXED_MM:
+        OUT_DIR = OUT_DIR.replace("_du80_", "_du{:g}mm_".format(DU_FIXED_MM))
+    elif T_EFF_RULE != "model_du_secant" or abs(DU_DROP - 0.8) > 1e-9 or DU_REFERENCE != "peak":
         OUT_DIR = OUT_DIR.replace("_du80_", "_{}_".format("testdu" if T_EFF_RULE != "model_du_secant" else
                                                           "du{:02d}{}".format(int(round(DU_DROP * 100)), "pc" if DU_REFERENCE != "peak" else "")))
 PHASE_B    = +1.0
@@ -302,7 +307,15 @@ def branch_props(d, F):
         out.update(model_du(d, F))
     return out
 def model_du(d, F):
-    """d_u where F has dropped to DU_DROP x the reference force (DU_REFERENCE), and the force there (see T_EFF_RULE)"""
+    """d_u where F has dropped to DU_DROP x the reference force (DU_REFERENCE), and the force there (see T_EFF_RULE);
+    with DU_FIXED_MM set: d_u = DU_FIXED_MM and the force of the curve there"""
+    if DU_FIXED_MM:
+        if d[-1] < DU_FIXED_MM:
+            raise RuntimeError("model d_u: the pushover ends at {:.1f} mm, before DU_FIXED_MM {:g} mm".format(d[-1], DU_FIXED_MM))
+        ip = int(np.argmax(F))
+        drop = float(np.interp(DU_FIXED_MM, d, F)) / float(F[ip])
+        return dict(du=float(DU_FIXED_MM), Fdu=float(np.interp(DU_FIXED_MM, d, F)), Fref=float(F[ip]), dref=float(d[ip]),
+                    brittle=False, in_jump=False, drop=drop)
     jumps = np.where(np.diff(d) > GAP_MM)[0]
     k0 = int(jumps[0]) + 1 if (len(jumps) and DU_REFERENCE == "post_crack") else 0
     ip = k0 + int(np.argmax(F[k0:]))
