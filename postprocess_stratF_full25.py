@@ -25,6 +25,12 @@ Tests: --exp-dir, default exp_processed_v3 (make_processed_v3.py: the group's fo
   The old EXP_DATA/processed_globalzero files add the table acceleration to absolute channels (peaks about 35 % high);
   use them only with --mass-set old to reproduce earlier figures. Read as in postprocess_r2tm_full25.py (offset,
   US-1 run-18 slip and 25 Hz low-pass handled there; cached in OUT/_exp_cache.pkl).
+Test reference (--tests, 16 Nov 2026, after Ihsan: compare with ONE specimen, or with the average of both):
+  both  US-1 and US-2 as separate series (as before; ratios against US-1)
+  US1 / US2   that specimen only, everywhere (ratios against it)
+  mean  per-run scalars (peak d, peak F, cumulative residual, xi_eq) = mean of US-1 and US-2, drawn with a shaded band
+        between the two specimens; ratios against the mean. Time histories cannot be averaged (two specimens, two
+        responses), so the loop and time-history figures and the per-cycle damping scatter still show both tests.
 
 OUTPUT (--out, default stratF_postproc/)
   fig_stratF_sequence.png   peak displacement per run, cumulative residual displacement, peak base shear per run
@@ -50,12 +56,42 @@ except ImportError as e:
     raise SystemExit("postprocess_r2tm_full25.py must sit next to this script ({})".format(e))
 
 US1, US2 = R.US1, R.US2
-# Experiments in front, dark and thin, told apart by line style; numerical runs behind, wide and translucent.
+# Experiments dark and thin, told apart by line style; numerical runs in solid, saturated colours (first: orange)
+# so they read clearly against the tests (15 Nov 2026: the translucent teal was hard to follow).
 TEST_STYLE = {US1: dict(color="#111827", ls="-", marker="o", mfc="white", label="US-1"),
               US2: dict(color="#1D4ED8", ls="--", marker="^", mfc="white", label="US-2")}
+MEAN = "mean"                       # key of the averaged test series (--tests mean)
+TEST_STYLE[MEAN] = dict(color="#111827", ls="-", marker="D", mfc="white", label="mean of US-1 and US-2")
+BAND_COLOR = "#9CA3AF"
 TEST_COLORS = {k: v["color"] for k, v in TEST_STYLE.items()}
-VAR_COLORS = ["#0F766E", "#B91C1C", "#7C3AED", "#A16207", "#6B7280"]
-NUM_ALPHA = 0.45
+MEAN_KEYS = ("peak_incr_mm", "peak_F_kN", "cum_resid_mm", "resid_incr_mm", "xi_med")
+
+
+def mean_tests(tests):
+    """per-run mean of US-1 and US-2 for the scalar metrics, with the two specimens kept as <key>_lo / <key>_hi.
+    Only runs present in both tests; a metric missing in either is left out of that run."""
+    out = {}
+    for n in sorted(set(tests[US1]) & set(tests[US2])):
+        a, b, r = tests[US1][n], tests[US2][n], {}
+        for k in MEAN_KEYS:
+            va, vb = a.get(k), b.get(k)
+            if va is None or vb is None or not (np.isfinite(va) and np.isfinite(vb)):
+                continue
+            r[k] = 0.5 * (va + vb); r[k + "_lo"] = min(va, vb); r[k + "_hi"] = max(va, vb)
+        out[n] = r
+    return out
+
+
+def test_views(tests, mode):
+    """(scalar series for the per-run figures, curve series for loops / time histories / cycles, reference key)"""
+    if mode in (US1, US2):
+        one = {mode: tests[mode]}
+        return one, one, mode
+    if mode == MEAN:
+        return {MEAN: mean_tests(tests)}, tests, MEAN
+    return tests, tests, US1
+VAR_COLORS = ["#C2410C", "#0F766E", "#7C3AED", "#A16207", "#6B7280"]
+NUM_ALPHA = 0.95
 PUSH_COLOR = "#9CA3AF"
 
 
@@ -74,6 +110,9 @@ DPI = 160
 MASS_V3 = {"vz_acc15": 490.80, "vz_acc16": 357.91, "vz_acc17": 470.34,
            "Channel_13_AccSlab1": 165.0, "Channel_14_AccSlab2": 165.0}
 MASS_SETS = dict(R.MASS_SETS); MASS_SETS.setdefault("v3", MASS_V3)
+# v3beam (15 Nov 2026): v3 plus the top steel beam, 61.4 kg on the 2.06 m wall accelerometer, as make_processed_v3.py
+# --beam does for the tests (use with --exp-dir exp_processed_v3_beam so both sides carry the same term).
+MASS_SETS.setdefault("v3beam", dict(MASS_SETS["v3"], vz_acc17=MASS_SETS["v3"]["vz_acc17"] + 61.4))
 
 
 def force_channels(folder, n, masses):
@@ -110,6 +149,8 @@ def args_():
     p.add_argument("--table-dir", default=".", help="folder with the vel_*.txt tables named in strategy_C_log.csv")
     p.add_argument("--run-max", type=int, default=25,
                    help="last run to read (default 25); runs after it are ignored even if their folder exists")
+    p.add_argument("--tests", default="both", choices=["both", "US1", "US2", "mean"],
+                   help="test reference: both specimens, one of them, or their mean (see the docstring)")
     p.add_argument("--out", default="stratF_postproc")
     return p.parse_args()
 
@@ -224,10 +265,14 @@ def plot_sequence(path, variants, tests):
                             ("peak_F_kN", ax[2], "peak |F| (kN)", "Peak base shear sum m a, per run")):
         for k, V in enumerate(variants):
             ns, v = series(V["runs"], key)
-            a.plot(ns, v, "-", marker="s", ms=6, mec="none", color=VAR_COLORS[k % len(VAR_COLORS)], lw=4.0,
+            a.plot(ns, v, "-", marker="s", ms=5, mec="none", color=VAR_COLORS[k % len(VAR_COLORS)], lw=2.2,
                    alpha=NUM_ALPHA, solid_capstyle="round", zorder=2, label=V["label"])
         for name, runs in tests.items():
             ns, v = series(runs, key); st = TEST_STYLE[name]
+            if name == MEAN:
+                ns_b = [n for n in ns if key + "_lo" in runs[n]]
+                a.fill_between(ns_b, [runs[n][key + "_lo"] for n in ns_b], [runs[n][key + "_hi"] for n in ns_b],
+                               color=BAND_COLOR, alpha=0.35, lw=0, zorder=1, label="range US-1 to US-2")
             a.plot(ns, v, ls=st["ls"], marker=st["marker"], color=st["color"], mfc=st["mfc"], lw=1.3, ms=4.5,
                    zorder=5, label=st["label"])
         if key == "cum_resid_mm":
@@ -237,24 +282,26 @@ def plot_sequence(path, variants, tests):
     fig.tight_layout(); fig.savefig(path, bbox_inches="tight"); plt.close(fig)
 
 
-def plot_ratios(path, variants, tests):
+def plot_ratios(path, variants, tests, ref=US1):
     fig, ax = plt.subplots(2, 2, figsize=(14, 9), dpi=DPI)
     nv = max(1, len(variants)); w = 0.8 / nv
+    rl = TEST_STYLE[ref]["label"].split(" (")[0]
     for row, (key, lab) in enumerate((("peak_incr_mm", "peak displacement"), ("peak_F_kN", "peak base shear"))):
         a = ax[row, 0]
         for k, V in enumerate(variants):
             ns, rr = [], []
             for n, r in sorted(V["runs"].items()):
-                t = tests[US1].get(n)
+                t = tests[ref].get(n)
                 if t is not None and key in r and key in t and t[key] > 0:
                     ns.append(n); rr.append(r[key] / t[key])
             a.bar(np.array(ns) + (k - (nv - 1) / 2) * w, rr, width=w, color=VAR_COLORS[k % len(VAR_COLORS)],
                   alpha=0.75, label=V["label"])
         a.axhline(1.0, color="#333333", lw=0.9, zorder=4); a.axhspan(0.7, 1.3, color="#DDEEDD", alpha=0.5, lw=0, zorder=0)
-        finish(a, yl="model / US-1", title="{}: model / US-1 per run (band +-30 %)".format(lab.capitalize()), runs_axis=True)
+        finish(a, yl="model / {}".format(rl), title="{}: model / {} per run (band +-30 %)".format(lab.capitalize(), rl),
+               runs_axis=True)
         a = ax[row, 1]; mx = 0
         for k, V in enumerate(variants):
-            for name, mk in ((US1, "o"), (US2, "^")):
+            for name, mk in [(nm, {US1: "o", US2: "^", MEAN: "D"}[nm]) for nm in tests]:
                 xs, ys = [], []
                 for n, r in V["runs"].items():
                     t = tests[name].get(n)
@@ -289,7 +336,7 @@ def plot_loops(path, variants, tests, loop_runs, bb):
             x = np.interp(r["tF"], r["t"], r["x"]) - r["x"][0]; F = r["F"]
             a.plot(x, F, lw=1.6, color=VAR_COLORS[j % len(VAR_COLORS)], alpha=NUM_ALPHA, zorder=2, label=V["label"])
             peaks.append((V["label"], np.max(np.abs(x)), np.max(np.abs(F)), VAR_COLORS[j % len(VAR_COLORS)]))
-        for name in (US1, US2):
+        for name in tests:
             r = tests[name].get(n)
             if r is None:
                 continue
@@ -463,7 +510,7 @@ def plot_timehistory(path, variants, tests, th_runs, pre=0.5, post=4.0, raw_dir=
                     mi = (ti >= -pre) & (ti <= t_end + post + 5.0)
                     av.plot(ti[mi], iv[1][mi], lw=3.0, color="#B9C0C7", zorder=1,
                             label="input: {} x {:g}".format(r.get("table_file", ""), sc_))
-        for name in (US1, US2):
+        for name in tests:
             r = tests[name].get(n)
             if r is None:
                 continue
@@ -580,15 +627,20 @@ def damping_metrics(variants, tests):
             _xi_summary(r, cycles_xi(r["t"][i0:i1], r["x"][i0:i1], r["F"][i0:i1]))
 
 
-def plot_damping(path, variants, tests):
+def plot_damping(path, variants, tests, curves=None):
+    curves = tests if curves is None else curves
     fig, ax = plt.subplots(1, 2, figsize=(15, 5.6), dpi=DPI, gridspec_kw=dict(width_ratios=[1.35, 1]))
     a = ax[0]
     for k, V in enumerate(variants):
         ns, v = series(V["runs"], "xi_med")
-        a.plot(ns, [100 * x for x in v], "-", marker="s", ms=6, mec="none", color=VAR_COLORS[k % len(VAR_COLORS)],
-               lw=4.0, alpha=NUM_ALPHA, zorder=2, label=V["label"])
+        a.plot(ns, [100 * x for x in v], "-", marker="s", ms=5, mec="none", color=VAR_COLORS[k % len(VAR_COLORS)],
+               lw=2.2, alpha=NUM_ALPHA, zorder=2, label=V["label"])
     for name, runs in tests.items():
         ns, v = series(runs, "xi_med"); st = TEST_STYLE[name]
+        if name == MEAN:
+            ns_b = [n for n in ns if "xi_med_lo" in runs[n]]
+            a.fill_between(ns_b, [100 * runs[n]["xi_med_lo"] for n in ns_b], [100 * runs[n]["xi_med_hi"] for n in ns_b],
+                           color=BAND_COLOR, alpha=0.35, lw=0, zorder=1, label="range US-1 to US-2")
         a.plot(ns, [100 * x for x in v], ls=st["ls"], marker=st["marker"], color=st["color"], mfc=st["mfc"], lw=1.3,
                ms=4.5, zorder=5, label=st["label"])
     a.axhspan(100 * XI_MEASURED[0], 100 * XI_MEASURED[1], color="#D1D5DB", alpha=0.6, lw=0, zorder=0,
@@ -601,8 +653,8 @@ def plot_damping(path, variants, tests):
     for k, V in enumerate(variants):
         A = [c[0] for r in V["runs"].values() for c in r.get("xi_cycles", [])]
         X = [100 * c[1] for r in V["runs"].values() for c in r.get("xi_cycles", [])]
-        b.plot(A, X, "s", ms=3.5, mec="none", color=VAR_COLORS[k % len(VAR_COLORS)], alpha=0.35, zorder=2, label=V["label"])
-    for name, runs in tests.items():
+        b.plot(A, X, "s", ms=3.5, mec="none", color=VAR_COLORS[k % len(VAR_COLORS)], alpha=0.6, zorder=2, label=V["label"])
+    for name, runs in curves.items():
         st = TEST_STYLE[name]
         A = [c[0] for r in runs.values() for c in r.get("xi_cycles", [])]
         X = [100 * c[1] for r in runs.values() for c in r.get("xi_cycles", [])]
@@ -645,6 +697,8 @@ def main():
         R.test_metrics(tests[name])
     print("US-1 runs {}, US-2 runs {}".format(len(tests[US1]), len(tests[US2])))
     damping_metrics(variants, tests)
+    scal, curves, ref = test_views(tests, {"US1": US1, "US2": US2, "mean": MEAN}.get(a.tests, "both"))
+    print("test reference: {} (ratios against {})".format(a.tests, TEST_STYLE[ref]["label"]))
     R.PUSHOVER_FORCE = "applied"
     bb = [R.backbone(p) if os.path.isfile(p) else (np.array([]), np.array([])) for p in (a.pushover_pos, a.pushover_neg)]
 
@@ -654,7 +708,8 @@ def main():
     with open(os.path.join(a.out, "stratF_metrics.csv"), "w", newline="") as f:
         w = csv.writer(f)
         w.writerow(["variant", "run", "record", "scale", "table_file"] + keys +
-                   ["US1_peak_mm", "US1_peak_F_kN", "US2_peak_mm", "US2_peak_F_kN", "ratio_d_US1", "ratio_F_US1"])
+                   ["US1_peak_mm", "US1_peak_F_kN", "US2_peak_mm", "US2_peak_F_kN", "ratio_d_US1", "ratio_F_US1",
+                    "ref", "ref_peak_mm", "ref_peak_F_kN", "ratio_d_ref", "ratio_F_ref"])
         for V in variants:
             for n, r in sorted(V["runs"].items()):
                 rec, sc = R.PROT[n]; t1, t2 = tests[US1].get(n, {}), tests[US2].get(n, {})
@@ -662,6 +717,10 @@ def main():
                 row += [R.fmt(t1.get("peak_incr_mm")), R.fmt(t1.get("peak_F_kN")), R.fmt(t2.get("peak_incr_mm")), R.fmt(t2.get("peak_F_kN"))]
                 row += [R.fmt(r["peak_incr_mm"] / t1["peak_incr_mm"]) if t1.get("peak_incr_mm") else "",
                         R.fmt(r.get("peak_F_kN", np.nan) / t1["peak_F_kN"]) if t1.get("peak_F_kN") else ""]
+                tr = scal[ref].get(n, {})
+                row += [a.tests, R.fmt(tr.get("peak_incr_mm")), R.fmt(tr.get("peak_F_kN")),
+                        R.fmt(r["peak_incr_mm"] / tr["peak_incr_mm"]) if tr.get("peak_incr_mm") else "",
+                        R.fmt(r.get("peak_F_kN", np.nan) / tr["peak_F_kN"]) if tr.get("peak_F_kN") else ""]
                 w.writerow(row)
     print("-> " + os.path.join(a.out, "stratF_metrics.csv"))
     with open(os.path.join(a.out, "stratF_damping.csv"), "w", newline="") as f:
@@ -687,15 +746,27 @@ def main():
                 R.fmt(r.get("tab_cum_mm"), "{:.2f}"), R.fmt(r.get("xi_med"), "{:.3f}"),
                 R.fmt(t1.get("xi_med"), "{:.3f}"), R.fmt(t2.get("xi_med"), "{:.3f}")))
 
+    # ---- model / reference, geometric mean of the per-run ratios
+    print("\nmodel / {} (geometric mean of the per-run ratios of the peaks)".format(TEST_STYLE[ref]["label"]))
+    for V in variants:
+        out = []
+        for lo, hi in ((1, 21), (15, 21), (22, 25)):
+            for key in ("peak_incr_mm", "peak_F_kN"):
+                q = [V["runs"][n][key] / scal[ref][n][key] for n in V["runs"] if lo <= n <= hi and n in scal[ref]
+                     and scal[ref][n].get(key) and V["runs"][n].get(key) and np.isfinite(V["runs"][n][key])]
+                out.append("{} runs {}-{} {:.2f}".format("d" if key == "peak_incr_mm" else "F", lo, hi,
+                                                         float(np.exp(np.mean(np.log(q)))) if q else np.nan))
+        print("  {:28s} ".format(V["label"][:28]) + " | ".join(out))
+
     # ---- figures
     loop_runs = [int(s) for s in a.loop_runs.split(",") if s.strip()]
     th_runs = [int(s) for s in a.th_runs.split(",") if s.strip()]
-    for fn, func in (("fig_stratF_sequence.png", lambda p: plot_sequence(p, variants, tests)),
-                     ("fig_stratF_ratios.png", lambda p: plot_ratios(p, variants, tests)),
-                     ("fig_stratF_loops.png", lambda p: plot_loops(p, variants, tests, loop_runs, bb)),
+    for fn, func in (("fig_stratF_sequence.png", lambda p: plot_sequence(p, variants, scal)),
+                     ("fig_stratF_ratios.png", lambda p: plot_ratios(p, variants, scal, ref)),
+                     ("fig_stratF_loops.png", lambda p: plot_loops(p, variants, curves, loop_runs, bb)),
                      ("fig_stratF_table.png", lambda p: plot_table(p, variants)),
-                     ("fig_stratF_damping.png", lambda p: plot_damping(p, variants, tests)),
-                     ("fig_stratF_timehistory.png", lambda p: plot_timehistory(p, variants, tests, th_runs,
+                     ("fig_stratF_damping.png", lambda p: plot_damping(p, variants, scal, curves)),
+                     ("fig_stratF_timehistory.png", lambda p: plot_timehistory(p, variants, curves, th_runs,
                                                                                  raw_dir=a.raw_dir, table_dir=a.table_dir))):
         p = os.path.join(a.out, fn)
         if func(p) is not False:

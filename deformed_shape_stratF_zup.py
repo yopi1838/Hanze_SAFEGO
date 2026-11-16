@@ -56,10 +56,11 @@ import os, sys, math, csv, re
 RUN_DIR  = "stratF_full_LS_MAXWELL50_zup_pk2_ft0p05_tr"                 # the Strategy F output folder (default)
 # override without editing (9 Nov 2026): a wrapper that sets DFM_RUN_DIR and execs this file, or, outside 3DEC,
 #   python deformed_shape_stratF_zup.py --post --run-dir <folder>
-RUN_DIR  = globals().get("DFM_RUN_DIR", RUN_DIR)
+RUN_DIR  = globals().pop("DFM_RUN_DIR", RUN_DIR)   # pop: a wrapper's folder must not stick to the next call in the same 3DEC session
 if "--run-dir" in sys.argv[:-1]:
     RUN_DIR = sys.argv[sys.argv.index("--run-dir") + 1]
 REF_SAV  = "Part_I_MASON_v8_LargeStrain_springforce_zup_pk2_ft0p05"      # the save the run started from
+REF_SAV  = globals().pop("DFM_REF_SAV", REF_SAV)  # wrapper override (16 Nov 2026), e.g. the unclamped build
 RUNS     = None            # None = every stratC_run_NN.sav found in RUN_DIR; or a list, e.g. [12, 17, 18, 19, 20, 21]
 OUT_DIR  = os.path.join(RUN_DIR, "deformed_shape")
 DMG      = "tension"     # set in main() from DAMAGE_PROP
